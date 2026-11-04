@@ -1,0 +1,572 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Identity & access ────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  VC
+  REGISTRAR
+  COE
+  EXAM_STAFF
+  ACADEMIC_STAFF
+  HOD
+  FACULTY
+  EVALUATOR
+  IQAC
+  STUDENT
+  PARENT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  designation  String?
+  department   String?
+  isActive     Boolean  @default(true)
+  mfaEnabled   Boolean  @default(false)
+  studentId    String?  @unique
+  student      Student? @relation("StudentUser", fields: [studentId], references: [id])
+  wardId       String?
+  ward         Student? @relation("ParentWard", fields: [wardId], references: [id])
+  createdAt    DateTime @default(now())
+
+  evaluations      Evaluation[]
+  papersSet        ExamPaper[]   @relation("PaperSetter")
+  auditLogs        AuditLog[]
+  coursesTaught    Course[]      @relation("CourseFaculty")
+}
+
+// ─── Academic structure ───────────────────────────────────────────────
+
+enum ProgrammeLevel {
+  UG
+  PG
+  DOCTORAL
+  DIPLOMA
+}
+
+model Programme {
+  id                String              @id @default(cuid())
+  code              String              @unique
+  name              String
+  level             ProgrammeLevel
+  durationSemesters Int
+  curricula         CurriculumVersion[]
+  batches           Batch[]
+  ruleSets          RuleSet[]
+}
+
+model CurriculumVersion {
+  id               String    @id @default(cuid())
+  programmeId      String
+  programme        Programme @relation(fields: [programmeId], references: [id])
+  code             String    @unique
+  name             String
+  effectiveFrom    Int
+  effectiveTo      Int?
+  creditsPerCourse Int
+  totalCredits     Int?
+  notes            String?
+  courses          Course[]
+  batches          Batch[]
+}
+
+model Batch {
+  id                  String            @id @default(cuid())
+  code                String            @unique
+  name                String
+  programmeId         String
+  programme           Programme         @relation(fields: [programmeId], references: [id])
+  curriculumVersionId String
+  curriculumVersion   CurriculumVersion @relation(fields: [curriculumVersionId], references: [id])
+  admissionYear       Int
+  currentSemester     Int
+  students            Student[]
+  ruleSets            RuleSet[]
+}
+
+enum CourseCategory {
+  CORE
+  CLINICAL
+  OPTIONAL
+  HONOURS
+  HSS
+  SPECIALIZATION
+  DISSERTATION
+  MOOT
+}
+
+model EvaluationScheme {
+  id          String                @id @default(cuid())
+  code        String                @unique
+  name        String
+  description String?
+  passRule    String                @default("AGGREGATE") // AGGREGATE | COMPONENT_AND_AGGREGATE
+  aggregatePassPct Float            @default(50)
+  components  AssessmentComponent[]
+  courses     Course[]
+}
+
+model AssessmentComponent {
+  id        String           @id @default(cuid())
+  schemeId  String
+  scheme    EvaluationScheme @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+  code      String
+  name      String
+  maxMarks  Float
+  passMarks Float?
+  group     String           @default("THEORY") // THEORY | PRACTICAL
+  source    String           @default("FACULTY") // FACULTY | EXAM (on-screen evaluation) | EXTERNAL | SYSTEM
+  sortOrder Int              @default(0)
+  subCriteria Json?
+  markEntries MarkEntry[]
+
+  @@unique([schemeId, code])
+}
+
+model Course {
+  id                  String            @id @default(cuid())
+  curriculumVersionId String
+  curriculumVersion   CurriculumVersion @relation(fields: [curriculumVersionId], references: [id])
+  code                String
+  title               String
+  semester            Int
+  credits             Int
+  category            CourseCategory
+  maxMarks            Int               @default(100)
+  schemeId            String
+  scheme              EvaluationScheme  @relation(fields: [schemeId], references: [id])
+  facultyId           String?
+  faculty             User?             @relation("CourseFaculty", fields: [facultyId], references: [id])
+  enrolments          Enrolment[]
+  examPapers          ExamPaper[]
+
+  @@unique([curriculumVersionId, code])
+}
+
+// ─── Students ─────────────────────────────────────────────────────────
+
+model Student {
+  id           String   @id @default(cuid())
+  uid          String   @unique
+  rollNo       String   @unique
+  name         String
+  gender       String
+  dob          DateTime?
+  email        String
+  phone        String?
+  category     String   @default("GEN")
+  abcId        String?
+  parentName   String?
+  parentPhone  String?
+  parentEmail  String?
+  photoUrl     String?
+  status       String   @default("ACTIVE")
+  batchId      String
+  batch        Batch    @relation(fields: [batchId], references: [id])
+  createdAt    DateTime @default(now())
+
+  user          User?              @relation("StudentUser")
+  parents       User[]             @relation("ParentWard")
+  enrolments    Enrolment[]
+  registrations ExamRegistration[]
+  seats         SeatAllocation[]
+  scripts       AnswerScript[]
+  courseResults CourseResult[]
+  semResults    SemesterResult[]
+  documents     Document[]
+  relaxations   RelaxationRequest[]
+}
+
+enum EnrolmentType {
+  REGULAR
+  REPEAT
+  IMPROVEMENT
+  REREGISTER
+}
+
+model Enrolment {
+  id           String        @id @default(cuid())
+  studentId    String
+  student      Student       @relation(fields: [studentId], references: [id])
+  courseId     String
+  course       Course        @relation(fields: [courseId], references: [id])
+  academicYear String
+  semester     Int
+  attempt      Int           @default(1)
+  type         EnrolmentType @default(REGULAR)
+  status       String        @default("ACTIVE")
+
+  attendance    AttendanceSummary?
+  markEntries   MarkEntry[]
+  eligibilities Eligibility[]
+  courseResults CourseResult[]
+  relaxations   RelaxationRequest[]
+
+  @@unique([studentId, courseId, academicYear, attempt])
+}
+
+model AttendanceSummary {
+  id               String    @id @default(cuid())
+  enrolmentId      String    @unique
+  enrolment        Enrolment @relation(fields: [enrolmentId], references: [id], onDelete: Cascade)
+  classesHeld      Int
+  classesAttended  Int
+  medicalLeaveDays Int       @default(0)
+  biometricCount   Int?
+  updatedAt        DateTime  @updatedAt
+}
+
+// ─── Configurable rules (rule engine) ─────────────────────────────────
+
+enum RuleType {
+  ATTENDANCE
+  GRADING
+  GRACE
+  PROMOTION
+}
+
+model RuleSet {
+  id           String     @id @default(cuid())
+  key          String     // stable identifier across versions, e.g. ATT-BALLB
+  type         RuleType
+  name         String
+  description  String?
+  programmeId  String?
+  programme    Programme? @relation(fields: [programmeId], references: [id])
+  batchId      String?
+  batch        Batch?     @relation(fields: [batchId], references: [id])
+  version      Int        @default(1)
+  isActive     Boolean    @default(true)
+  params       Json
+  logic        Json?
+  effectiveFrom DateTime  @default(now())
+  createdById  String?
+  createdAt    DateTime   @default(now())
+  changeNote   String?
+
+  @@unique([key, version])
+}
+
+// ─── Examinations ─────────────────────────────────────────────────────
+
+enum ExamType {
+  REGULAR
+  REPEAT
+  SPECIAL
+  IMPROVEMENT
+  REREGISTERED
+}
+
+model Exam {
+  id               String       @id @default(cuid())
+  code             String       @unique
+  name             String
+  type             ExamType
+  academicYear     String
+  parity           String       // ODD | EVEN
+  status           String       @default("PLANNED") // PLANNED | REGISTRATION | SCHEDULED | IN_PROGRESS | EVALUATION | RESULT | CLOSED
+  startDate        DateTime
+  endDate          DateTime
+  registrationOpen Boolean      @default(false)
+  feeAmount        Int          @default(0)
+  papers           ExamPaper[]
+  registrations    ExamRegistration[]
+  eligibilities    Eligibility[]
+  resultRuns       ResultRun[]
+  relaxations      RelaxationRequest[]
+}
+
+model ExamPaper {
+  id             String         @id @default(cuid())
+  examId         String
+  exam           Exam           @relation(fields: [examId], references: [id])
+  courseId       String
+  course         Course         @relation(fields: [courseId], references: [id])
+  date           DateTime
+  session        String         // FN | AN
+  durationMins   Int
+  maxMarks       Int
+  questionScheme Json?
+  setterId       String?
+  setter         User?          @relation("PaperSetter", fields: [setterId], references: [id])
+  evaluationMode String         @default("SINGLE") // SINGLE | DOUBLE | TRIPLE
+  seats          SeatAllocation[]
+  scripts        AnswerScript[]
+  registrationPapers RegistrationPaper[]
+
+  @@unique([examId, courseId])
+}
+
+model Eligibility {
+  id            String    @id @default(cuid())
+  examId        String
+  exam          Exam      @relation(fields: [examId], references: [id])
+  enrolmentId   String
+  enrolment     Enrolment @relation(fields: [enrolmentId], references: [id])
+  status        String    // ELIGIBLE | INELIGIBLE | PENDING_RELAXATION | RELAXED
+  reason        String?
+  coursePct     Float
+  aggregatePct  Float
+  semesterPct   Float?
+  ruleSetId     String?
+  ruleVersion   Int?
+  computedAt    DateTime  @default(now())
+
+  @@unique([examId, enrolmentId])
+}
+
+model RelaxationRequest {
+  id           String    @id @default(cuid())
+  examId       String
+  exam         Exam      @relation(fields: [examId], references: [id])
+  studentId    String
+  student      Student   @relation(fields: [studentId], references: [id])
+  enrolmentId  String
+  enrolment    Enrolment @relation(fields: [enrolmentId], references: [id])
+  ground       String    // MEDICAL | EMERGENCY | OTHER
+  remarks      String?
+  status       String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  requestedById String?
+  decidedById  String?
+  decidedAt    DateTime?
+  decisionNote String?
+  createdAt    DateTime  @default(now())
+}
+
+model ExamRegistration {
+  id          String              @id @default(cuid())
+  examId      String
+  exam        Exam                @relation(fields: [examId], references: [id])
+  studentId   String
+  student     Student             @relation(fields: [studentId], references: [id])
+  status      String              @default("SUBMITTED") // DRAFT | SUBMITTED | APPROVED
+  feePaid     Boolean             @default(false)
+  paymentRef  String?
+  submittedAt DateTime            @default(now())
+  papers      RegistrationPaper[]
+  admitCardCode String?           @unique
+
+  @@unique([examId, studentId])
+}
+
+model RegistrationPaper {
+  id             String           @id @default(cuid())
+  registrationId String
+  registration   ExamRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  examPaperId    String
+  examPaper      ExamPaper        @relation(fields: [examPaperId], references: [id])
+
+  @@unique([registrationId, examPaperId])
+}
+
+model Room {
+  id       String           @id @default(cuid())
+  centre   String
+  code     String           @unique
+  name     String
+  rows     Int
+  cols     Int
+  seats    SeatAllocation[]
+}
+
+model SeatAllocation {
+  id          String    @id @default(cuid())
+  examPaperId String
+  examPaper   ExamPaper @relation(fields: [examPaperId], references: [id])
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  roomId      String
+  room        Room      @relation(fields: [roomId], references: [id])
+  benchNo     String
+  attended    Boolean?
+
+  @@unique([examPaperId, studentId])
+}
+
+model MalpracticeCase {
+  id          String   @id @default(cuid())
+  examPaperId String
+  studentId   String
+  description String
+  evidenceUrl String?
+  reportedBy  String
+  status      String   @default("REPORTED")
+  createdAt   DateTime @default(now())
+}
+
+// ─── Answer scripts & on-screen evaluation ────────────────────────────
+
+model AnswerScript {
+  id          String         @id @default(cuid())
+  examPaperId String
+  examPaper   ExamPaper      @relation(fields: [examPaperId], references: [id])
+  studentId   String
+  student     Student        @relation(fields: [studentId], references: [id])
+  dummyNo     String         @unique
+  barcode     String         @unique
+  scanUrl     String?
+  pageCount   Int            @default(0)
+  status      String         @default("RECEIVED") // RECEIVED | SCANNED | ALLOCATED | EVALUATED | FINALISED
+  finalMarks  Float?
+  evaluations Evaluation[]
+  custody     CustodyEvent[]
+
+  @@unique([examPaperId, studentId])
+}
+
+model CustodyEvent {
+  id        String       @id @default(cuid())
+  scriptId  String
+  script    AnswerScript @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  action    String       // COLLECTED | SEALED | STRONG_ROOM_IN | DISPATCHED | RECEIVED | SCANNED
+  location  String
+  handler   String
+  at        DateTime     @default(now())
+}
+
+model Evaluation {
+  id            String       @id @default(cuid())
+  scriptId      String
+  script        AnswerScript @relation(fields: [scriptId], references: [id])
+  evaluatorId   String
+  evaluator     User         @relation(fields: [evaluatorId], references: [id])
+  round         Int          @default(1)
+  marks         Json?
+  total         Float?
+  remarks       String?
+  status        String       @default("ASSIGNED") // ASSIGNED | IN_PROGRESS | SUBMITTED | LOCKED
+  submittedAt   DateTime?
+  signatureHash String?
+  createdAt     DateTime     @default(now())
+
+  @@unique([scriptId, round])
+}
+
+// ─── Marks & results ──────────────────────────────────────────────────
+
+model MarkEntry {
+  id          String              @id @default(cuid())
+  enrolmentId String
+  enrolment   Enrolment           @relation(fields: [enrolmentId], references: [id], onDelete: Cascade)
+  componentId String
+  component   AssessmentComponent @relation(fields: [componentId], references: [id])
+  marks       Float?
+  absent      Boolean             @default(false)
+  status      String              @default("DRAFT") // DRAFT | SUBMITTED | LOCKED
+  source      String              @default("FACULTY")
+  enteredById String?
+  updatedAt   DateTime            @updatedAt
+
+  @@unique([enrolmentId, componentId])
+}
+
+model ResultRun {
+  id            String           @id @default(cuid())
+  examId        String
+  exam          Exam             @relation(fields: [examId], references: [id])
+  batchId       String?
+  label         String
+  status        String           @default("PROCESSED") // PROCESSED | SUBMITTED | APPROVED | PUBLISHED | WITHDRAWN
+  rulesUsed     Json
+  summary       Json?
+  processedById String
+  processedAt   DateTime         @default(now())
+  submittedById String?
+  submittedAt   DateTime?
+  approvedById  String?
+  approvedAt    DateTime?
+  publishedById String?
+  publishedAt   DateTime?
+  courseResults CourseResult[]
+  semResults    SemesterResult[]
+}
+
+model CourseResult {
+  id            String    @id @default(cuid())
+  runId         String
+  run           ResultRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  enrolmentId   String
+  enrolment     Enrolment @relation(fields: [enrolmentId], references: [id])
+  studentId     String
+  student       Student   @relation(fields: [studentId], references: [id])
+  courseId      String
+  components    Json
+  rawTotal      Float
+  grace         Float     @default(0)
+  total         Float
+  grade         String
+  gradePoint    Float
+  credits       Int
+  status        String    // PASS | FAIL | AB | NA | W
+  flags         Json?
+
+  @@unique([runId, enrolmentId])
+}
+
+model SemesterResult {
+  id          String    @id @default(cuid())
+  runId       String
+  run         ResultRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  semester    Int
+  credits     Int
+  earnedCredits Int
+  sgpa        Float
+  cgpa        Float
+  result      String    // PASS | FAIL | WITHHELD
+  division    String?
+  flags       Json?
+
+  @@unique([runId, studentId, semester])
+}
+
+// ─── Documents & verification ─────────────────────────────────────────
+
+model Document {
+  id          String   @id @default(cuid())
+  type        String   // GRADE_SHEET | TRANSCRIPT | ADMIT_CARD | DEGREE
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  refId       String?
+  verifyCode  String   @unique
+  payload     Json
+  payloadHash String
+  isDuplicate Boolean  @default(false)
+  revoked     Boolean  @default(false)
+  issuedById  String?
+  issuedAt    DateTime @default(now())
+}
+
+// ─── Audit trail (hash-chained, tamper-evident) ───────────────────────
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  at        DateTime @default(now())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  actorRole String?
+  action    String
+  entity    String
+  entityId  String?
+  summary   String?
+  before    Json?
+  after     Json?
+  prevHash  String
+  hash      String
+
+  @@index([entity, entityId])
+  @@index([actorId])
+}

@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif-display), Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: #f8f6f3;
+  --color-foreground: #1f1a17;
+  --color-card: #ffffff;
+  --color-muted: #f1ede8;
+  --color-muted-foreground: #6b625b;
+  --color-border: #e6dfd7;
+
+  --color-brand-50: #fdf5ec;
+  --color-brand-100: #f9e4cc;
+  --color-brand-200: #f2c592;
+  --color-brand-300: #eaa35a;
+  --color-brand-400: #e3872f;
+  --color-brand-500: #d06d17;
+  --color-brand-600: #a95312;
+  --color-brand-700: #843f13;
+  --color-brand-800: #5e2e12;
+  --color-brand-900: #3a1d0d;
+
+  --color-ink-800: #2a1e18;
+  --color-ink-900: #1b130f;
+
+  --color-leaf-50: #eef7ef;
+  --color-leaf-100: #d4ecd7;
+  --color-leaf-600: #2f7d3a;
+  --color-leaf-700: #23612c;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.01em;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
 }
