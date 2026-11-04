@@ -75,7 +75,8 @@ export async function verifyOtpAction(_: LoginState, formData: FormData): Promis
 
 export async function logoutAction() {
   const s = await getSession();
-  if (s) await audit({ actorId: s.userId, actorRole: s.role, action: "LOGOUT", entity: "Session", summary: "Signed out" });
+  const user = s ? await db.user.findUnique({ where: { id: s.userId } }) : null;
+  if (user) await audit({ actorId: user.id, actorRole: user.role, action: "LOGOUT", entity: "Session", summary: "Signed out" });
   await deleteSession();
   redirect("/login");
 }

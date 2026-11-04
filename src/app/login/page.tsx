@@ -1,14 +1,14 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { ROLE_LABELS } from "@/lib/roles";
 import { DEMO_OTP } from "@/lib/demo/constants";
 import { DEMO_PASSWORD } from "@/lib/demo/scenarios";
 import { LoginPanel } from "./login-panel";
 
 export default async function LoginPage() {
-  if (await getSession()) redirect("/dashboard");
+  if (await getCurrentUser()) redirect("/dashboard");
   const users = await db.user.findMany({ orderBy: { createdAt: "asc" }, select: { email: true, name: true, role: true, designation: true, mfaEnabled: true } });
   const order = ["COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "FACULTY", "EVALUATOR", "STUDENT", "PARENT", "ADMIN", "HOD", "IQAC"];
   const seen = new Set<string>();
