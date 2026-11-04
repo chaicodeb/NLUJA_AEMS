@@ -316,6 +316,7 @@ model Eligibility {
   enrolmentId   String
   enrolment     Enrolment @relation(fields: [enrolmentId], references: [id])
   status        String    // ELIGIBLE | INELIGIBLE | PENDING_RELAXATION | RELAXED
+  relaxable     Boolean   @default(false)
   reason        String?
   coursePct     Float
   aggregatePct  Float
