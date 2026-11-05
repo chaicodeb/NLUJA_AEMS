@@ -195,6 +195,7 @@ model Student {
   revaluations  RevaluationRequest[]
   leaves        LeaveRequest[]
   attendanceAlerts AttendanceAlert[]
+  feedbackSubmissions FeedbackSubmission[]
 }
 
 enum EnrolmentType {
@@ -236,6 +237,65 @@ model AttendanceSummary {
   medicalLeaveDays Int       @default(0)
   biometricCount   Int?
   updatedAt        DateTime  @updatedAt
+}
+
+// ─── Student feedback (anonymous) ─────────────────────────────────────
+
+model FeedbackForm {
+  id                String               @id @default(cuid())
+  title             String
+  type              String               // COURSE (per course & teacher) | INSTITUTION (satisfaction survey)
+  academicYear      String
+  description       String?
+  questions         Json                 // [{ id, section, text, kind: LIKERT | TEXT, required }]
+  status            String               @default("DRAFT") // DRAFT | OPEN | CLOSED
+  opensAt           DateTime
+  closesAt          DateTime
+  minResponses      Int                  @default(5)
+  releasedToFaculty Boolean              @default(false)
+  createdById       String
+  createdAt         DateTime             @default(now())
+  submissions       FeedbackSubmission[]
+  responses         FeedbackResponse[]
+  actions           FeedbackAction[]
+}
+
+/// Who has given feedback (for reminders and completion rates) — never what they answered.
+model FeedbackSubmission {
+  id          String       @id @default(cuid())
+  formId      String
+  form        FeedbackForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student      @relation(fields: [studentId], references: [id])
+  courseId    String       @default("")
+  submittedOn DateTime     @db.Date
+
+  @@unique([formId, studentId, courseId])
+}
+
+/// The answers, with no link to the student who gave them.
+model FeedbackResponse {
+  id          String       @id @default(cuid())
+  formId      String
+  form        FeedbackForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  courseId    String       @default("")
+  facultyId   String?
+  batchId     String?
+  answers     Json
+  submittedOn DateTime     @db.Date
+
+  @@index([formId, courseId])
+}
+
+/// Action taken on feedback (NAAC criterion 1.4).
+model FeedbackAction {
+  id          String       @id @default(cuid())
+  formId      String
+  form        FeedbackForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  courseId    String       @default("")
+  note        String
+  createdById String
+  createdAt   DateTime     @default(now())
 }
 
 /// One scheduled class meeting of a course; its records roll up into AttendanceSummary.

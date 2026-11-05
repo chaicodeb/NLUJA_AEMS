@@ -237,6 +237,20 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
+## Act 9A — Student feedback and NAAC reporting (3 min) · NIQ 3 (feedback) · NAAC criterion 1.4
+
+*Works at any stage; the feedback window is open at* **Fresh start**.
+
+1. **Switch → Aditi → Dashboard**: *"3 anonymous feedback forms awaiting you"* → **Feedback**. Point at the anonymity notice: the system records *that* she answered, never *what* — the two are stored separately.
+2. **BL9.4 → Give feedback** → tap eight ratings, add a comment → **Submit anonymously**. The course moves to *Submitted*.
+3. **Switch → IQAC (Dr. S. Choudhury) → Feedback & Surveys → Analysis**: about 90% response rate, overall index ≈ 4.0; courses lowest-first — **BL3.4 Economics ≈ 2.9 (Concern)**, the same paper the Moderation Board corrected in Act 6A.
+4. Open **BL3.4 → Report**: weakest on syllabus coverage and assessment fairness, with verbatim comments (*"the end-semester paper went well beyond what was taught"*). **Record action taken** (remedial tutorials, revised question-setting guidelines).
+5. Back on the form: **Close window** → **Release to teachers** → **NAAC 1.4 export (CSV)**.
+6. **Switch → Dr. Ananya Bora → Feedback & Surveys**: only her own seven courses, each with its index; another teacher's report is refused. Courses with fewer than five responses would stay hidden.
+7. The **Student Satisfaction Survey** analysis shows hostel and Wi-Fi as the weakest areas and the library as the strongest — input for the Annual Quality Assurance Report.
+
+---
+
 ## Close (1 minute)
 
 > "What you saw is your own regulation running end-to-end: BCI attendance with VC relaxation, component-wise LL.M. minimums, moot-court weighting, grace within limits, anonymous double evaluation, maker–checker results and verifiable documents — all configurable by NLUJA staff, all audited.

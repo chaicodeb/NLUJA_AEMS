@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, BellRing, CalendarClock, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, NotebookPen, PenLine } from "lucide-react";
+import { ArrowRight, BellRing, CalendarClock, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, MessagesSquare, NotebookPen, PenLine } from "lucide-react";
+import { studentFeedback } from "@/lib/feedback/feedback";
 import { dueClassCount } from "@/lib/attendance/daily";
 import { PUBLISHED_ORDER, firstPerSemester } from "@/lib/results/engine";
 import type { Role } from "@prisma/client";
@@ -56,7 +57,14 @@ async function actionItems(role: Role, examId: string | undefined): Promise<Acti
     db.internalMarksSheet.count({ where: { academicYear: exam.academicYear, status: "SUBMITTED" } }),
     db.internalMarksSheet.count({ where: { academicYear: exam.academicYear, status: { in: ["DRAFT", "RETURNED"] } } }),
   ]);
-  const [pendingLeave, dueClasses] = await Promise.all([db.leaveRequest.count({ where: { status: "PENDING" } }), dueClassCount()]);
+  const [pendingLeave, dueClasses, openForms] = await Promise.all([
+    db.leaveRequest.count({ where: { status: "PENDING" } }),
+    dueClassCount(),
+    db.feedbackForm.findMany({ where: { status: { in: ["OPEN", "CLOSED"] }, releasedToFaculty: false }, include: { _count: { select: { responses: true } } } }),
+  ]);
+  if (role === "IQAC") {
+    for (const f of openForms) items.push({ label: f.status === "OPEN" ? `${f.title}: open, ${f._count.responses} responses so far` : `${f.title}: closed — release results to teachers`, href: `/feedback/${f.id}`, tone: f.status === "OPEN" ? "blue" : "amber" });
+  }
   if (["HOD", "ACADEMIC_STAFF"].includes(role) && pendingLeave) items.push({ label: `${pendingLeave} leave application(s) awaiting decision`, href: "/attendance/leave", tone: "amber" });
   if (["ACADEMIC_STAFF", "COE", "HOD"].includes(role) && dueClasses) items.push({ label: `${dueClasses} class(es) held but attendance not yet marked`, href: "/attendance/classes", tone: "blue" });
   if ((role === "HOD" || role === "COE") && sheetsToVerify) items.push({ label: `${sheetsToVerify} internal-marks sheet(s) awaiting verification`, href: "/marks?status=SUBMITTED", tone: "amber" });
@@ -376,6 +384,7 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
   const latest = firstPerSemester(full.semResults).at(-1);
   const isParent = user.role === "PARENT";
   const alerts = await db.attendanceAlert.findMany({ where: { studentId: full.id, level: { in: ["SHORTAGE", "CRITICAL", "NOTICE"] } }, orderBy: { createdAt: "desc" }, take: 2 });
+  const feedbackDue = isParent ? 0 : (await studentFeedback(full.id)).items.filter((i) => !i.done).length;
 
   return (
     <div className="space-y-6">
@@ -417,6 +426,12 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
         </div>
       )}
       {isParent && <Callout tone="blue">Read-only access to your ward&apos;s records, shared with consent under the University&apos;s data-sharing policy (DPDP Act, 2023).</Callout>}
+      {feedbackDue > 0 && (
+        <Link href="/me/feedback" className="flex items-center justify-between gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 hover:bg-sky-100">
+          <span className="flex items-center gap-2"><MessagesSquare className="h-4 w-4" /> {feedbackDue} anonymous feedback form{feedbackDue === 1 ? "" : "s"} awaiting you — about two minutes each</span>
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
       {alerts.length > 0 && (
         <Link href="/me/attendance" className="block rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 hover:bg-red-100">
           <div className="flex items-center gap-2 font-semibold"><BellRing className="h-4 w-4" /> Attendance alert</div>

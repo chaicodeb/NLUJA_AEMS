@@ -18,6 +18,7 @@ import { gradeFor, type GradingParams } from "../rules/engine";
 import { INTERNAL_SOURCES, sheetSignature } from "../marks/internal";
 import { DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET } from "./constants";
 import { seedDailyAttendance, type AttendancePlan } from "./attendance-seed";
+import { seedFeedback } from "./feedback-seed";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
 function splitRubric(total: number, criteria: { code: string; max: number }[]) {
@@ -36,7 +37,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -491,6 +492,7 @@ export async function seedDemo() {
   });
 
   await seedDailyAttendance(attendancePlan, CLASSES_HELD, users);
+  await seedFeedback(users.iqac);
 
   // Pending VC relaxation request (Priyanka Saikia, ADR 67.3%)
   const priyanka = await db.student.findFirstOrThrow({ where: { name: "Priyanka Saikia" } });

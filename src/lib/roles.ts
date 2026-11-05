@@ -56,6 +56,7 @@ export const NAV: NavSection[] = [
   {
     title: "Governance",
     items: [
+      { href: "/feedback", label: "Feedback & Surveys", icon: "MessageSquareText", roles: ["IQAC", "VC", "HOD", "COE", "ACADEMIC_STAFF", "REGISTRAR", "ADMIN", "FACULTY"] },
       { href: "/reports", label: "Report Builder", icon: "BarChart3", roles: ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "HOD", "IQAC"] },
       { href: "/audit", label: "Audit Trail", icon: "History", roles: ["ADMIN", "COE", "VC", "REGISTRAR"] },
     ],
@@ -66,6 +67,7 @@ export const NAV: NavSection[] = [
       { href: "/me/attendance", label: "My Attendance", icon: "CalendarCheck", roles: ["STUDENT", "PARENT"] },
       { href: "/me/exams", label: "Exam Registration", icon: "FileCheck", roles: ["STUDENT"] },
       { href: "/me/results", label: "Results & Grade Sheets", icon: "GraduationCap", roles: ["STUDENT", "PARENT"] },
+      { href: "/me/feedback", label: "Feedback", icon: "MessagesSquare", roles: ["STUDENT"] },
     ],
   },
 ];
