@@ -11,6 +11,9 @@ export const ROLE_LABELS: Record<Role, string> = {
   FACULTY: "Faculty",
   EVALUATOR: "Evaluator",
   IQAC: "IQAC Coordinator",
+  LIBRARIAN: "Librarian",
+  WARDEN: "Chief Warden",
+  ACCOUNTS: "Finance & Accounts",
   STUDENT: "Student",
   PARENT: "Parent / Guardian",
 };
@@ -23,7 +26,7 @@ const ALL_STAFF: Role[] = ["ADMIN", "VC", "REGISTRAR", "COE", "EXAM_STAFF", "ACA
 export const NAV: NavSection[] = [
   {
     title: "Overview",
-    items: [{ href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: [...ALL_STAFF, "FACULTY", "EVALUATOR", "STUDENT", "PARENT"] }],
+    items: [{ href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: [...ALL_STAFF, "LIBRARIAN", "WARDEN", "ACCOUNTS", "FACULTY", "EVALUATOR", "STUDENT", "PARENT"] }],
   },
   {
     title: "Academics",
@@ -55,6 +58,14 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    title: "Student Services",
+    items: [
+      { href: "/clearance", label: "No-dues Desk", icon: "Stamp", roles: ["LIBRARIAN", "WARDEN", "ACCOUNTS", "EXAM_STAFF", "REGISTRAR", "ADMIN"] },
+      { href: "/exit", label: "Exit & Certificates", icon: "DoorOpen", roles: ["REGISTRAR", "ACCOUNTS", "ADMIN"] },
+      { href: "/alumni", label: "Alumni", icon: "Contact", roles: ["REGISTRAR", "VC", "IQAC", "HOD", "ACADEMIC_STAFF", "ADMIN"] },
+    ],
+  },
+  {
     title: "Governance",
     items: [
       { href: "/feedback", label: "Feedback & Surveys", icon: "MessageSquareText", roles: ["IQAC", "VC", "HOD", "COE", "ACADEMIC_STAFF", "REGISTRAR", "ADMIN", "FACULTY"] },
@@ -70,6 +81,7 @@ export const NAV: NavSection[] = [
       { href: "/me/results", label: "Results & Grade Sheets", icon: "GraduationCap", roles: ["STUDENT", "PARENT"] },
       { href: "/me/feedback", label: "Feedback", icon: "MessagesSquare", roles: ["STUDENT"] },
       { href: "/me/degree", label: "Degree & Convocation", icon: "Award", roles: ["STUDENT", "PARENT"] },
+      { href: "/me/exit", label: "Exit & Alumni", icon: "DoorOpen", roles: ["STUDENT"] },
     ],
   },
 ];

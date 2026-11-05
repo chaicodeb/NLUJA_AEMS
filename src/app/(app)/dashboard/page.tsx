@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, BellRing, CalendarClock, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, MessagesSquare, NotebookPen, PenLine } from "lucide-react";
+import { ArrowRight, Banknote, BellRing, CalendarClock, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, MessagesSquare, NotebookPen, PenLine, Stamp } from "lucide-react";
 import { studentFeedback } from "@/lib/feedback/feedback";
+import { DEPARTMENTS } from "@/lib/convocation/degree";
+import { departmentsFor, exitRegister } from "@/lib/exit/exit";
 import { dueClassCount } from "@/lib/attendance/daily";
 import { PUBLISHED_ORDER, firstPerSemester } from "@/lib/results/engine";
 import type { Role } from "@prisma/client";
@@ -31,16 +33,73 @@ export default async function DashboardPage() {
   const user = await requirePage("/dashboard");
   if (user.role === "STUDENT" || user.role === "PARENT") return <StudentDashboard user={user} />;
   if (user.role === "FACULTY" || user.role === "EVALUATOR") return <TeachingDashboard user={user} />;
+  if (["LIBRARIAN", "WARDEN", "ACCOUNTS"].includes(user.role)) return <DeskDashboard user={user} />;
   return <StaffDashboard user={user} />;
+}
+
+async function DeskDashboard({ user }: { user: CurrentUser }) {
+  const [department] = departmentsFor(user.role);
+  const [counts, items] = await Promise.all([db.clearance.groupBy({ by: ["status"], where: { department }, _count: { _all: true } }), exitItems(user.role)]);
+  const count = (s: string) => counts.find((c) => c.status === s)?._count._all ?? 0;
+  return (
+    <div className="space-y-6">
+      <PageHeader eyebrow={ROLE_LABELS[user.role]} title={`Welcome, ${user.name}`} description={user.designation ?? undefined} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Stat label="Awaiting no-dues decision" value={count("PENDING")} tone={count("PENDING") ? "amber" : "green"} />
+        <Stat label="Dues outstanding" value={count("DUES")} tone={count("DUES") ? "red" : "neutral"} />
+        <Stat label="Cleared" value={count("CLEARED")} tone="green" />
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <Link href="/clearance" className={buttonVariants({ variant: "accent" })}>
+          <Stamp className="h-4 w-4" /> Open the {DEPARTMENTS[department].toLowerCase()} no-dues desk
+        </Link>
+        {user.role === "ACCOUNTS" && (
+          <Link href="/exit" className={buttonVariants({ variant: "outline" })}>
+            <Banknote className="h-4 w-4" /> Caution-deposit refunds
+          </Link>
+        )}
+      </div>
+      {items.length > 0 && (
+        <Card>
+          <CardHeader title="Needs your attention" />
+          <ul className="divide-y divide-border">
+            {items.map((i) => (
+              <li key={i.label}>
+                <Link href={i.href} className="flex items-center justify-between gap-3 px-5 py-3 text-sm hover:bg-muted/40">
+                  <span className="flex items-center gap-2"><CircleAlert className="h-4 w-4 text-amber-600" /> {i.label}</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+    </div>
+  );
 }
 
 async function currentExam() {
   return db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
 }
 
-async function actionItems(role: Role, examId: string | undefined): Promise<ActionItem[]> {
-  if (!examId) return [];
+async function exitItems(role: Role): Promise<ActionItem[]> {
   const items: ActionItem[] = [];
+  const desk = departmentsFor(role);
+  if (desk.length === 1) {
+    const n = await db.clearance.count({ where: { department: desk[0], status: "PENDING" } });
+    if (n) items.push({ label: `${n} student(s) awaiting ${DEPARTMENTS[desk[0]].toLowerCase()} no-dues clearance`, href: "/clearance", tone: "amber" });
+  }
+  if (["REGISTRAR", "ACCOUNTS"].includes(role)) {
+    const open = (await exitRegister()).filter((r) => r.status === "OPEN" && r.allCleared);
+    const n = role === "REGISTRAR" ? open.filter((r) => r.surveyDone && !r.certificates.length).length : open.filter((r) => r.bankAccount && !r.refundedAt).length;
+    if (n) items.push({ label: role === "REGISTRAR" ? `${n} cleared student(s) awaiting migration & character certificates` : `${n} caution-deposit refund(s) ready to release`, href: "/exit", tone: "amber" });
+  }
+  return items;
+}
+
+async function actionItems(role: Role, examId: string | undefined): Promise<ActionItem[]> {
+  const items: ActionItem[] = await exitItems(role);
+  if (!examId) return items;
   const [relax, processed, approved, pendingEvals, third, eligCount, regCount, seatCount, exam] = await Promise.all([
     db.relaxationRequest.count({ where: { status: "PENDING" } }),
     db.resultRun.findFirst({ where: { examId, status: "PROCESSED" } }),
@@ -385,6 +444,7 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
   const isParent = user.role === "PARENT";
   const alerts = await db.attendanceAlert.findMany({ where: { studentId: full.id, level: { in: ["SHORTAGE", "CRITICAL", "NOTICE"] } }, orderBy: { createdAt: "desc" }, take: 2 });
   const feedbackDue = isParent ? 0 : (await studentFeedback(full.id)).items.filter((i) => !i.done).length;
+  const exitOpen = isParent ? null : await db.exitRequest.findFirst({ where: { studentId: full.id, status: "OPEN" } });
 
   return (
     <div className="space-y-6">
@@ -429,6 +489,12 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
       {feedbackDue > 0 && (
         <Link href="/me/feedback" className="flex items-center justify-between gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 hover:bg-sky-100">
           <span className="flex items-center gap-2"><MessagesSquare className="h-4 w-4" /> {feedbackDue} anonymous feedback form{feedbackDue === 1 ? "" : "s"} awaiting you — about two minutes each</span>
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
+      {exitOpen && (
+        <Link href="/me/exit" className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 hover:bg-amber-100">
+          <span className="flex items-center gap-2"><Stamp className="h-4 w-4" /> Exit formalities in progress — check your no-dues, refund and certificates</span>
           <ArrowRight className="h-4 w-4" />
         </Link>
       )}

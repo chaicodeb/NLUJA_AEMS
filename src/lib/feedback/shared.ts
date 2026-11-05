@@ -35,6 +35,16 @@ export const INSTITUTION_TEMPLATE: Question[] = [
   { id: "c1", section: "Comments", kind: "TEXT", required: false, text: "Any suggestion for the University?" },
 ];
 
+export const EXIT_TEMPLATE: Question[] = [
+  { id: "e1", section: "Programme outcomes", kind: "LIKERT", required: true, text: "The programme developed my legal reasoning, research and writing skills" },
+  { id: "e2", section: "Programme outcomes", kind: "LIKERT", required: true, text: "Clinical courses, moots and internships prepared me for professional practice" },
+  { id: "e3", section: "Programme outcomes", kind: "LIKERT", required: true, text: "The curriculum was current with developments in law and society" },
+  { id: "e4", section: "Support", kind: "LIKERT", required: true, text: "Placement and career support helped me secure my next step" },
+  { id: "e5", section: "Support", kind: "LIKERT", required: true, text: "Administrative services (examinations, records, certificates) were efficient" },
+  { id: "e6", section: "Overall", kind: "LIKERT", required: true, text: "I would recommend NLUJA, Assam to a prospective law student" },
+  { id: "c1", section: "Comments", kind: "TEXT", required: false, text: "What should the University change for future batches?" },
+];
+
 export type Summary = {
   n: number;
   index: number | null;

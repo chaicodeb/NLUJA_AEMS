@@ -33,7 +33,7 @@ export default async function FeedbackPage() {
             <Card key={form.id} className="flex flex-col">
               <CardHeader
                 title={form.title}
-                description={`${form.type === "COURSE" ? "Course & teacher feedback" : "Institution-wide survey"} · ${formatDate(form.opensAt)} – ${formatDate(form.closesAt)}`}
+                description={`${form.type === "COURSE" ? "Course & teacher feedback" : form.type === "EXIT" ? "Graduate exit survey" : "Institution-wide survey"} · ${formatDate(form.opensAt)} – ${formatDate(form.closesAt)}`}
                 action={<Badge tone={STATUS[form.status as keyof typeof STATUS].tone}>{STATUS[form.status as keyof typeof STATUS].label}{form.releasedToFaculty ? " · released" : ""}</Badge>}
               />
               <div className="grid grid-cols-3 gap-3 px-5 py-4 text-center">

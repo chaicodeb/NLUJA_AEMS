@@ -34,7 +34,7 @@ export default async function MyFeedbackPage() {
                 {list.map((i) => (
                   <li key={i.courseId || i.formId} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm">
                     <div>
-                      {i.code ? <><span className="font-mono text-xs text-muted-foreground">{i.code}</span> {i.title}</> : <span className="font-medium">Institution-wide survey</span>}
+                      {i.code ? <><span className="font-mono text-xs text-muted-foreground">{i.code}</span> {i.title}</> : <span className="font-medium">{i.formTitle.toLowerCase().includes("exit") ? "Graduate exit survey" : "Institution-wide survey"}</span>}
                       {i.teacher && <div className="text-xs text-muted-foreground">{i.teacher}</div>}
                     </div>
                     {i.done ? (

@@ -21,6 +21,9 @@ enum Role {
   FACULTY
   EVALUATOR
   IQAC
+  LIBRARIAN
+  WARDEN
+  ACCOUNTS
   STUDENT
   PARENT
 }
@@ -199,6 +202,8 @@ model Student {
   feedbackSubmissions FeedbackSubmission[]
   degreeApplications  DegreeApplication[]
   clearances          Clearance[]
+  exitRequest         ExitRequest?
+  alumniProfile       AlumniProfile?
 }
 
 enum EnrolmentType {
@@ -281,6 +286,46 @@ model DegreeApplication {
   @@unique([convocationId, studentId])
 }
 
+/// A student leaving the University: graduation, withdrawal or transfer. Drives no-dues, refund and certificates.
+model ExitRequest {
+  id                String    @id @default(cuid())
+  studentId         String    @unique
+  student           Student   @relation(fields: [studentId], references: [id])
+  type              String    // GRADUATION | WITHDRAWAL | TRANSFER
+  reason            String?
+  status            String    @default("OPEN") // OPEN | COMPLETED
+  cautionDeposit    Int       @default(10000)
+  deductions        Int       @default(0)
+  bankAccount       String?
+  ifsc              String?
+  refundRef         String?
+  refundedAt        DateTime?
+  forwardingAddress String?
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+}
+
+/// Alumni registry: graduates of this system plus records migrated from earlier years.
+model AlumniProfile {
+  id               String   @id @default(cuid())
+  studentId        String?  @unique
+  student          Student? @relation(fields: [studentId], references: [id])
+  name             String
+  programme        String   // BALLB | LLM | PHD
+  graduationYear   Int
+  email            String
+  phone            String?
+  sector           String   // LITIGATION | LAW_FIRM | CORPORATE | JUDICIARY | HIGHER_STUDIES | CIVIL_SERVICES | ACADEMIA | POLICY_NGO | OTHER | SEEKING
+  organisation     String?
+  designation      String?
+  city             String?
+  qualifiedExams   String[] @default([])
+  directoryConsent Boolean  @default(true)
+  mentor           Boolean  @default(false)
+  source           String   @default("SELF") // SELF | MIGRATED
+  updatedAt        DateTime @updatedAt
+}
+
 /// Departmental no-dues clearance (library, hostel, accounts, examination) required before a degree or exit.
 model Clearance {
   id          String   @id @default(cuid())
@@ -301,7 +346,7 @@ model Clearance {
 model FeedbackForm {
   id                String               @id @default(cuid())
   title             String
-  type              String               // COURSE (per course & teacher) | INSTITUTION (satisfaction survey)
+  type              String               // COURSE (per course & teacher) | INSTITUTION (satisfaction survey) | EXIT (graduating students)
   academicYear      String
   description       String?
   questions         Json                 // [{ id, section, text, kind: LIKERT | TEXT, required }]

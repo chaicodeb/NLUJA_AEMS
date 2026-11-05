@@ -24,7 +24,7 @@ export default async function FeedbackFormPage({ params }: PageProps<"/feedback/
     <div className="space-y-6">
       <div className="text-sm"><Link href="/feedback" className="text-brand-700 hover:underline">← Feedback & surveys</Link></div>
       <PageHeader
-        eyebrow={`${form.type === "COURSE" ? "Course & teacher feedback" : "Student satisfaction survey"} · ${form.academicYear}`}
+        eyebrow={`${form.type === "COURSE" ? "Course & teacher feedback" : form.type === "EXIT" ? "Graduate exit survey" : "Student satisfaction survey"} · ${form.academicYear}`}
         title={form.title}
         description={`${formatDate(form.opensAt)} – ${formatDate(form.closesAt)} · anonymous · results to teachers need ≥ ${form.minResponses} responses`}
         actions={
@@ -93,7 +93,7 @@ export default async function FeedbackFormPage({ params }: PageProps<"/feedback/
             </Card>
           )}
           <QuestionBreakdown summary={overall} title={form.type === "COURSE" ? "All courses — question-wise" : "Question-wise results"} />
-          {form.type === "INSTITUTION" && <Comments summary={overall} />}
+          {form.type !== "COURSE" && <Comments summary={overall} />}
           {form.status === "OPEN" && <Callout tone="blue">The window is open: figures update as students respond. Teachers cannot see anything until the IQAC closes the window and releases results.</Callout>}
         </>
       )}

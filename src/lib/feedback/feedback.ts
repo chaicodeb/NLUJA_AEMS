@@ -16,9 +16,16 @@ export function isOpen(form: { status: string; opensAt: Date; closesAt: Date }) 
 }
 
 /** Everything a student still owes or has already given, across open forms. */
+/** Students in the final semester of their programme, or with an exit request, are the audience of exit surveys. */
+export async function isLeaving(studentId: string) {
+  const s = await db.student.findUniqueOrThrow({ where: { id: studentId }, include: { batch: { include: { programme: true } }, exitRequest: true } });
+  return s.batch.currentSemester >= s.batch.programme.durationSemesters || !!s.exitRequest;
+}
+
 export async function studentFeedback(studentId: string) {
   const student = await db.student.findUniqueOrThrow({ where: { id: studentId } });
-  const forms = (await db.feedbackForm.findMany({ where: { status: "OPEN" }, orderBy: { opensAt: "asc" } })).filter(isOpen);
+  const leaving = await isLeaving(studentId);
+  const forms = (await db.feedbackForm.findMany({ where: { status: "OPEN" }, orderBy: { opensAt: "asc" } })).filter((f) => isOpen(f) && (f.type !== "EXIT" || leaving));
   const done = await db.feedbackSubmission.findMany({ where: { studentId, formId: { in: forms.map((f) => f.id) } } });
   const items: { formId: string; formTitle: string; closesAt: Date; courseId: string; code: string | null; title: string; teacher: string | null; done: boolean }[] = [];
   for (const f of forms) {
@@ -70,6 +77,10 @@ export async function formAnalytics(formId: string, facultyId?: string) {
   const form = await db.feedbackForm.findUniqueOrThrow({ where: { id: formId } });
   const questions = questionsOf(form);
   const responses = await db.feedbackResponse.findMany({ where: { formId, ...(facultyId ? { facultyId } : {}) } });
+  if (form.type === "EXIT") {
+    const eligible = await db.exitRequest.count();
+    return { form, questions, overall: summarise(responses, questions), eligible, courses: [] };
+  }
   if (form.type === "INSTITUTION") {
     const eligible = await db.student.count({ where: { status: "ACTIVE" } });
     return { form, questions, overall: summarise(responses, questions), eligible, courses: [] };
@@ -153,7 +164,7 @@ export async function exportCsv(formId: string) {
   const likert = a.questions.filter((q) => q.kind === "LIKERT");
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const head = ["Course code", "Course", "Teacher", "Enrolled", "Responses", "Response rate %", "Index (1-5)", ...likert.map((q) => `${q.id}: ${q.text}`), "Action taken"];
-  const rows = a.form.type === "INSTITUTION"
+  const rows = a.form.type !== "COURSE"
     ? [["—", a.form.title, "—", a.eligible, a.overall.n, a.eligible ? Math.round((a.overall.n / a.eligible) * 100) : 0, a.overall.index, ...a.overall.perQuestion.map((q) => q.mean), actions.map((x) => x.note).join(" | ")]]
     : a.courses.map((c) => [c.code, c.title, c.teacher, c.enrolled, c.summary.n, c.rate, c.summary.index, ...c.summary.perQuestion.map((q) => q.mean), actions.filter((x) => x.courseId === c.id).map((x) => x.note).join(" | ")]);
   return { filename: `${a.form.title.replace(/[^A-Za-z0-9]+/g, "_")}.csv`, body: [head, ...rows].map((r) => r.map(esc).join(",")).join("\r\n") };

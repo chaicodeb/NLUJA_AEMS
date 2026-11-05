@@ -29,7 +29,9 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
 | Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation), Arindam Hazarika (backlog) | 2B, 4, 8, 8A, 8B |
 | Parent | Mr. Pranab Baruah | 8 |
-| Graduand | Rituparna Bhuyan (B.A. LL.B. 2021–26, gold medallist) | 8C |
+| Graduand | Rituparna Bhuyan (B.A. LL.B. 2021–26, gold medallist) | 8C, 8D |
+| Registrar | Dr. P. K. Medhi | 8C, 8D |
+| Librarian / Chief Warden / Finance & Accounts | Dr. B. K. Choudhury / Mr. H. Rabha / Ms. R. Agarwal | 8D |
 
 **Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published · Revaluation window · Supplementary exam.
 
@@ -245,6 +247,21 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 4. Open Rituparna's degree (or as her: **Degree certificate**): serial number, *Awarded the Chancellor's Gold Medal*, VC's digital signature, QR → **Authentic Degree Certificate** on the public verification page.
 
 > "Eligibility is never a manual tick-list: it is recomputed from published results and clearances at the moment the list is frozen, and every step is in the audit trail."
+
+---
+
+## Act 8D — Student exit, no-dues and alumni (4 min) · NIQ 3 (alumni & exit management) · NAAC criterion 5.2
+
+*Works at any stage.* **Debojit Mahanta** (B.A. LL.B. 2025–30, BAL25-010) is withdrawing after Semester III; the Examination Branch has already cleared him and three desks are pending. Five 2021–26 graduates have already exited; Rituparna's exit is open.
+
+1. **Switch → Librarian (Dr. B. K. Choudhury)**: the dashboard has only the no-dues desk. **Open the library no-dues desk** → Debojit *Pending* → **No dues**. (Nilakshi's ₹1200 overdue books are also visible here.)
+2. **Switch → Chief Warden (Mr. H. Rabha) → No-dues Desk** → Debojit → **From deposit** → ₹1500, *"Broken study table, room B-214"* → **Recover & clear**. *"No cash counter: hostel damages are recovered from the ₹10,000 caution deposit."*
+3. **Switch → Finance & Accounts (Ms. R. Agarwal) → No-dues Desk** → **No dues**. Then **Exit & Certificates**: Debojit shows *4/4 cleared*, ₹10,000 − ₹1,500 = **₹8,500** → **Refund ₹8,500** → NEFT reference generated.
+4. **Switch → Registrar → Exit & Certificates** → Debojit → **Issue certificates** → migration and character certificates, digitally signed; the student record closes as *Withdrawn*. Open the migration certificate → QR → **Authentic Migration Certificate**.
+5. **Switch → Rituparna → Exit & Alumni**: four no-dues ticked; the **graduate exit survey** is the only item pending → **Take the survey** (six ratings, a comment) → **Submit anonymously**. Enter bank details for the refund. Fill the **alumni profile**: *Judicial service, Assam Judicial Service, Civil Judge (Junior Division)*, tick *Judicial Services* → **Save profile**.
+6. **Switch → Registrar → Alumni**: 53 alumni from 2014 onwards (migrated records plus self-updated profiles); progression by year for **NAAC 5.2.1 / 5.2.2** (placed, higher studies, competitive exams); sector chart; searchable directory honouring consent; **NAAC 5.2 export (CSV)**.
+
+> "Leaving the University is one workflow, not four counters: each department clears from its own desk, the deposit refund is computed, and the certificates are signed and verifiable — and every graduate becomes a record in the alumni registry."
 
 ---
 

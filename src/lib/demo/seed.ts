@@ -20,6 +20,7 @@ import { DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET } from "./constants";
 import { seedDailyAttendance, type AttendancePlan } from "./attendance-seed";
 import { seedFeedback } from "./feedback-seed";
 import { seedGraduates } from "./graduates-seed";
+import { seedExitAndAlumni } from "./exit-seed";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
 function splitRubric(total: number, criteria: { code: string; max: number }[]) {
@@ -38,7 +39,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -160,6 +161,9 @@ export async function seedDemo() {
     { key: "academic", name: "Ms. J. Bora", email: "academic@nluassam.ac.in", role: "ACADEMIC_STAFF", designation: "Section Officer, Academic Section" },
     { key: "hod", name: "Prof. N. Goswami", email: "hod@nluassam.ac.in", role: "HOD", designation: "Dean, Undergraduate Studies", department: "Faculty of Law" },
     { key: "iqac", name: "Dr. S. Choudhury", email: "iqac@nluassam.ac.in", role: "IQAC", designation: "IQAC Coordinator" },
+    { key: "librarian", name: "Dr. B. K. Choudhury", email: "library@nluassam.ac.in", role: "LIBRARIAN", designation: "University Librarian" },
+    { key: "warden", name: "Mr. H. Rabha", email: "warden@nluassam.ac.in", role: "WARDEN", designation: "Chief Warden" },
+    { key: "accounts", name: "Ms. R. Agarwal", email: "accounts@nluassam.ac.in", role: "ACCOUNTS", designation: "Finance Officer" },
     { key: "fac1", name: "Dr. Ananya Bora", email: "ananya.bora@nluassam.ac.in", role: "FACULTY", designation: "Assistant Professor of Law", department: "Constitutional Law" },
     { key: "fac2", name: "Dr. Rituraj Gogoi", email: "rituraj.gogoi@nluassam.ac.in", role: "FACULTY", designation: "Associate Professor of Law", department: "Business Law" },
     { key: "fac3", name: "Dr. Mridusmita Das", email: "mridusmita.das@nluassam.ac.in", role: "FACULTY", designation: "Assistant Professor", department: "Social Sciences" },
@@ -498,6 +502,7 @@ export async function seedDemo() {
     programmeId: ballb.id, curriculumId: cur2019.id, legacyRunId: legacyRun.id, grading: gradingParams, passwordHash, users,
     semesterCourses: { ...legacyCourses[cur2019.id], 9: ["BL9.1", "BL9.2", "BL9.3", "BL9.4", "BL9.5"].map((c) => courses[c]) },
   });
+  await seedExitAndAlumni(users);
 
   // Pending VC relaxation request (Priyanka Saikia, ADR 67.3%)
   const priyanka = await db.student.findFirstOrThrow({ where: { name: "Priyanka Saikia" } });

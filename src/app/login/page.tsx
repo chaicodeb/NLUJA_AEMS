@@ -10,7 +10,7 @@ import { LoginPanel } from "./login-panel";
 export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/dashboard");
   const users = await db.user.findMany({ orderBy: { createdAt: "asc" }, select: { email: true, name: true, role: true, designation: true, mfaEnabled: true } });
-  const order = ["COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "FACULTY", "EVALUATOR", "STUDENT", "PARENT", "ADMIN", "HOD", "IQAC"];
+  const order = ["COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "FACULTY", "EVALUATOR", "STUDENT", "PARENT", "ADMIN", "HOD", "IQAC", "LIBRARIAN", "WARDEN", "ACCOUNTS"];
   const seen = new Set<string>();
   const demo = users
     .filter((u) => (["FACULTY", "EVALUATOR", "STUDENT"].includes(u.role) ? true : !seen.has(u.role) && seen.add(u.role)))

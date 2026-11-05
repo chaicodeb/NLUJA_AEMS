@@ -21,7 +21,7 @@ export default async function GiveFeedbackPage({ params, searchParams }: PagePro
       <div className="text-sm"><Link href="/me/feedback" className="text-brand-700 hover:underline">← Feedback</Link></div>
       <PageHeader
         eyebrow={form.title}
-        title={course ? `${course.code} ${course.title}` : "Student Satisfaction Survey"}
+        title={course ? `${course.code} ${course.title}` : form.title}
         description={course ? `Teacher: ${course.faculty?.name ?? "—"} · rate each statement from 1 (strongly disagree) to 5 (strongly agree)` : "Rate each statement from 1 (strongly disagree) to 5 (strongly agree)"}
       />
       {!isOpen(form) ? (

@@ -7,10 +7,14 @@ import type { AdmitCardPayload } from "@/lib/exams/admit-cards";
 import type { GradeSheetPayload } from "@/lib/results/workflow";
 import type { TranscriptPayload } from "@/lib/results/transcript";
 import type { DegreePayload } from "@/lib/convocation/degree";
+import type { ExitCertificatePayload } from "@/lib/exit/exit";
 import { Card } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
-const TYPE_LABEL: Record<string, string> = { ADMIT_CARD: "Admit Card", GRADE_SHEET: "Semester Grade Sheet", TRANSCRIPT: "Consolidated Transcript", DEGREE: "Degree Certificate", PROVISIONAL: "Provisional Certificate" };
+const TYPE_LABEL: Record<string, string> = {
+  ADMIT_CARD: "Admit Card", GRADE_SHEET: "Semester Grade Sheet", TRANSCRIPT: "Consolidated Transcript", DEGREE: "Degree Certificate", PROVISIONAL: "Provisional Certificate",
+  MIGRATION: "Migration Certificate", CHARACTER: "Character Certificate",
+};
 
 export default async function VerifyPage({ params }: PageProps<"/verify/[code]">) {
   const { code } = await params;
@@ -67,6 +71,7 @@ export default async function VerifyPage({ params }: PageProps<"/verify/[code]">
             {doc.type === "GRADE_SHEET" && <GradeSheetDetails p={doc.payload as GradeSheetPayload} />}
             {doc.type === "TRANSCRIPT" && <TranscriptDetails p={doc.payload as unknown as TranscriptPayload} />}
             {(doc.type === "DEGREE" || doc.type === "PROVISIONAL") && <DegreeDetails p={doc.payload as unknown as DegreePayload} />}
+            {(doc.type === "MIGRATION" || doc.type === "CHARACTER") && <CertificateDetails p={doc.payload as unknown as ExitCertificatePayload} />}
           </>
         )}
         <p className="text-center text-xs text-muted-foreground">Verification is performed against the University&apos;s records in real time.</p>
@@ -92,6 +97,32 @@ function DegreeDetails({ p }: { p: DegreePayload }) {
           ["Conferred at", p.convocation ? `${p.convocation.title}, ${formatDate(p.convocation.date)}` : "Awaiting convocation"],
           ["Signed by", `${p.signatory.name}, ${p.signatory.designation}`],
           ...(p.medals.length ? [["Medals", p.medals.join(", ")]] : []),
+        ].map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-xs text-muted-foreground">{k}</dt>
+            <dd className="font-medium">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
+  );
+}
+
+function CertificateDetails({ p }: { p: ExitCertificatePayload }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="border-b border-border px-5 py-4">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{p.kind === "MIGRATION" ? "Migration" : "Character"} certificate · No. {p.serialNo}</div>
+        <div className="mt-1 text-lg font-semibold">{p.student.name}</div>
+        <div className="text-sm text-muted-foreground">Roll No. {p.student.rollNo} · UID {p.student.uid}</div>
+      </div>
+      <dl className="grid gap-3 px-5 py-4 text-sm sm:grid-cols-2">
+        {[
+          ["Programme & batch", `${p.programme} · ${p.batch}`],
+          ["Period of study", p.period],
+          ["Last examination", p.lastExamination],
+          ["Reason for leaving", p.exitType],
+          ["Signed by", `${p.signatory.name}, ${p.signatory.designation}`],
         ].map(([k, v]) => (
           <div key={k}>
             <dt className="text-xs text-muted-foreground">{k}</dt>
