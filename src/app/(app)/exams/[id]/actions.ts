@@ -8,6 +8,7 @@ import { computeEligibility } from "@/lib/exams/eligibility";
 import { bulkRegisterEligible } from "@/lib/exams/registration";
 import { generateSeating } from "@/lib/exams/seating";
 import { publishAdmitCards } from "@/lib/exams/admit-cards";
+import { conductExam, reassignEvaluator, reopenEvaluation } from "@/lib/exams/evaluation";
 
 const EXAM_OPS = ["ADMIN", "COE", "EXAM_STAFF"] as const;
 
@@ -23,6 +24,28 @@ export async function generateSeatingAction(examId: string) {
   const exam = await db.exam.findUniqueOrThrow({ where: { id: examId } });
   if (exam.admitCardsPublished) return { error: "Admit cards are already published. Withdraw them before re-generating seating." };
   const res = await generateSeating(examId, { id: user.id, role: user.role });
+  revalidatePath(`/exams/${examId}`);
+  return res;
+}
+
+export async function conductExamAction(examId: string) {
+  const user = await requireUser([...EXAM_OPS]);
+  const res = await conductExam(examId, { id: user.id, role: user.role });
+  revalidatePath(`/exams/${examId}`);
+  return res;
+}
+
+export async function reassignEvaluatorAction(examId: string, examPaperId: string, round: number, evaluatorId: string) {
+  const user = await requireUser(["ADMIN", "COE"]);
+  const res = await reassignEvaluator(examPaperId, round, evaluatorId, { id: user.id, role: user.role });
+  revalidatePath(`/exams/${examId}`);
+  return res;
+}
+
+export async function reopenEvaluationAction(examId: string, evaluationId: string, reason: string) {
+  const user = await requireUser(["COE"]);
+  if (!reason.trim()) return { error: "A reason is mandatory for an administrative override." };
+  const res = await reopenEvaluation(evaluationId, reason.trim(), { id: user.id, role: user.role });
   revalidatePath(`/exams/${examId}`);
   return res;
 }

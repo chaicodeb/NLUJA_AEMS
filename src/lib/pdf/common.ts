@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from "pdf-lib";
 import QRCode from "qrcode";
-import bwipjs from "bwip-js";
+import bwipjs from "bwip-js/node";
 
 export const BRAND = rgb(0.52, 0.25, 0.07);
 export const INK = rgb(0.12, 0.1, 0.09);

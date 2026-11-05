@@ -7,12 +7,15 @@ import { cn, formatDate } from "@/lib/utils";
 import { EligibilityControls, RelaxationButton } from "./eligibility-client";
 import { BulkRegisterButton, GenerateSeatingButton, PublishAdmitCardsButton } from "./ops-client";
 import { sessionKey } from "@/lib/exams/seating";
+import { THIRD_EVAL_THRESHOLD } from "@/lib/exams/evaluation";
+import { ConductExamButton, EvaluatorSelect, ReopenButton } from "./scripts-client";
 
 const TABS = [
   { key: "papers", label: "Papers & schedule" },
   { key: "eligibility", label: "Eligibility" },
   { key: "registrations", label: "Registrations" },
   { key: "seating", label: "Seating & admit cards" },
+  { key: "scripts", label: "Scripts & evaluation" },
 ] as const;
 
 const STATUS_TONE = { ELIGIBLE: "green", RELAXED: "blue", PENDING_RELAXATION: "amber", INELIGIBLE: "red" } as const;
@@ -84,6 +87,150 @@ export default async function ExamDetail({ params, searchParams }: PageProps<"/e
       {tab === "eligibility" && <EligibilityTab examId={id} status={String(sp.status ?? "")} batch={String(sp.batch ?? "")} role={user.role} />}
       {tab === "registrations" && <RegistrationsTab examId={id} role={user.role} registrationOpen={exam.registrationOpen} feeAmount={exam.feeAmount} />}
       {tab === "seating" && <SeatingTab examId={id} role={user.role} published={exam.admitCardsPublished} session={String(sp.session ?? "")} />}
+      {tab === "scripts" && <ScriptsTab examId={id} role={user.role} published={exam.admitCardsPublished} paperFilter={String(sp.paper ?? "")} />}
+    </div>
+  );
+}
+
+const EVAL_TONE = { ASSIGNED: "amber", IN_PROGRESS: "blue", LOCKED: "green" } as const;
+const SCRIPT_TONE = { ALLOCATED: "amber", FINALISED: "green", THIRD_EVALUATION: "violet" } as const;
+
+async function ScriptsTab({ examId, role, published, paperFilter }: { examId: string; role: string; published: boolean; paperFilter: string }) {
+  const papers = await db.examPaper.findMany({
+    where: { examId },
+    include: { course: true, setter: true, scripts: { include: { evaluations: { include: { evaluator: true } } } } },
+    orderBy: [{ date: "asc" }, { session: "asc" }],
+  });
+  const total = papers.reduce((a, p) => a + p.scripts.length, 0);
+  const canOperate = ["ADMIN", "COE", "EXAM_STAFF"].includes(role);
+  const canAssign = ["ADMIN", "COE"].includes(role);
+
+  if (total === 0) {
+    return (
+      <div className="space-y-4">
+        <Callout tone="amber" title="Examination not yet conducted">
+          After the examination, answer booklets are collected, sealed, moved to the strong room, barcoded with a dummy number (masking roll number and signature) and scanned for on-screen evaluation.
+        </Callout>
+        {canOperate && <ConductExamButton examId={examId} disabled={!published} />}
+        {!published && <p className="text-sm text-muted-foreground">Publish admit cards first.</p>}
+      </div>
+    );
+  }
+
+  const scripts = papers.flatMap((p) => p.scripts.map((s) => ({ ...s, paper: p })));
+  const finalised = scripts.filter((s) => s.status === "FINALISED").length;
+  const evals = scripts.flatMap((s) => s.evaluations);
+  const pendingEvals = evals.filter((e) => e.status !== "LOCKED").length;
+  const third = scripts.filter((s) => s.status === "THIRD_EVALUATION").length;
+  const absent = await db.seatAllocation.count({ where: { examPaper: { examId }, attended: false } });
+  const candidates = await db.user.findMany({ where: { role: { in: ["EVALUATOR", "FACULTY"] } }, orderBy: [{ role: "asc" }, { name: "asc" }] });
+  const shown = paperFilter ? scripts.filter((s) => s.paper.course.code === paperFilter) : scripts.filter((s) => s.status !== "FINALISED" || s.paper.evaluationMode === "DOUBLE").slice(0, 40);
+  const custody = await db.custodyEvent.findMany({ where: { scriptId: { in: shown.map((s) => s.id) } }, orderBy: { at: "asc" } });
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <Stat label="Scripts scanned" value={total} tone="brand" hint="300 DPI · PDF/A · identity masked" />
+        <Stat label="Absent" value={absent} hint="Recorded as AB" />
+        <Stat label="Finalised" value={`${finalised}/${total}`} tone="green" hint="Marks posted to Result Processing" />
+        <Stat label="Pending evaluations" value={pendingEvals} tone={pendingEvals ? "amber" : "green"} />
+        <Stat label="Third evaluations" value={third} tone={third ? "red" : "neutral"} hint={`Triggered when evaluators differ by > ${Math.round(THIRD_EVAL_THRESHOLD * 100)}%`} />
+      </div>
+
+      <Card>
+        <CardHeader title="Evaluator allocation" description="Pending scripts can be reassigned. The system refuses to assign a paper's setter as its evaluator, or the same person to two rounds of a blind double evaluation." />
+        <Table>
+          <THead>
+            <tr>
+              <TH>Paper</TH>
+              <TH>Setter</TH>
+              <TH>Mode</TH>
+              <TH>Round 1 evaluator</TH>
+              <TH>Round 2 evaluator</TH>
+              <TH className="text-right">Progress</TH>
+            </tr>
+          </THead>
+          <tbody>
+            {papers.filter((p) => p.scripts.length).map((p) => {
+              const ev = p.scripts.flatMap((s) => s.evaluations);
+              const r1 = ev.find((e) => e.round === 1);
+              const r2 = ev.find((e) => e.round === 2);
+              const done = p.scripts.filter((s) => s.status === "FINALISED").length;
+              const opts = candidates.map((c) => ({ id: c.id, label: `${c.name} (${c.role === "EVALUATOR" ? "external" : "faculty"})` }));
+              return (
+                <TR key={p.id}>
+                  <TD>
+                    <Link href={`/exams/${examId}?tab=scripts&paper=${p.course.code}`} className="font-mono text-xs font-semibold text-brand-700 hover:underline">{p.course.code}</Link>
+                    <div className="max-w-52 truncate text-xs text-muted-foreground">{p.course.title}</div>
+                  </TD>
+                  <TD className="text-xs">{p.setter?.name ?? "—"}</TD>
+                  <TD><Badge tone={p.evaluationMode === "DOUBLE" ? "violet" : "neutral"}>{p.evaluationMode}</Badge></TD>
+                  <TD className="w-60">{r1 && (canAssign ? <EvaluatorSelect examId={examId} examPaperId={p.id} round={1} current={r1.evaluatorId} options={opts} /> : <span className="text-xs">{r1.evaluator.name}</span>)}</TD>
+                  <TD className="w-60">{r2 ? (canAssign ? <EvaluatorSelect examId={examId} examPaperId={p.id} round={2} current={r2.evaluatorId} options={opts} /> : <span className="text-xs">{r2.evaluator.name}</span>) : <span className="text-xs text-muted-foreground">—</span>}</TD>
+                  <TD className="text-right text-sm">{done}/{p.scripts.length}</TD>
+                </TR>
+              );
+            })}
+          </tbody>
+        </Table>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title={paperFilter ? `Scripts — ${paperFilter}` : "Scripts needing attention & double-evaluated scripts"}
+          description="Candidate identity stays sealed here; it is decoded only during result processing."
+          action={paperFilter ? <Link href={`/exams/${examId}?tab=scripts`} className="text-sm text-brand-700 hover:underline">Show summary</Link> : undefined}
+        />
+        <Table>
+          <THead>
+            <tr>
+              <TH>Dummy No. / barcode</TH>
+              <TH>Paper</TH>
+              <TH>Chain of custody</TH>
+              <TH>Evaluations</TH>
+              <TH className="text-right">Final</TH>
+              <TH>Status</TH>
+            </tr>
+          </THead>
+          <tbody>
+            {shown.map((s) => (
+              <TR key={s.id} className="align-top">
+                <TD>
+                  <div className="font-mono font-semibold">{s.dummyNo}</div>
+                  <div className="font-mono text-[11px] text-muted-foreground">{s.barcode}</div>
+                </TD>
+                <TD className="font-mono text-xs">{s.paper.course.code}</TD>
+                <TD>
+                  <details>
+                    <summary className="cursor-pointer text-xs text-brand-700">{custody.filter((c) => c.scriptId === s.id).length} checkpoints</summary>
+                    <ol className="mt-1 space-y-0.5 border-l border-brand-200 pl-2 text-[11px]">
+                      {custody.filter((c) => c.scriptId === s.id).map((c) => (
+                        <li key={c.id}>
+                          <span className="font-semibold">{c.action.replaceAll("_", " ")}</span> · {c.location} · {c.handler} · {formatDate(c.at, true)}
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                </TD>
+                <TD>
+                  <div className="space-y-1">
+                    {s.evaluations.sort((a, b) => a.round - b.round).map((e) => (
+                      <div key={e.id} className="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span className="text-muted-foreground">R{e.round}</span>
+                        <span>{e.evaluator.name}</span>
+                        <Badge tone={EVAL_TONE[e.status as keyof typeof EVAL_TONE] ?? "neutral"}>{e.status === "LOCKED" ? `${e.total}` : e.status.replace("_", " ")}</Badge>
+                        {e.status === "LOCKED" && role === "COE" && <ReopenButton examId={examId} evaluationId={e.id} />}
+                      </div>
+                    ))}
+                  </div>
+                </TD>
+                <TD className="text-right font-semibold">{s.finalMarks ?? "—"}<span className="text-xs font-normal text-muted-foreground">/{s.paper.maxMarks}</span></TD>
+                <TD><Badge tone={SCRIPT_TONE[s.status as keyof typeof SCRIPT_TONE] ?? "neutral"}>{s.status.replace("_", " ")}</Badge></TD>
+              </TR>
+            ))}
+          </tbody>
+        </Table>
+      </Card>
     </div>
   );
 }
