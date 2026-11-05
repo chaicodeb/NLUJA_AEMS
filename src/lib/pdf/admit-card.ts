@@ -70,7 +70,7 @@ export async function renderAdmitCard(doc: { verifyCode: string; payloadHash: st
 
   // Verification & signature
   y -= 14;
-  const url = `${appUrl()}/verify/${doc.verifyCode}`;
+  const url = `${await appUrl()}/verify/${doc.verifyCode}`;
   const qr = await qrPng(f.pdf, url);
   page.drawImage(qr, { x: 40, y: y - 92, width: 92, height: 92 });
   text(page, "Scan to verify centre, room and bench", 142, y - 14, f.bold, 8.5);

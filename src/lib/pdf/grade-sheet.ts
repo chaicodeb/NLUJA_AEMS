@@ -97,7 +97,7 @@ export async function renderGradeSheet(doc: { verifyCode: string; payloadHash: s
   y -= 26;
 
   // Verification & signature
-  const url = `${appUrl()}/verify/${doc.verifyCode}`;
+  const url = `${await appUrl()}/verify/${doc.verifyCode}`;
   const qr = await qrPng(f.pdf, url);
   page.drawImage(qr, { x: 40, y: y - 90, width: 90, height: 90 });
   text(page, "Scan to verify this grade sheet", 140, y - 14, f.bold, 8.5);

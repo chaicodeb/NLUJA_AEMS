@@ -1,6 +1,6 @@
 import "server-only";
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { db } from "./db";
@@ -19,9 +19,10 @@ export async function createSession(payload: SessionPayload) {
     .setExpirationTime("8h")
     .sign(key);
   const store = await cookies();
+  const proto = (await headers()).get("x-forwarded-proto");
   store.set(COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: proto === "https",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 8,

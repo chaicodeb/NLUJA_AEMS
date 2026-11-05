@@ -1,0 +1,54 @@
+# NLUJA AEMS demo — one command: `docker compose up -d --build`, then open http://localhost:8080
+name: nluja-aems
+
+x-db-env: &db-env
+  DATABASE_URL: postgresql://nluja:nluja@db:5432/nluja_ems
+  DIRECT_URL: postgresql://nluja:nluja@db:5432/nluja_ems
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nluja
+      POSTGRES_PASSWORD: nluja
+      POSTGRES_DB: nluja_ems
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nluja -d nluja_ems"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # Creates the schema and loads demo data on first start (keeps data on later starts)
+  setup:
+    build:
+      context: .
+      target: builder
+    environment:
+      <<: *db-env
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-docker-demo-secret-0123456789}
+    command: sh -c "npx prisma db push --skip-generate && npx tsx prisma/setup.ts"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      target: runner
+    environment:
+      <<: *db-env
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-docker-demo-secret-0123456789}
+      DOC_SIGNING_SECRET: ${DOC_SIGNING_SECRET:-change-me-docker-signing-secret-987654321}
+    ports:
+      - "${APP_PORT:-8080}:3000"
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  pgdata:

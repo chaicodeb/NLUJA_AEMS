@@ -8,7 +8,25 @@ See **[docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md)** for the presentation walkthro
 
 Next.js 16 (App Router, server actions) · TypeScript · Tailwind CSS 4 · PostgreSQL + Prisma 6 · JSON-Logic rule engine · pdf-lib / qrcode / bwip-js for documents · exceljs · recharts.
 
-## Run locally
+## Run with Docker (easiest)
+
+Requirements: Docker Desktop only.
+
+```powershell
+docker compose up -d --build
+```
+
+Open **http://localhost:8080**. The first start builds the image and loads the demo data (later starts keep your data; to start over, use the Presenter control or `docker compose down -v`).
+
+## Share a public link (free, no account)
+
+```powershell
+.\scripts\share-link.ps1
+```
+
+Starts the Docker demo and prints a `https://<name>.trycloudflare.com` link that works from any browser or phone (QR codes on admit cards and grade sheets resolve to it). Keep the window open — the link lives as long as the window and the computer stay on, and changes on every run.
+
+## Run for development
 
 Requirements: Node.js 20.9+, Docker Desktop.
 
@@ -30,6 +48,8 @@ DIRECT_URL="postgresql://nluja:nluja@localhost:5433/nluja_ems"
 SESSION_SECRET="<random 32+ chars>"
 APP_URL="http://localhost:3000"
 ```
+
+`APP_URL` is only a fallback; QR codes use the address the visitor actually opened.
 
 The Controller of Examinations / Admin dashboard has a **Presenter** control that rebuilds the data at any stage of the cycle.
 
