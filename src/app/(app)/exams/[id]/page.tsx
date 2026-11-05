@@ -243,7 +243,7 @@ async function RegistrationsTab({ examId, role, registrationOpen, feeAmount }: {
     include: { student: { include: { batch: true } }, papers: { include: { examPaper: { include: { course: true } } } } },
     orderBy: { student: { rollNo: "asc" } },
   });
-  const students = await db.student.count();
+  const students = await db.student.count({ where: { status: "ACTIVE" } });
   const blocked = await db.auditLog.count({ where: { action: "REGISTRATION_BLOCKED" } });
   const canOperate = ["ADMIN", "COE", "EXAM_STAFF"].includes(role);
   return (
@@ -420,7 +420,7 @@ async function EligibilityTab({ examId, status, batch, role }: { examId: string;
   const count = (s: string) => all.find((a) => a.status === s)?._count._all ?? 0;
   const total = all.reduce((a, b) => a + b._count._all, 0);
   const lastRun = await db.auditLog.findFirst({ where: { action: "RUN_ELIGIBILITY", entityId: examId }, orderBy: { id: "desc" }, include: { actor: true } });
-  const batches = await db.batch.findMany({ orderBy: { code: "asc" } });
+  const batches = await db.batch.findMany({ where: { students: { some: { status: "ACTIVE" } } }, orderBy: { code: "asc" } });
   const canRun = ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF"].includes(role);
   const canFile = ["ADMIN", "COE", "ACADEMIC_STAFF"].includes(role);
   const pendingReq = await db.relaxationRequest.findMany({ where: { examId, status: "PENDING" }, select: { enrolmentId: true } });

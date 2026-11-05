@@ -63,6 +63,7 @@ model Programme {
   name              String
   level             ProgrammeLevel
   durationSemesters Int
+  degreeTitle       String?
   curricula         CurriculumVersion[]
   batches           Batch[]
   ruleSets          RuleSet[]
@@ -196,6 +197,8 @@ model Student {
   leaves        LeaveRequest[]
   attendanceAlerts AttendanceAlert[]
   feedbackSubmissions FeedbackSubmission[]
+  degreeApplications  DegreeApplication[]
+  clearances          Clearance[]
 }
 
 enum EnrolmentType {
@@ -237,6 +240,60 @@ model AttendanceSummary {
   medicalLeaveDays Int       @default(0)
   biometricCount   Int?
   updatedAt        DateTime  @updatedAt
+}
+
+// ─── Degree & convocation ─────────────────────────────────────────────
+
+model Convocation {
+  id                  String              @id @default(cuid())
+  number              Int                 @unique
+  title               String
+  date                DateTime
+  venue               String
+  chiefGuest          String?
+  status              String              @default("PLANNING") // PLANNING | APPLICATIONS_OPEN | LIST_FROZEN | DEGREES_ISSUED
+  applicationDeadline DateTime
+  feeInPerson         Int                 @default(2500)
+  feeInAbsentia       Int                 @default(1500)
+  medals              Json                // [{ code, name, criterion: { type: HIGHEST_CGPA | HIGHEST_TOTAL, courses? } }]
+  councilResolution   String?
+  frozenAt            DateTime?
+  frozenById          String?
+  issuedAt            DateTime?
+  applications        DegreeApplication[]
+}
+
+model DegreeApplication {
+  id            String      @id @default(cuid())
+  convocationId String
+  convocation   Convocation @relation(fields: [convocationId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id])
+  mode          String      // IN_PERSON | IN_ABSENTIA
+  guests        Int         @default(0)
+  fee           Int
+  paymentRef    String
+  status        String      @default("APPLIED") // APPLIED | APPROVED | NOT_ELIGIBLE
+  reason        String?
+  serialNo      String?     @unique
+  appliedAt     DateTime    @default(now())
+
+  @@unique([convocationId, studentId])
+}
+
+/// Departmental no-dues clearance (library, hostel, accounts, examination) required before a degree or exit.
+model Clearance {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  department  String   // LIBRARY | HOSTEL | ACCOUNTS | EXAMINATION
+  status      String   @default("PENDING") // PENDING | CLEARED | DUES
+  amount      Int?
+  note        String?
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, department])
 }
 
 // ─── Student feedback (anonymous) ─────────────────────────────────────

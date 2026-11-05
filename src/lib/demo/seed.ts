@@ -19,6 +19,7 @@ import { INTERNAL_SOURCES, sheetSignature } from "../marks/internal";
 import { DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET } from "./constants";
 import { seedDailyAttendance, type AttendancePlan } from "./attendance-seed";
 import { seedFeedback } from "./feedback-seed";
+import { seedGraduates } from "./graduates-seed";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
 function splitRubric(total: number, criteria: { code: string; max: number }[]) {
@@ -37,7 +38,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -64,9 +65,9 @@ export async function seedDemo() {
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
   // ── Programmes & curricula ────────────────────────────────────────
-  const ballb = await db.programme.create({ data: { code: "BALLB", name: "B.A. LL.B. (Hons.) Five Year Integrated Course", level: "UG", durationSemesters: 10 } });
-  const llm = await db.programme.create({ data: { code: "LLM", name: "One Year LL.M. Degree Programme", level: "PG", durationSemesters: 2 } });
-  await db.programme.create({ data: { code: "PHD", name: "Ph.D. Degree Programme", level: "DOCTORAL", durationSemesters: 12 } });
+  const ballb = await db.programme.create({ data: { code: "BALLB", name: "B.A. LL.B. (Hons.) Five Year Integrated Course", level: "UG", durationSemesters: 10, degreeTitle: "Bachelor of Arts and Bachelor of Laws (Honours)" } });
+  const llm = await db.programme.create({ data: { code: "LLM", name: "One Year LL.M. Degree Programme", level: "PG", durationSemesters: 2, degreeTitle: "Master of Laws" } });
+  await db.programme.create({ data: { code: "PHD", name: "Ph.D. Degree Programme", level: "DOCTORAL", durationSemesters: 12, degreeTitle: "Doctor of Philosophy in Law" } });
 
   const cur2019 = await db.curriculumVersion.create({
     data: { programmeId: ballb.id, code: "BALLB-CUR-2019", name: "B.A. LL.B. (Hons.) Curriculum — 2019 to 2024 admissions", effectiveFrom: 2019, effectiveTo: 2024, creditsPerCourse: 5, totalCredits: 250, notes: "Each course 100 marks, 5 credits. Sem IX–X theory: 30 mid-semester + 70 end-semester." },
@@ -493,6 +494,10 @@ export async function seedDemo() {
 
   await seedDailyAttendance(attendancePlan, CLASSES_HELD, users);
   await seedFeedback(users.iqac);
+  await seedGraduates({
+    programmeId: ballb.id, curriculumId: cur2019.id, legacyRunId: legacyRun.id, grading: gradingParams, passwordHash, users,
+    semesterCourses: { ...legacyCourses[cur2019.id], 9: ["BL9.1", "BL9.2", "BL9.3", "BL9.4", "BL9.5"].map((c) => courses[c]) },
+  });
 
   // Pending VC relaxation request (Priyanka Saikia, ADR 67.3%)
   const priyanka = await db.student.findFirstOrThrow({ where: { name: "Priyanka Saikia" } });

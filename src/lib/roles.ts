@@ -51,6 +51,7 @@ export const NAV: NavSection[] = [
       { href: "/moderation", label: "Moderation", icon: "Scale", roles: ["ADMIN", "COE", "EXAM_STAFF", "VC"] },
       { href: "/revaluations", label: "Revaluation & Scrutiny", icon: "RefreshCcw", roles: ["ADMIN", "COE", "EXAM_STAFF", "VC", "REGISTRAR"] },
       { href: "/supplementary", label: "Supplementary Exams", icon: "Repeat", roles: ["ADMIN", "COE", "EXAM_STAFF", "VC", "REGISTRAR"] },
+      { href: "/convocation", label: "Degrees & Convocation", icon: "Award", roles: ["ADMIN", "REGISTRAR", "VC", "COE", "ACADEMIC_STAFF"] },
     ],
   },
   {
@@ -68,6 +69,7 @@ export const NAV: NavSection[] = [
       { href: "/me/exams", label: "Exam Registration", icon: "FileCheck", roles: ["STUDENT"] },
       { href: "/me/results", label: "Results & Grade Sheets", icon: "GraduationCap", roles: ["STUDENT", "PARENT"] },
       { href: "/me/feedback", label: "Feedback", icon: "MessagesSquare", roles: ["STUDENT"] },
+      { href: "/me/degree", label: "Degree & Convocation", icon: "Award", roles: ["STUDENT", "PARENT"] },
     ],
   },
 ];

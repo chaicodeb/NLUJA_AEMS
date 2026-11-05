@@ -12,7 +12,7 @@ import { NoticesButton } from "./client";
 export default async function AttendancePage({ searchParams }: PageProps<"/attendance">) {
   const user = await requirePage("/attendance");
   const sp = await searchParams;
-  const batches = await db.batch.findMany({ orderBy: { code: "asc" }, include: { programme: true } });
+  const batches = await db.batch.findMany({ where: { students: { some: { status: "ACTIVE" } } }, orderBy: { code: "asc" }, include: { programme: true } });
   const batch = batches.find((b) => b.code === sp.batch) ?? batches[0];
   const rule = await getActiveRule("ATTENDANCE", batch.programmeId);
   const p = rule ? asParams<AttendanceParams>(rule) : null;

@@ -29,6 +29,7 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
 | Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation), Arindam Hazarika (backlog) | 2B, 4, 8, 8A, 8B |
 | Parent | Mr. Pranab Baruah | 8 |
+| Graduand | Rituparna Bhuyan (B.A. LL.B. 2021–26, gold medallist) | 8C |
 
 **Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published · Revaluation window · Supplementary exam.
 
@@ -226,6 +227,24 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 5. **Switch → Arindam → Results**: the supplementary grade sheet is the current one; academic history and the transcript count semester IX once.
 
 > "Internal marks carry forward, only the end-semester paper is retaken, and CGPA, grade sheets and transcripts update through the same verified pipeline."
+
+---
+
+## Act 8C — Degree, medals and convocation (4 min) · NIQ 3 (degree & convocation) · RFP §8.8
+
+*Works at any stage* — the graduating batch is **B.A. LL.B. (Hons.) 2021–26** (ten semesters migrated, completed June 2026); the **14th Annual Convocation** is open for applications.
+
+1. **Switch → Rituparna Bhuyan (graduand) → Degree & Convocation**: five requirements checked live — all 10 semesters, no backlog, 250/250 credits, minimum CGPA, no-dues (library, hostel, accounts, examination). CGPA 9.58, First Class with Distinction.
+   - **Provisional certificate** → instant, QR-verifiable, signed by the Registrar.
+   - **Apply**: in person, 2 guest passes, ₹2500 → *Application received*.
+2. **Switch → Registrar → Degrees & Convocation**: 10 graduands, medals computed from published results — **Chancellor's Gold Medal: Rituparna Bhuyan**, **Gold Medal in Constitutional Law: Ankita Dutta**.
+   - **Bikram Chetri**: backlog in Semester X → not eligible (cannot apply).
+   - **Nilakshi Gogoi**: *Library ₹1200 outstanding* → **Record payment** (receipt no.) → all requirements met.
+   - **Freeze graduand list** with the Academic Council resolution → every application re-checked; serial numbers **NLUJA/BALLB/2026/0001…** allotted.
+3. **Switch → Vice-Chancellor → Degrees & Convocation → Confer 9 degrees** → nine digitally signed certificates.
+4. Open Rituparna's degree (or as her: **Degree certificate**): serial number, *Awarded the Chancellor's Gold Medal*, VC's digital signature, QR → **Authentic Degree Certificate** on the public verification page.
+
+> "Eligibility is never a manual tick-list: it is recomputed from published results and clearances at the moment the list is frozen, and every step is in the audit trail."
 
 ---
 

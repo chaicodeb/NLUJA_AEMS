@@ -94,8 +94,8 @@ async function actionItems(role: Role, examId: string | undefined): Promise<Acti
 async function StaffDashboard({ user }: { user: CurrentUser }) {
   const exam = await currentExam();
   const [students, batches, pendingRelax, auditCount, recent, items] = await Promise.all([
-    db.student.count(),
-    db.batch.findMany({ include: { programme: true, _count: { select: { students: true } } }, orderBy: { code: "asc" } }),
+    db.student.count({ where: { status: "ACTIVE" } }),
+    db.batch.findMany({ where: { students: { some: { status: "ACTIVE" } } }, include: { programme: true, _count: { select: { students: true } } }, orderBy: { code: "asc" } }),
     db.relaxationRequest.count({ where: { status: "PENDING" } }),
     db.auditLog.count(),
     db.auditLog.findMany({ orderBy: { id: "desc" }, take: 7, include: { actor: true } }),

@@ -57,6 +57,13 @@ export const LEGACY_BALLB_2019: Record<number, [string, string, string][]> = {
     ["BL8.4", "Hons. Paper-III: Judicial Review", "HONOURS"],
     ["BL8.5", "Hons. Paper-IV: Comparative Federalism", "HONOURS"],
   ],
+  10: [
+    ["BL10.1", "Professional Ethics and Professional Accounting System (Clinical-II)", "CLINICAL"],
+    ["BL10.2", "Drafting, Pleading and Conveyancing (Clinical-III)", "CLINICAL"],
+    ["BL10.3", "Land Laws of Assam", "OPTIONAL"],
+    ["BL10.4", "Hons. Paper-VI: Constitutionalism and Rights", "HONOURS"],
+    ["BL10.5", "Internship and Dissertation", "CORE"],
+  ],
 };
 
 export const LEGACY_BALLB_2025: Record<number, [string, string, string][]> = {
