@@ -9,6 +9,8 @@ import { Badge, Callout, Card, CardHeader, PageHeader, Stat, buttonVariants, typ
 import { cn, formatDate } from "@/lib/utils";
 import { ApproveButton, PublishButton } from "../results-client";
 
+export const maxDuration = 300;
+
 const GRADE_TONE: Record<string, BadgeTone> = { O: "green", "A+": "green", A: "green", "B+": "blue", B: "blue", C: "amber", F: "red", AB: "red", NA: "red", W: "violet" };
 const FLAG_TONE: Record<string, BadgeTone> = {
   GRACE: "amber", COMPONENT_FAIL: "red", AGGREGATE_PASS_COMPONENT_FAIL: "red", AGGREGATE_FAIL: "red", ABSENT: "red",

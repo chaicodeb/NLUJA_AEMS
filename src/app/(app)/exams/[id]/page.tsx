@@ -10,6 +10,8 @@ import { sessionKey } from "@/lib/exams/seating";
 import { THIRD_EVAL_THRESHOLD } from "@/lib/exams/evaluation";
 import { ConductExamButton, EvaluatorSelect, ReopenButton } from "./scripts-client";
 
+export const maxDuration = 300;
+
 const TABS = [
   { key: "papers", label: "Papers & schedule" },
   { key: "eligibility", label: "Eligibility" },

@@ -12,6 +12,8 @@ import { formatDate } from "@/lib/utils";
 import { DemoStageControl } from "./reset-demo-button";
 import { AttendanceChart, EligibilityPie, EvaluationProgressChart, ResultsByBatchChart } from "./charts";
 
+export const maxDuration = 300;
+
 const STAGES = [
   { key: "REGISTRATION", label: "Eligibility & registration" },
   { key: "SCHEDULED", label: "Admit cards & seating" },

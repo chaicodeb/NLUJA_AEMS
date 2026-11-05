@@ -7,6 +7,8 @@ import { Badge, Card, CardBody, CardHeader, PageHeader, Table, TD, TH, THead, TR
 import { formatDate } from "@/lib/utils";
 import { ProcessButton } from "./results-client";
 
+export const maxDuration = 300;
+
 const RUN_TONE = { PROCESSED: "amber", APPROVED: "blue", PUBLISHED: "green", WITHDRAWN: "neutral" } as const;
 
 export default async function ResultsPage() {
