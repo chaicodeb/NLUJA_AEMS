@@ -16,7 +16,7 @@ export function StudentCopyButton() {
         start(async () => {
           const r = await requestStudentCopyAction();
           if ("error" in r && r.error) return void toast.error(r.error);
-          if ("docId" in r) window.location.href = `/api/transcript/${r.docId}`;
+          if ("docId" in r) Object.assign(document.createElement("a"), { href: `/api/transcript/${r.docId}` }).click();
         })
       }
     >
