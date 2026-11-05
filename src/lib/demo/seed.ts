@@ -16,7 +16,7 @@ import {
 
 const TABLES = [
   "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
-  "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Room",
+  "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
   "EvaluationScheme", "Batch", "CurriculumVersion", "Programme",
@@ -288,6 +288,9 @@ export async function seedDemo() {
         }
       }
 
+      if (cohort.batch.code === "BALLB-2022" && i === 1) {
+        await db.user.create({ data: { name: s.name, email: "student2@nluassam.ac.in", role: "STUDENT", designation: "B.A. LL.B. (Hons.) — Semester IX", passwordHash, studentId: student.id } });
+      }
       if (cohort.batch.code === "BALLB-2022" && i === 0) {
         await db.user.create({ data: { name: s.name, email: "student@nluassam.ac.in", role: "STUDENT", designation: "B.A. LL.B. (Hons.) — Semester IX", passwordHash, studentId: student.id } });
         await db.user.create({ data: { name: `Mr. Pranab Baruah`, email: "parent@nluassam.ac.in", role: "PARENT", designation: "Parent of Aditi Baruah", passwordHash, wardId: student.id } });
@@ -351,12 +354,12 @@ export async function seedDemo() {
     { code: "BL3.4", day: 3, session: "AN" },
     { code: "BL3.5", day: 4, session: "AN" },
     { code: "BL3.6", day: 5, session: "AN" },
-    { code: "ML1.1", day: 1, session: "FN" },
-    { code: "ML1.2", day: 3, session: "FN" },
-    { code: "ML1.3", day: 5, session: "FN" },
-    { code: "ML1.4", day: 7, session: "FN" },
-    { code: "ML1.5", day: 8, session: "FN" },
-    { code: "ML1.6", day: 9, session: "FN" },
+    { code: "ML1.1", day: 0, session: "FN" },
+    { code: "ML1.2", day: 2, session: "FN" },
+    { code: "ML1.3", day: 4, session: "FN" },
+    { code: "ML1.4", day: 6, session: "FN" },
+    { code: "ML1.5", day: 7, session: "FN" },
+    { code: "ML1.6", day: 8, session: "FN" },
   ];
   for (const p of paperCodes) {
     const course = courses[p.code];

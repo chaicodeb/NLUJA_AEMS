@@ -13,7 +13,7 @@ export default async function LoginPage() {
   const order = ["COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "FACULTY", "EVALUATOR", "STUDENT", "PARENT", "ADMIN", "HOD", "IQAC"];
   const seen = new Set<string>();
   const demo = users
-    .filter((u) => (u.role === "FACULTY" || u.role === "EVALUATOR" ? true : !seen.has(u.role) && seen.add(u.role)))
+    .filter((u) => (["FACULTY", "EVALUATOR", "STUDENT"].includes(u.role) ? true : !seen.has(u.role) && seen.add(u.role)))
     .filter((u) => u.email !== "mridusmita.das@nluassam.ac.in")
     .sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role))
     .map((u) => ({ ...u, roleLabel: ROLE_LABELS[u.role] }));

@@ -2,13 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
-import { Badge, Card, PageHeader, Stat, Table, TD, TH, THead, TR, Callout } from "@/components/ui";
+import { Badge, Card, CardHeader, PageHeader, Stat, Table, TD, TH, THead, TR, Callout } from "@/components/ui";
 import { cn, formatDate } from "@/lib/utils";
 import { EligibilityControls, RelaxationButton } from "./eligibility-client";
+import { BulkRegisterButton, GenerateSeatingButton, PublishAdmitCardsButton } from "./ops-client";
+import { sessionKey } from "@/lib/exams/seating";
 
 const TABS = [
   { key: "papers", label: "Papers & schedule" },
   { key: "eligibility", label: "Eligibility" },
+  { key: "registrations", label: "Registrations" },
+  { key: "seating", label: "Seating & admit cards" },
 ] as const;
 
 const STATUS_TONE = { ELIGIBLE: "green", RELAXED: "blue", PENDING_RELAXATION: "amber", INELIGIBLE: "red" } as const;
@@ -78,6 +82,177 @@ export default async function ExamDetail({ params, searchParams }: PageProps<"/e
       )}
 
       {tab === "eligibility" && <EligibilityTab examId={id} status={String(sp.status ?? "")} batch={String(sp.batch ?? "")} role={user.role} />}
+      {tab === "registrations" && <RegistrationsTab examId={id} role={user.role} registrationOpen={exam.registrationOpen} feeAmount={exam.feeAmount} />}
+      {tab === "seating" && <SeatingTab examId={id} role={user.role} published={exam.admitCardsPublished} session={String(sp.session ?? "")} />}
+    </div>
+  );
+}
+
+async function RegistrationsTab({ examId, role, registrationOpen, feeAmount }: { examId: string; role: string; registrationOpen: boolean; feeAmount: number }) {
+  const regs = await db.examRegistration.findMany({
+    where: { examId },
+    include: { student: { include: { batch: true } }, papers: { include: { examPaper: { include: { course: true } } } } },
+    orderBy: { student: { rollNo: "asc" } },
+  });
+  const students = await db.student.count();
+  const blocked = await db.auditLog.count({ where: { action: "REGISTRATION_BLOCKED" } });
+  const canOperate = ["ADMIN", "COE", "EXAM_STAFF"].includes(role);
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Students register through the student portal: only papers they are eligible for can be selected, and the fee of ₹{feeAmount} is collected through the payment gateway.
+        </p>
+        {canOperate && registrationOpen && <BulkRegisterButton examId={examId} />}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Stat label="Registered students" value={regs.length} hint={`of ${students} students`} tone="green" />
+        <Stat label="Fees collected" value={`₹${(regs.filter((r) => r.feePaid).length * feeAmount).toLocaleString("en-IN")}`} hint="Reconciled with payment gateway" tone="brand" />
+        <Stat label="Blocked attempts" value={blocked} hint="Ineligible papers rejected with reason" tone={blocked ? "red" : "neutral"} />
+      </div>
+      <Card>
+        <Table>
+          <THead>
+            <tr>
+              <TH>Student</TH>
+              <TH>Batch</TH>
+              <TH>Papers</TH>
+              <TH>Payment</TH>
+              <TH>Submitted</TH>
+              <TH>Admit card</TH>
+            </tr>
+          </THead>
+          <tbody>
+            {regs.map((r) => (
+              <TR key={r.id}>
+                <TD>
+                  <div className="font-medium">{r.student.name}</div>
+                  <div className="font-mono text-xs text-muted-foreground">{r.student.rollNo}</div>
+                </TD>
+                <TD className="text-sm">{r.student.batch.name}</TD>
+                <TD>
+                  <div className="flex flex-wrap gap-1">
+                    {r.papers.map((p) => (
+                      <span key={p.id} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">{p.examPaper.course.code}</span>
+                    ))}
+                  </div>
+                </TD>
+                <TD>
+                  <Badge tone={r.feePaid ? "green" : "amber"}>{r.feePaid ? "Paid" : "Pending"}</Badge>
+                  <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">{r.paymentRef}</div>
+                </TD>
+                <TD className="text-xs">{formatDate(r.submittedAt, true)}</TD>
+                <TD>
+                  {r.admitCardCode ? (
+                    <a href={`/api/admit-card/${r.id}`} target="_blank" className="text-sm font-medium text-brand-700 hover:underline">
+                      {r.admitCardCode}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Not issued</span>
+                  )}
+                </TD>
+              </TR>
+            ))}
+            {regs.length === 0 && (
+              <TR><TD colSpan={6} className="py-8 text-center text-muted-foreground">No registrations yet.</TD></TR>
+            )}
+          </tbody>
+        </Table>
+      </Card>
+    </div>
+  );
+}
+
+async function SeatingTab({ examId, role, published, session }: { examId: string; role: string; published: boolean; session: string }) {
+  const papers = await db.examPaper.findMany({ where: { examId }, include: { course: true, _count: { select: { registrationPapers: true, seats: true } } }, orderBy: [{ date: "asc" }, { session: "asc" }] });
+  const sessions = Array.from(new Map(papers.map((p) => [sessionKey(p.date, p.session), p])).entries()).map(([key, p]) => ({
+    key, date: p.date, session: p.session, papers: papers.filter((x) => sessionKey(x.date, x.session) === key),
+  }));
+  const current = sessions.find((s) => s.key === session) ?? sessions[0];
+  const seats = current
+    ? await db.seatAllocation.findMany({ where: { examPaperId: { in: current.papers.map((p) => p.id) } }, include: { student: true, room: true, examPaper: { include: { course: true } } } })
+    : [];
+  const rooms = await db.room.findMany({ orderBy: { code: "asc" } });
+  const duties = current ? await db.invigilation.findMany({ where: { examId, session: current.session, date: new Date(`${current.key.split("|")[0]}T00:00:00.000Z`) }, include: { user: true, room: true } }) : [];
+  const totalSeats = await db.seatAllocation.count({ where: { examPaper: { examId } } });
+  const regCount = await db.examRegistration.count({ where: { examId } });
+  const canOperate = ["ADMIN", "COE", "EXAM_STAFF"].includes(role);
+  const palette = ["bg-brand-100 text-brand-900 ring-brand-300", "bg-sky-100 text-sky-900 ring-sky-300", "bg-violet-100 text-violet-900 ring-violet-300"];
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Candidates are shuffled and laid out so that no two students writing the same paper sit next to each other. Invigilators are rotated, and a paper&apos;s setter is never assigned to invigilate that session.
+        </p>
+        {canOperate && (
+          <div className="flex gap-2">
+            <GenerateSeatingButton examId={examId} disabled={published || regCount === 0} />
+            {["ADMIN", "COE"].includes(role) && <PublishAdmitCardsButton examId={examId} disabled={published || totalSeats === 0} />}
+          </div>
+        )}
+      </div>
+      {published && <Callout tone="green" title="Admit cards published">Registration is closed. Candidates can download their digitally signed admit cards from the student portal.</Callout>}
+      {regCount === 0 && <Callout tone="amber">No registrations yet — seating can be generated once students have registered.</Callout>}
+
+      <div className="flex flex-wrap gap-2">
+        {sessions.map((s) => (
+          <Link
+            key={s.key}
+            href={`/exams/${examId}?tab=seating&session=${encodeURIComponent(s.key)}`}
+            className={cn("rounded-lg border px-3 py-1.5 text-xs", s.key === current?.key ? "border-brand-600 bg-brand-600 text-white" : "border-border bg-white hover:bg-muted")}
+          >
+            <div className="font-semibold">{formatDate(s.date)} · {s.session}</div>
+            <div className="opacity-80">{s.papers.map((p) => p.course.code).join(" + ")}</div>
+          </Link>
+        ))}
+      </div>
+
+      {current && seats.length > 0 && (
+        <>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {current.papers.map((p, i) => (
+              <span key={p.id} className={cn("rounded px-2 py-1 ring-1 ring-inset", palette[i % palette.length])}>
+                <strong>{p.course.code}</strong> {p.course.title} · {p._count.seats} seated
+              </span>
+            ))}
+            <a href={`/exams/${examId}/sheet?session=${encodeURIComponent(current.key)}`} target="_blank" className="ml-auto font-medium text-brand-700 hover:underline">
+              Print attendance sheets
+            </a>
+          </div>
+          <div className="grid gap-5 xl:grid-cols-2">
+            {rooms
+              .filter((room) => seats.some((s) => s.roomId === room.id))
+              .map((room) => {
+                const duty = duties.find((d) => d.roomId === room.id);
+                return (
+                  <Card key={room.id}>
+                    <CardHeader title={room.name} description={`${room.centre} · Invigilator: ${duty?.user.name ?? "—"}`} action={<Badge>{seats.filter((s) => s.roomId === room.id).length} / {room.rows * room.cols}</Badge>} />
+                    <div className="p-4">
+                      <div className="mb-2 rounded bg-muted py-1 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Invigilator&apos;s desk</div>
+                      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${room.cols}, minmax(0, 1fr))` }}>
+                        {Array.from({ length: room.rows * room.cols }, (_, i) => {
+                          const label = `${room.code}/${String.fromCharCode(65 + Math.floor(i / room.cols))}${(i % room.cols) + 1}`;
+                          const s = seats.find((x) => x.roomId === room.id && x.benchNo === label);
+                          const idx = s ? current.papers.findIndex((p) => p.id === s.examPaperId) : -1;
+                          return (
+                            <div key={label} className={cn("rounded-md px-1 py-1.5 text-center text-[10px] leading-tight ring-1 ring-inset", s ? palette[idx % palette.length] : "bg-white text-muted-foreground/50 ring-border")} title={s ? `${s.student.name} · ${s.examPaper.course.code}` : "Empty"}>
+                              <div className="font-mono font-semibold">{label.split("/")[1]}</div>
+                              <div className="truncate">{s ? s.student.rollNo : "—"}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+          </div>
+          {duties.some((d) => d.duty === "FLYING_SQUAD") && (
+            <p className="text-sm text-muted-foreground">Flying squad: {duties.filter((d) => d.duty === "FLYING_SQUAD").map((d) => d.user.name).join(", ")}</p>
+          )}
+        </>
+      )}
     </div>
   );
 }

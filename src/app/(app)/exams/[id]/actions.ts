@@ -5,6 +5,35 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { requireUser } from "@/lib/session";
 import { computeEligibility } from "@/lib/exams/eligibility";
+import { bulkRegisterEligible } from "@/lib/exams/registration";
+import { generateSeating } from "@/lib/exams/seating";
+import { publishAdmitCards } from "@/lib/exams/admit-cards";
+
+const EXAM_OPS = ["ADMIN", "COE", "EXAM_STAFF"] as const;
+
+export async function bulkRegisterAction(examId: string) {
+  const user = await requireUser([...EXAM_OPS]);
+  const res = await bulkRegisterEligible(examId, { id: user.id, role: user.role });
+  revalidatePath(`/exams/${examId}`);
+  return res;
+}
+
+export async function generateSeatingAction(examId: string) {
+  const user = await requireUser([...EXAM_OPS]);
+  const exam = await db.exam.findUniqueOrThrow({ where: { id: examId } });
+  if (exam.admitCardsPublished) return { error: "Admit cards are already published. Withdraw them before re-generating seating." };
+  const res = await generateSeating(examId, { id: user.id, role: user.role });
+  revalidatePath(`/exams/${examId}`);
+  return res;
+}
+
+export async function publishAdmitCardsAction(examId: string) {
+  const user = await requireUser(["ADMIN", "COE"]);
+  const res = await publishAdmitCards(examId, { id: user.id, role: user.role });
+  revalidatePath(`/exams/${examId}`);
+  revalidatePath("/me/exams");
+  return res;
+}
 
 export async function runEligibilityAction(examId: string) {
   const user = await requireUser(["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF"]);

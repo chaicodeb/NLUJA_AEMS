@@ -45,6 +45,7 @@ model User {
   papersSet        ExamPaper[]   @relation("PaperSetter")
   auditLogs        AuditLog[]
   coursesTaught    Course[]      @relation("CourseFaculty")
+  invigilations    Invigilation[]
 }
 
 // ─── Academic structure ───────────────────────────────────────────────
@@ -280,8 +281,10 @@ model Exam {
   startDate        DateTime
   endDate          DateTime
   registrationOpen Boolean      @default(false)
+  admitCardsPublished Boolean   @default(false)
   feeAmount        Int          @default(0)
   papers           ExamPaper[]
+  invigilations    Invigilation[]
   registrations    ExamRegistration[]
   eligibilities    Eligibility[]
   resultRuns       ResultRun[]
@@ -380,6 +383,20 @@ model Room {
   rows     Int
   cols     Int
   seats    SeatAllocation[]
+  invigilations Invigilation[]
+}
+
+model Invigilation {
+  id      String   @id @default(cuid())
+  examId  String
+  exam    Exam     @relation(fields: [examId], references: [id])
+  date    DateTime
+  session String
+  roomId  String?
+  room    Room?    @relation(fields: [roomId], references: [id])
+  userId  String
+  user    User     @relation(fields: [userId], references: [id])
+  duty    String   @default("INVIGILATOR") // INVIGILATOR | FLYING_SQUAD
 }
 
 model SeatAllocation {
