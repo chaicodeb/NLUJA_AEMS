@@ -3,6 +3,7 @@ import { CheckCircle2, ShieldX } from "lucide-react";
 import { db } from "@/lib/db";
 import { verifyDocument } from "@/lib/docs";
 import type { AdmitCardPayload } from "@/lib/exams/admit-cards";
+import type { GradeSheetPayload } from "@/lib/results/workflow";
 import { Card } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
@@ -48,11 +49,55 @@ export default async function VerifyPage({ params }: PageProps<"/verify/[code]">
               </div>
             </Card>
             {doc.type === "ADMIT_CARD" && <AdmitCardDetails p={doc.payload as AdmitCardPayload} />}
+            {doc.type === "GRADE_SHEET" && <GradeSheetDetails p={doc.payload as GradeSheetPayload} />}
           </>
         )}
         <p className="text-center text-xs text-muted-foreground">Verification is performed against the University&apos;s records in real time.</p>
       </main>
     </div>
+  );
+}
+
+function GradeSheetDetails({ p }: { p: GradeSheetPayload }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="border-b border-border px-5 py-4">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{p.exam.name} · Semester {p.semester}</div>
+        <div className="mt-1 text-lg font-semibold">{p.student.name}</div>
+        <div className="text-sm text-muted-foreground">Roll No. {p.student.rollNo} · UID {p.student.uid} · {p.student.programme}</div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 border-b border-border px-5 py-4 text-center sm:grid-cols-4">
+        {[
+          ["SGPA", p.sgpa.toFixed(2)],
+          ["CGPA", p.cgpa.toFixed(2)],
+          ["Credits earned", `${p.earnedCredits}/${p.credits}`],
+          ["Result", p.result],
+        ].map(([k, v]) => (
+          <div key={k}>
+            <div className="text-xs text-muted-foreground">{k}</div>
+            <div className="text-lg font-semibold">{v}</div>
+          </div>
+        ))}
+      </div>
+      <table className="w-full text-sm">
+        <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
+          <tr>
+            <th className="px-4 py-2">Course</th>
+            <th className="px-4 py-2 text-right">Credits</th>
+            <th className="px-4 py-2">Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {p.courses.map((c) => (
+            <tr key={c.code} className="border-t border-border">
+              <td className="px-4 py-2"><span className="font-mono text-xs">{c.code}</span> {c.title}</td>
+              <td className="px-4 py-2 text-right">{c.credits}</td>
+              <td className="px-4 py-2 font-semibold">{c.grade}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
   );
 }
 
