@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
 import { Badge, Callout, Card, CardHeader, EmptyState, PageHeader, Stat, Table, TD, TH, THead, TR } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { REVALUATION_ROUND } from "@/lib/exams/evaluation";
 
 const TONE = { ASSIGNED: "amber", IN_PROGRESS: "blue", LOCKED: "green" } as const;
 
@@ -59,7 +60,7 @@ export default async function MyEvaluationsPage() {
                 {list.map((e) => (
                   <TR key={e.id}>
                     <TD className="font-mono font-semibold">{e.script.dummyNo}</TD>
-                    <TD>{e.round}</TD>
+                    <TD>{e.round === REVALUATION_ROUND ? <Badge tone="violet">Revaluation</Badge> : e.round}</TD>
                     <TD><Badge tone={TONE[e.status as keyof typeof TONE] ?? "neutral"}>{e.status.replace("_", " ")}</Badge></TD>
                     <TD className="text-right">{e.total ?? "—"}</TD>
                     <TD className="text-xs">{e.submittedAt ? formatDate(e.submittedAt, true) : "—"}</TD>

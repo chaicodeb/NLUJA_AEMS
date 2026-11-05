@@ -16,6 +16,7 @@ export type GradeSheetPayload = {
   division: string | null;
   history: { semester: number; sgpa: number; credits: number }[];
   publishedOn: string;
+  revision?: { note: string; on: string; supersedes: string };
 };
 
 /** Second-person verification: the person who processed a result can never approve it. */
@@ -31,41 +32,41 @@ export async function approveRun(runId: string, actor: { id: string; role: strin
   return { ok: true };
 }
 
-export async function publishRun(runId: string, actor: { id: string; role: string }) {
-  const run = await db.resultRun.findUniqueOrThrow({
-    where: { id: runId },
-    include: {
-      exam: true,
-      semResults: { include: { student: { include: { batch: { include: { programme: true } } } } } },
-      courseResults: { include: { enrolment: { include: { course: true } } } },
-    },
+export async function buildGradeSheetPayload(semResultId: string): Promise<GradeSheetPayload> {
+  const sr = await db.semesterResult.findUniqueOrThrow({
+    where: { id: semResultId },
+    include: { run: { include: { exam: true } }, student: { include: { batch: { include: { programme: true } } } } },
   });
+  const [history, courseResults] = await Promise.all([
+    db.semesterResult.findMany({ where: { studentId: sr.studentId, semester: { lt: sr.semester }, run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } }),
+    db.courseResult.findMany({ where: { runId: sr.runId, studentId: sr.studentId }, include: { enrolment: { include: { course: true } } } }),
+  ]);
+  const courses = courseResults
+    .sort((a, b) => a.enrolment.course.code.localeCompare(b.enrolment.course.code))
+    .map((c) => ({
+      code: c.enrolment.course.code, title: c.enrolment.course.title, credits: c.credits, grade: c.grade, gradePoint: c.gradePoint,
+      status: c.status, total: c.total, max: (c.components as { max: number }[]).reduce((a, x) => a + x.max, 0),
+    }));
+  return {
+    exam: { code: sr.run.exam.code, name: sr.run.exam.name },
+    student: {
+      name: sr.student.name, rollNo: sr.student.rollNo, uid: sr.student.uid, abcId: sr.student.abcId,
+      programme: sr.student.batch.programme.name, batch: sr.student.batch.name,
+    },
+    semester: sr.semester, courses, credits: sr.credits, earnedCredits: sr.earnedCredits, sgpa: sr.sgpa, cgpa: sr.cgpa,
+    result: sr.result, division: sr.division, history: history.map((h) => ({ semester: h.semester, sgpa: h.sgpa, credits: h.credits })),
+    publishedOn: new Date().toISOString(),
+  };
+}
+
+export async function publishRun(runId: string, actor: { id: string; role: string }) {
+  const run = await db.resultRun.findUniqueOrThrow({ where: { id: runId }, include: { semResults: true } });
   if (run.status !== "APPROVED") return { error: "Results must be approved before publication." };
 
   let issued = 0;
   for (const sr of run.semResults) {
     if (sr.result === "WITHHELD") continue;
-    const history = await db.semesterResult.findMany({
-      where: { studentId: sr.studentId, semester: { lt: sr.semester }, run: { status: "PUBLISHED" } },
-      orderBy: { semester: "asc" },
-    });
-    const courses = run.courseResults
-      .filter((c) => c.studentId === sr.studentId)
-      .sort((a, b) => a.enrolment.course.code.localeCompare(b.enrolment.course.code))
-      .map((c) => ({
-        code: c.enrolment.course.code, title: c.enrolment.course.title, credits: c.credits, grade: c.grade, gradePoint: c.gradePoint,
-        status: c.status, total: c.total, max: (c.components as { max: number }[]).reduce((a, x) => a + x.max, 0),
-      }));
-    const payload: GradeSheetPayload = {
-      exam: { code: run.exam.code, name: run.exam.name },
-      student: {
-        name: sr.student.name, rollNo: sr.student.rollNo, uid: sr.student.uid, abcId: sr.student.abcId,
-        programme: sr.student.batch.programme.name, batch: sr.student.batch.name,
-      },
-      semester: sr.semester, courses, credits: sr.credits, earnedCredits: sr.earnedCredits, sgpa: sr.sgpa, cgpa: sr.cgpa,
-      result: sr.result, division: sr.division, history: history.map((h) => ({ semester: h.semester, sgpa: h.sgpa, credits: h.credits })),
-      publishedOn: new Date().toISOString(),
-    };
+    const payload = await buildGradeSheetPayload(sr.id);
     await issueDocument({ type: "GRADE_SHEET", studentId: sr.studentId, refId: sr.id, payload, issuedById: actor.id });
     issued++;
   }
@@ -77,6 +78,16 @@ export async function publishRun(runId: string, actor: { id: string; role: strin
     before: { status: "APPROVED" }, after: { status: "PUBLISHED", gradeSheets: issued },
   });
   return { ok: true, issued };
+}
+
+/** Issues a revised grade sheet for an amended published result and marks the earlier one as superseded. */
+export async function reissueGradeSheet(semResultId: string, note: string, actor: { id: string; role: string }) {
+  const previous = await db.document.findFirst({ where: { type: "GRADE_SHEET", refId: semResultId, revoked: false }, orderBy: { issuedAt: "desc" } });
+  const payload = await buildGradeSheetPayload(semResultId);
+  payload.revision = { note, on: new Date().toISOString(), supersedes: previous?.verifyCode ?? "—" };
+  if (previous) await db.document.update({ where: { id: previous.id }, data: { revoked: true } });
+  const sr = await db.semesterResult.findUniqueOrThrow({ where: { id: semResultId } });
+  return issueDocument({ type: "GRADE_SHEET", studentId: sr.studentId, refId: semResultId, payload, issuedById: actor.id });
 }
 
 export function flagsOf(v: unknown): Flag[] {

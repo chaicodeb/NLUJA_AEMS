@@ -13,6 +13,10 @@ export async function renderGradeSheet(doc: { verifyCode: string; payloadHash: s
   let y = universityHeader(page, f, `GRADE SHEET — SEMESTER ${ROMAN[p.semester] ?? p.semester}`);
   centered(page, p.exam.name, y - 4, f.bold, 10);
   y -= 24;
+  if (p.revision) {
+    centered(page, `REVISED — ${p.revision.note} · supersedes ${p.revision.supersedes} · ${istDate(p.revision.on)}`, y + 4, f.bold, 8, rgb(0.75, 0.1, 0.1));
+    y -= 12;
+  }
 
   if (doc.isDuplicate) {
     page.drawText("DUPLICATE", { x: 150, y: 380, size: 90, font: f.bold, color: rgb(0.85, 0.2, 0.2), opacity: 0.12, rotate: degrees(35) });

@@ -20,15 +20,15 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 | Role | Name | Used in act |
 |---|---|---|
-| Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 3, 5, 6, 7 |
+| Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 3, 5, 6, 7, 8A |
 | Examination Branch 🔑 | Mr. D. Kalita | 7 |
 | Academic Section | Ms. J. Bora | 2 (optional) |
 | Vice-Chancellor | Prof. (Dr.) A. K. Sharma | 3, 7 |
-| Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6 |
-| Student | Aditi Baruah (registers live), Rahul Kalita (blocked paper) | 4, 8 |
+| Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
+| Student | Aditi Baruah (registers live), Rahul Kalita (blocked paper), Sneha Iyer (LL.M., revaluation) | 4, 8, 8A |
 | Parent | Mr. Pranab Baruah | 8 |
 
-**Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published.
+**Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published · Revaluation window.
 
 ---
 
@@ -145,6 +145,22 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 4. **Switch → Parent** → same data, read-only, consent note (DPDP Act 2023).
 
 > "In production these documents are pushed to DigiLocker / NAD and credits to ABC via their APIs."
+
+---
+
+## Act 8A — Revaluation and scrutiny (4 min) · NIQ 3 (re-evaluation / scrutiny) · RFP §8.7, §14.1
+
+*Fallback:* **Presenter → Revaluation window → Jump**. Sneha's revaluation and Tenzing's scrutiny are already filed.
+
+1. **Switch → Aditi → Results & Grade Sheets → Revaluation & scrutiny**: deadline (15 days after publication), fees, paper-wise marks → **Apply** on BL9.1 → *Scrutiny / re-totalling — ₹300* → **Pay & apply**. Scrutiny runs immediately.
+2. **Switch → COE → Revaluation & Scrutiny**:
+   - Aditi's scrutiny checklist: every question marked in both rounds, totals add up, nothing above maximum, final = mean of rounds, posted mark matches → **Apply rule & decide** → *no discrepancy, marks unchanged*.
+   - **Sneha Iyer (LL.M.), ML1.3, Written 32/70 → F.** Open the evaluator list: the **paper setter** and the **original evaluator** are flagged. Try assigning the setter → refused and logged (`SEGREGATION_VIOLATION_BLOCKED`). Assign **Prof. S. Hazarika**.
+3. **Switch → Prof. S. Hazarika → My Evaluations**: the script shows a *Revaluation* badge; dummy number only, *original marks hidden*. Mark Q1–Q5 = 8, 8, 7, 8, 7 (**38**) → **Submit & lock**.
+4. **Switch → COE → Revaluation & Scrutiny**: original 32 → revalued 38, change +6 against a threshold of ±3.5 (5% of 70) → **Apply rule & decide** → *Result amended*.
+5. **Switch → Sneha → Results**: ML1.3 now **A**, SGPA 7.20 FAIL → **8.80 PASS**; grade sheet carries *REVISED — after revaluation of ML1.3 · supersedes …*. Verify the **old** code → *Document superseded / revoked — replaced by …*.
+
+> "Window, fees, threshold and whether marks may go down are all in **Rule Configuration → Revaluation & scrutiny policy**, versioned like every other rule. Every step — application, assignment, blocked assignment, amendment — is in the audit trail."
 
 ---
 

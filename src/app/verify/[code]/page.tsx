@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { CheckCircle2, ShieldX } from "lucide-react";
 import { db } from "@/lib/db";
 import { verifyDocument } from "@/lib/docs";
@@ -14,6 +15,9 @@ export default async function VerifyPage({ params }: PageProps<"/verify/[code]">
   const { code } = await params;
   const doc = await db.document.findUnique({ where: { verifyCode: code.toUpperCase() } });
   const result = doc ? verifyDocument(doc) : null;
+  const successor = doc?.revoked
+    ? await db.document.findFirst({ where: { type: doc.type, studentId: doc.studentId, revoked: false, payload: { path: ["revision", "supersedes"], equals: doc.verifyCode } } })
+    : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,6 +50,15 @@ export default async function VerifyPage({ params }: PageProps<"/verify/[code]">
                   </p>
                   <p className="mt-2 break-all font-mono text-[11px] text-muted-foreground">SHA-256 {doc.payloadHash}</p>
                   <p className="break-all font-mono text-[11px] text-muted-foreground">Signature {result?.signature.slice(0, 40)}…</p>
+                  {successor && (
+                    <p className="mt-3 text-sm">
+                      Replaced by{" "}
+                      <Link href={`/verify/${successor.verifyCode}`} className="font-mono font-semibold text-brand-700 underline">
+                        {successor.verifyCode}
+                      </Link>{" "}
+                      issued {formatDate(successor.issuedAt, true)} ({(successor.payload as { revision?: { note?: string } }).revision?.note ?? "revised"}).
+                    </p>
+                  )}
                 </div>
               </div>
             </Card>

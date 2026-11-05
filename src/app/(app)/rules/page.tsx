@@ -5,8 +5,9 @@ import { requirePage } from "@/lib/session";
 import { Badge, Card, Callout, PageHeader } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import type { AttendanceParams, GraceParams, GradingParams } from "@/lib/rules/engine";
+import type { RevaluationParams } from "@/lib/results/revaluation";
 
-const TYPE_LABEL = { ATTENDANCE: "Attendance & eligibility", GRADING: "Grading", GRACE: "Grace marks", PROMOTION: "Promotion" } as const;
+const TYPE_LABEL = { ATTENDANCE: "Attendance & eligibility", GRADING: "Grading", GRACE: "Grace marks", PROMOTION: "Promotion", REVALUATION: "Revaluation" } as const;
 
 export default async function RulesPage() {
   await requirePage("/rules");
@@ -82,6 +83,14 @@ function RuleSummary({ type, params }: { type: string; params: unknown }) {
           <strong>{p.failGrade}</strong> &lt;{Math.min(...p.bands.map((b) => b.min))}
         </span>
       </div>
+    );
+  }
+  if (type === "REVALUATION") {
+    const p = params as RevaluationParams;
+    return (
+      <span>
+        Window <strong>{p.windowDays} days</strong> · fees ₹<strong>{p.feeRevaluation}</strong> (revaluation) / ₹<strong>{p.feeScrutiny}</strong> (scrutiny) · revised marks adopted if change ≥ <strong>{p.minChangePct}%</strong> of maximum
+      </span>
     );
   }
   if (type === "GRACE") {

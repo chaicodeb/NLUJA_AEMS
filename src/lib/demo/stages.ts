@@ -8,6 +8,7 @@ import { publishAdmitCards } from "../exams/admit-cards";
 import { conductExam, submitEvaluation, type QuestionScheme } from "../exams/evaluation";
 import { processResults } from "../results/engine";
 import { approveRun, publishRun } from "../results/workflow";
+import { applyRevaluation } from "../results/revaluation";
 
 export const DEMO_STAGES = [
   { key: "start", label: "Fresh start", hint: "Rules configured; eligibility not yet run; one relaxation request pending" },
@@ -18,6 +19,7 @@ export const DEMO_STAGES = [
   { key: "evaluated", label: "Evaluation complete", hint: "All scripts finalised; ready for result processing" },
   { key: "processed", label: "Results processed", hint: "Processed by the Exam Branch; awaiting COE approval" },
   { key: "published", label: "Results published", hint: "Approved by COE, released by VC, grade sheets issued" },
+  { key: "revaluation", label: "Revaluation window", hint: "Sneha has applied for revaluation of ML1.3 (awaiting a re-evaluator); Tenzing's scrutiny awaits the COE" },
 ] as const;
 
 export type DemoStage = (typeof DEMO_STAGES)[number]["key"];
@@ -71,4 +73,16 @@ export async function jumpToStage(stage: DemoStage) {
   if ("error" in res || !at("published")) return;
   await approveRun(res.runId, as(coe));
   await publishRun(res.runId, as(vc));
+  if (!at("revaluation")) return;
+
+  const scriptOf = async (name: string, code: string) => {
+    const s = await db.student.findFirstOrThrow({ where: { name } });
+    const script = await db.answerScript.findFirstOrThrow({ where: { studentId: s.id, examPaper: { examId: exam.id, course: { code } } } });
+    const user = await db.user.findFirst({ where: { studentId: s.id } });
+    return { studentId: s.id, scriptId: script.id, actor: user ? as(user) : as(staff) };
+  };
+  const sneha = await scriptOf("Sneha Iyer", "ML1.3");
+  await applyRevaluation(sneha.studentId, sneha.scriptId, "REVALUATION", "I answered all questions in detail; Written marks appear lower than expected.", "UPI", sneha.actor);
+  const tenzing = await scriptOf("Tenzing Bhutia", "BL9.2");
+  await applyRevaluation(tenzing.studentId, tenzing.scriptId, "SCRUTINY", "Requesting re-totalling of Taxation paper.", "NETBANKING", tenzing.actor);
 }

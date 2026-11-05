@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { requirePage } from "@/lib/session";
 import { answerText } from "@/lib/demo/answers";
-import type { EvaluationMarks, QuestionScheme } from "@/lib/exams/evaluation";
+import { REVALUATION_ROUND, type EvaluationMarks, type QuestionScheme } from "@/lib/exams/evaluation";
 import { Workspace } from "./workspace";
 
 export default async function EvaluatePage({ params }: PageProps<"/evaluation/[id]">) {
@@ -44,7 +44,7 @@ export default async function EvaluatePage({ params }: PageProps<"/evaluation/[i
       </div>
       <Workspace
         evaluation={{
-          id: ev.id, round: ev.round, status: ev.status, total: ev.total, remarks: ev.remarks ?? "", signatureHash: ev.signatureHash,
+          id: ev.id, round: ev.round, revaluation: ev.round === REVALUATION_ROUND, status: ev.status, total: ev.total, remarks: ev.remarks ?? "", signatureHash: ev.signatureHash,
           submittedAt: ev.submittedAt?.toISOString() ?? null,
           marks: (ev.marks as EvaluationMarks | null) ?? { questions: {}, annotations: [] },
         }}

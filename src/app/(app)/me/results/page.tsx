@@ -4,6 +4,8 @@ import { requirePage } from "@/lib/session";
 import type { GradeSheetPayload } from "@/lib/results/workflow";
 import type { TranscriptPayload } from "@/lib/results/transcript";
 import { StudentCopyButton } from "../../transcripts/transcript-buttons";
+import { revaluationOptions } from "@/lib/results/revaluation";
+import { ApplyForm } from "../../revaluations/client";
 import { Badge, Callout, Card, CardHeader, EmptyState, PageHeader, Stat, Table, TD, TH, THead, TR, buttonVariants, type BadgeTone } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
@@ -16,6 +18,7 @@ export default async function MyResultsPage() {
   const student = await db.student.findUniqueOrThrow({ where: { id: studentId }, include: { batch: true } });
   const sheets = await db.document.findMany({ where: { studentId, type: "GRADE_SHEET", revoked: false }, orderBy: { issuedAt: "desc" } });
   const history = await db.semesterResult.findMany({ where: { studentId, run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } });
+  const reval = await revaluationOptions(studentId);
   const transcripts = await db.document.findMany({ where: { studentId, type: "TRANSCRIPT", revoked: false }, orderBy: { issuedAt: "desc" }, take: 10 });
   const latest = sheets[0];
   const p = latest?.payload as GradeSheetPayload | undefined;
@@ -82,6 +85,51 @@ export default async function MyResultsPage() {
             </Table>
           </Card>
         </>
+      )}
+      {reval && reval.papers.length > 0 && (
+        <Card>
+          <CardHeader
+            title="Revaluation & scrutiny"
+            description={reval.open ? `Apply by ${formatDate(reval.deadline)} · revaluation ₹${reval.params.feeRevaluation}, scrutiny ₹${reval.params.feeScrutiny} per paper · up to ${reval.params.maxPapers} papers` : `The application window closed on ${formatDate(reval.deadline)}`}
+          />
+          <Table>
+            <THead>
+              <tr>
+                <TH>Paper</TH>
+                <TH className="text-right">End-semester marks</TH>
+                <TH>Grade</TH>
+                <TH>Applications</TH>
+                <TH />
+              </tr>
+            </THead>
+            <tbody>
+              {reval.papers.map((pp) => (
+                <TR key={pp.scriptId}>
+                  <TD><span className="font-mono text-xs text-muted-foreground">{pp.code}</span> {pp.title}</TD>
+                  <TD className="text-right">{pp.marks}/{pp.max}</TD>
+                  <TD><Badge tone={GRADE_TONE[pp.grade] ?? "neutral"}>{pp.grade}</Badge></TD>
+                  <TD>
+                    <div className="flex flex-col gap-1 text-xs">
+                      {pp.requests.map((r) => (
+                        <span key={r.id}>
+                          <Badge tone={r.status === "DECIDED" ? (r.outcome === "REVISED" ? "green" : "neutral") : "amber"}>
+                            {r.type === "REVALUATION" ? "Revaluation" : "Scrutiny"} · {r.status === "DECIDED" ? (r.outcome === "REVISED" ? `revised to ${r.revisedMarks}` : "unchanged") : "in process"}
+                          </Badge>
+                        </span>
+                      ))}
+                      {!pp.requests.length && <span className="text-muted-foreground">—</span>}
+                    </div>
+                  </TD>
+                  <TD className="text-right">
+                    {user.role === "STUDENT" && reval.open && (
+                      <ApplyForm scriptId={pp.scriptId} code={pp.code} feeRevaluation={reval.params.feeRevaluation} feeScrutiny={reval.params.feeScrutiny} existing={pp.requests.map((r) => r.type)} />
+                    )}
+                  </TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+        </Card>
       )}
       <Card>
         <CardHeader

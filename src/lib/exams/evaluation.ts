@@ -9,6 +9,9 @@ export type QuestionScheme = { q: string; max: number }[];
 export type Annotation = { page: number; x: number; y: number; kind: "tick" | "cross" | "comment"; text?: string };
 export type EvaluationMarks = { questions: Record<string, number>; annotations: Annotation[] };
 
+/** Evaluation round reserved for post-result revaluation (rounds 1–3 are regular evaluations). */
+export const REVALUATION_ROUND = 9;
+
 /** Disagreement between two evaluators beyond this share of the paper's maximum triggers a third evaluation. */
 export const THIRD_EVAL_THRESHOLD = 0.15;
 
@@ -226,6 +229,10 @@ export async function submitEvaluation(evaluationId: string, input: EvaluationMa
       summary: `Script ${ev.script.dummyNo} (round ${ev.round}) evaluated: ${total}/${ev.script.examPaper.maxMarks}; digitally signed and locked`,
       after: { questions: input.questions, total, signature: updated.signatureHash?.slice(0, 16) },
     });
+    if (ev.round === REVALUATION_ROUND) {
+      await db.revaluationRequest.updateMany({ where: { evaluationId }, data: { status: "EVALUATED", revisedMarks: total } });
+      return { ok: true, total, state: "REVALUATED" };
+    }
     const state = await tryFinalise(ev.scriptId);
     return { ok: true, total, state };
   }
@@ -241,7 +248,8 @@ export async function reopenEvaluation(evaluationId: string, reason: string, act
     summary: `Administrative override: evaluation of ${ev.script.dummyNo} (round ${ev.round}) re-opened — ${reason}`,
     before: { status: "LOCKED", total: ev.total }, after: { status: "IN_PROGRESS" },
   });
-  await tryFinalise(ev.scriptId);
+  if (ev.round === REVALUATION_ROUND) await db.revaluationRequest.updateMany({ where: { evaluationId, status: "EVALUATED" }, data: { status: "ASSIGNED", revisedMarks: null } });
+  else await tryFinalise(ev.scriptId);
   return { ok: true };
 }
 

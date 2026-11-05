@@ -7,7 +7,7 @@ import { cn, formatDate } from "@/lib/utils";
 import { EligibilityControls, RelaxationButton } from "./eligibility-client";
 import { BulkRegisterButton, GenerateSeatingButton, PublishAdmitCardsButton } from "./ops-client";
 import { sessionKey } from "@/lib/exams/seating";
-import { THIRD_EVAL_THRESHOLD } from "@/lib/exams/evaluation";
+import { REVALUATION_ROUND, THIRD_EVAL_THRESHOLD } from "@/lib/exams/evaluation";
 import { ConductExamButton, EvaluatorSelect, ReopenButton } from "./scripts-client";
 
 export const maxDuration = 300;
@@ -218,7 +218,7 @@ async function ScriptsTab({ examId, role, published, paperFilter }: { examId: st
                   <div className="space-y-1">
                     {s.evaluations.sort((a, b) => a.round - b.round).map((e) => (
                       <div key={e.id} className="flex flex-wrap items-center gap-1.5 text-xs">
-                        <span className="text-muted-foreground">R{e.round}</span>
+                        <span className="text-muted-foreground">{e.round === REVALUATION_ROUND ? "Reval" : `R${e.round}`}</span>
                         <span>{e.evaluator.name}</span>
                         <Badge tone={EVAL_TONE[e.status as keyof typeof EVAL_TONE] ?? "neutral"}>{e.status === "LOCKED" ? `${e.total}` : e.status.replace("_", " ")}</Badge>
                         {e.status === "LOCKED" && role === "COE" && <ReopenButton examId={examId} evaluationId={e.id} />}

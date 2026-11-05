@@ -11,7 +11,7 @@ import { BookletPage } from "./booklet-page";
 import { saveEvaluationAction } from "./actions";
 
 type Props = {
-  evaluation: { id: string; round: number; status: string; total: number | null; remarks: string; signatureHash: string | null; submittedAt: string | null; marks: EvaluationMarks };
+  evaluation: { id: string; round: number; revaluation: boolean; status: string; total: number | null; remarks: string; signatureHash: string | null; submittedAt: string | null; marks: EvaluationMarks };
   script: {
     dummyNo: string; barcode: string; pageCount: number; barcodeSvg: string; courseCode: string; courseTitle: string; examName: string;
     maxMarks: number; scheme: { q: string; max: number }[]; answers: string[][]; evaluationMode: string;
@@ -53,7 +53,8 @@ export function Workspace({ evaluation, script, nextId }: Props) {
       if ("error" in res && res.error) return void toast.error(res.error);
       if (final) {
         toast.success(
-          res.state === "FINALISED" ? "Locked and signed — script finalised and marks posted to Result Processing"
+          res.state === "REVALUATED" ? "Locked and signed — revalued marks sent to the Controller of Examinations for decision"
+            : res.state === "FINALISED" ? "Locked and signed — script finalised and marks posted to Result Processing"
             : res.state === "THIRD_EVALUATION" ? "Locked — evaluator disagreement exceeds threshold; third evaluation triggered"
             : "Locked and signed — awaiting the independent second evaluation",
         );
@@ -122,7 +123,11 @@ export function Workspace({ evaluation, script, nextId }: Props) {
           />
           <CardBody className="space-y-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5"><EyeOff className="h-3.5 w-3.5" /> Candidate identity masked · barcode {script.barcode}</div>
-            {script.evaluationMode !== "SINGLE" && (
+            {evaluation.revaluation ? (
+              <div className="flex items-center gap-1.5 text-violet-700">
+                <ShieldCheck className="h-3.5 w-3.5" /> Revaluation on the student&apos;s application — evaluate afresh. Original marks are hidden from you.
+              </div>
+            ) : script.evaluationMode !== "SINGLE" && (
               <div className="flex items-center gap-1.5 text-violet-700">
                 <ShieldCheck className="h-3.5 w-3.5" /> Blind {script.evaluationMode.toLowerCase()} evaluation — round {evaluation.round}. Other evaluators&apos; marks are not visible to you.
               </div>

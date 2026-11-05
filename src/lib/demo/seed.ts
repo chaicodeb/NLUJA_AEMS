@@ -17,7 +17,7 @@ import { LEGACY_BALLB_2019, LEGACY_BALLB_2025, academicYearOf } from "./legacy";
 import { gradeFor, type GradingParams } from "../rules/engine";
 
 const TABLES = [
-  "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -327,6 +327,9 @@ export async function seedDemo() {
       if (cohort.batch.code === "BALLB-2022" && i === 1) {
         await db.user.create({ data: { name: s.name, email: "student2@nluassam.ac.in", role: "STUDENT", designation: "B.A. LL.B. (Hons.) — Semester IX", passwordHash, studentId: student.id } });
       }
+      if (cohort.batch.code === "LLM-2026" && s.name === "Sneha Iyer") {
+        await db.user.create({ data: { name: s.name, email: "student3@nluassam.ac.in", role: "STUDENT", designation: "LL.M. — Semester I", passwordHash, studentId: student.id } });
+      }
       if (cohort.batch.code === "BALLB-2022" && i === 0) {
         await db.user.create({ data: { name: s.name, email: "student@nluassam.ac.in", role: "STUDENT", designation: "B.A. LL.B. (Hons.) — Semester IX", passwordHash, studentId: student.id } });
         await db.user.create({ data: { name: `Mr. Pranab Baruah`, email: "parent@nluassam.ac.in", role: "PARENT", designation: "Parent of Aditi Baruah", passwordHash, wardId: student.id } });
@@ -367,6 +370,12 @@ export async function seedDemo() {
         key: "GRACE-NLUJA", type: "GRACE", name: "Grace marks policy",
         description: "Grace marks only to reach the pass mark; per-course and per-semester caps; never applied to absent candidates.",
         params: { enabled: true, maxPerCourse: 3, maxPerSemester: 5, maxCourses: 2, onlyToPass: true, approvingAuthority: "COE" },
+        createdById: users.coe, changeNote: "Initial configuration",
+      },
+      {
+        key: "REVAL-NLUJA", type: "REVALUATION", name: "Revaluation & scrutiny policy",
+        description: "Applications within the window after publication; blind re-evaluation by a fresh evaluator; revised marks adopted only when the change meets the threshold.",
+        params: { windowDays: 15, feeRevaluation: 1000, feeScrutiny: 300, minChangePct: 5, allowDecrease: true, maxPapers: 3 },
         createdById: users.coe, changeNote: "Initial configuration",
       },
     ],

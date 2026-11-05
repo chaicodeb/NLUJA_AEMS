@@ -188,6 +188,7 @@ model Student {
   semResults    SemesterResult[]
   documents     Document[]
   relaxations   RelaxationRequest[]
+  revaluations  RevaluationRequest[]
 }
 
 enum EnrolmentType {
@@ -236,6 +237,7 @@ enum RuleType {
   GRADING
   GRACE
   PROMOTION
+  REVALUATION
 }
 
 model RuleSet {
@@ -289,6 +291,7 @@ model Exam {
   eligibilities    Eligibility[]
   resultRuns       ResultRun[]
   relaxations      RelaxationRequest[]
+  revaluations     RevaluationRequest[]
 }
 
 model ExamPaper {
@@ -566,6 +569,35 @@ model Document {
   revoked     Boolean  @default(false)
   issuedById  String?
   issuedAt    DateTime @default(now())
+}
+
+// ─── Post-result: revaluation & scrutiny ──────────────────────────────
+
+model RevaluationRequest {
+  id            String    @id @default(cuid())
+  examId        String
+  exam          Exam      @relation(fields: [examId], references: [id])
+  studentId     String
+  student       Student   @relation(fields: [studentId], references: [id])
+  enrolmentId   String
+  scriptId      String
+  courseCode    String
+  type          String    // REVALUATION | SCRUTINY
+  status        String    @default("PAID") // PAID | ASSIGNED | EVALUATED | DECIDED
+  reason        String?
+  fee           Int
+  paymentRef    String
+  originalMarks Float
+  revisedMarks  Float?
+  maxMarks      Float
+  evaluationId  String?
+  findings      Json?
+  outcome       String?   // REVISED | UNCHANGED
+  outcomeNote   String?
+  ruleVersion   Int?
+  decidedById   String?
+  decidedAt     DateTime?
+  createdAt     DateTime  @default(now())
 }
 
 // ─── Self-service reports ─────────────────────────────────────────────

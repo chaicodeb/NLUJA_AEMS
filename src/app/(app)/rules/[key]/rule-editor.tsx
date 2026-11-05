@@ -36,6 +36,7 @@ export function RuleEditor({ ruleKey, type, params, canEdit }: Props) {
           {type === "ATTENDANCE" && <AttendanceForm value={draft as AttendanceParams} onChange={setDraft} disabled={!canEdit} />}
           {type === "GRADING" && <GradingForm value={draft as GradingParams} onChange={setDraft} disabled={!canEdit} />}
           {type === "GRACE" && <GraceForm value={draft as GraceParams} onChange={setDraft} disabled={!canEdit} />}
+          {type === "REVALUATION" && <RevaluationForm value={draft as RevaluationParams} onChange={setDraft} disabled={!canEdit} />}
           {canEdit && (
             <div className="space-y-2 border-t border-border pt-4">
               <Label htmlFor="note">Reason for change / authority reference</Label>
@@ -287,6 +288,37 @@ function GradingTester({ params }: { params: GradingParams }) {
         </div>
       </CardBody>
     </Card>
+  );
+}
+
+type RevaluationParams = { windowDays: number; feeRevaluation: number; feeScrutiny: number; minChangePct: number; allowDecrease: boolean; maxPapers: number };
+
+function RevaluationForm({ value: p, onChange, disabled }: { value: RevaluationParams; onChange: (v: Record<string, unknown>) => void; disabled: boolean }) {
+  const set = (patch: Partial<RevaluationParams>) => onChange({ ...p, ...patch });
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Application window (days after publication)">
+        <Input type="number" value={p.windowDays} disabled={disabled} onChange={(e) => set({ windowDays: num(e.target.value) })} />
+      </Field>
+      <Field label="Maximum papers per student per semester">
+        <Input type="number" value={p.maxPapers} disabled={disabled} onChange={(e) => set({ maxPapers: num(e.target.value) })} />
+      </Field>
+      <Field label="Revaluation fee per paper (₹)">
+        <Input type="number" value={p.feeRevaluation} disabled={disabled} onChange={(e) => set({ feeRevaluation: num(e.target.value) })} />
+      </Field>
+      <Field label="Scrutiny / re-totalling fee per paper (₹)">
+        <Input type="number" value={p.feeScrutiny} disabled={disabled} onChange={(e) => set({ feeScrutiny: num(e.target.value) })} />
+      </Field>
+      <Field label="Adopt revised marks if change ≥ (% of maximum)" help="Smaller differences are treated as evaluator variance; original marks stand.">
+        <Input type="number" value={p.minChangePct} disabled={disabled} onChange={(e) => set({ minChangePct: num(e.target.value) })} />
+      </Field>
+      <div className="flex items-end pb-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={p.allowDecrease} disabled={disabled} onChange={(e) => set({ allowDecrease: e.target.checked })} />
+          Revised marks may also be lower than the original
+        </label>
+      </div>
+    </div>
   );
 }
 
