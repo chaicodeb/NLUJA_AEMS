@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, PenLine } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, NotebookPen, PenLine } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requirePage, type CurrentUser } from "@/lib/session";
@@ -50,6 +50,12 @@ async function actionItems(role: Role, examId: string | undefined): Promise<Acti
     db.exam.findUniqueOrThrow({ where: { id: examId } }),
   ]);
   const relaxable = await db.eligibility.count({ where: { examId, status: "INELIGIBLE", relaxable: true } });
+  const [sheetsToVerify, sheetsOpen] = await Promise.all([
+    db.internalMarksSheet.count({ where: { academicYear: exam.academicYear, status: "SUBMITTED" } }),
+    db.internalMarksSheet.count({ where: { academicYear: exam.academicYear, status: { in: ["DRAFT", "RETURNED"] } } }),
+  ]);
+  if ((role === "HOD" || role === "COE") && sheetsToVerify) items.push({ label: `${sheetsToVerify} internal-marks sheet(s) awaiting verification`, href: "/marks?status=SUBMITTED", tone: "amber" });
+  if (["COE", "EXAM_STAFF", "ACADEMIC_STAFF", "HOD"].includes(role) && sheetsOpen) items.push({ label: `${sheetsOpen} internal-marks sheet(s) not yet submitted by teachers`, href: "/marks?status=open", tone: "blue" });
 
   if (role === "VC") {
     if (relax) items.push({ label: `${relax} attendance relaxation request(s) awaiting your decision`, href: "/relaxations", tone: "amber" });
@@ -273,13 +279,14 @@ async function TeachingDashboard({ user }: { user: CurrentUser }) {
   const [courses, evals] = await Promise.all([
     db.course.findMany({
       where: { facultyId: user.id, enrolments: { some: {} } },
-      include: { enrolments: { include: { attendance: true, markEntries: { include: { component: true } } } }, scheme: { include: { components: true } } },
+      include: { enrolments: { include: { attendance: true } }, marksSheets: true },
       orderBy: { code: "asc" },
     }),
     db.evaluation.groupBy({ by: ["status"], where: { evaluatorId: user.id }, _count: { _all: true } }),
   ]);
   const pending = evals.filter((e) => e.status !== "LOCKED").reduce((a, e) => a + e._count._all, 0);
   const done = evals.filter((e) => e.status === "LOCKED").reduce((a, e) => a + e._count._all, 0);
+  const openSheets = courses.flatMap((c) => c.marksSheets).filter((s) => ["DRAFT", "RETURNED"].includes(s.status)).length;
 
   return (
     <div className="space-y-6">
@@ -289,10 +296,19 @@ async function TeachingDashboard({ user }: { user: CurrentUser }) {
         <Stat label="Scripts pending evaluation" value={pending} tone={pending ? "amber" : "green"} hint={pending ? undefined : "All allocated scripts evaluated"} />
         <Stat label="Evaluations submitted" value={done} tone="green" />
       </div>
-      {pending > 0 && (
-        <Link href="/evaluation" className={buttonVariants({ variant: "accent" })}>
-          <PenLine className="h-4 w-4" /> Continue evaluating ({pending} pending)
-        </Link>
+      {(pending > 0 || openSheets > 0) && (
+        <div className="flex flex-wrap gap-3">
+          {openSheets > 0 && (
+            <Link href="/marks" className={buttonVariants({ variant: "default" })}>
+              <NotebookPen className="h-4 w-4" /> Enter internal marks ({openSheets} sheet{openSheets === 1 ? "" : "s"} open)
+            </Link>
+          )}
+          {pending > 0 && (
+            <Link href="/evaluation" className={buttonVariants({ variant: "accent" })}>
+              <PenLine className="h-4 w-4" /> Continue evaluating ({pending} pending)
+            </Link>
+          )}
+        </div>
       )}
       {courses.length > 0 && (
         <Card>
@@ -310,16 +326,18 @@ async function TeachingDashboard({ user }: { user: CurrentUser }) {
             <tbody>
               {courses.map((c) => {
                 const pcts = c.enrolments.map((e) => (e.attendance ? (e.attendance.classesAttended / e.attendance.classesHeld) * 100 : 0));
-                const internalComps = c.scheme.components.filter((x) => x.source !== "EXAM").length;
-                const submitted = c.enrolments.reduce((a, e) => a + e.markEntries.filter((m) => m.component.source !== "EXAM" && m.status !== "DRAFT").length, 0);
-                const expected = c.enrolments.length * internalComps;
+                const open = c.marksSheets.filter((s) => ["DRAFT", "RETURNED"].includes(s.status)).length;
                 return (
                   <TR key={c.id}>
                     <TD><span className="font-mono text-xs text-muted-foreground">{c.code}</span> {c.title}</TD>
                     <TD className="text-right">{c.enrolments.length}</TD>
                     <TD className="text-right">{(pcts.reduce((a, b) => a + b, 0) / Math.max(1, pcts.length)).toFixed(1)}%</TD>
                     <TD className="text-right">{pcts.filter((p) => p < 70).length}</TD>
-                    <TD><Badge tone={submitted >= expected ? "green" : "amber"}>{submitted}/{expected} submitted</Badge></TD>
+                    <TD>
+                      <Link href="/marks">
+                        <Badge tone={open ? "amber" : "green"}>{c.marksSheets.length - open}/{c.marksSheets.length} sheets submitted</Badge>
+                      </Link>
+                    </TD>
                   </TR>
                 );
               })}

@@ -23,6 +23,8 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 3, 5, 6, 7, 8A |
 | Examination Branch 🔑 | Mr. D. Kalita | 7 |
 | Academic Section | Ms. J. Bora | 2 (optional) |
+| Faculty | Dr. Ananya Bora (BL3.5 marks sheet) | 2A |
+| Head of Department (Dean) | Prof. N. Goswami | 2A |
 | Vice-Chancellor | Prof. (Dr.) A. K. Sharma | 3, 7 |
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
 | Student | Aditi Baruah (registers live), Rahul Kalita (blocked paper), Sneha Iyer (LL.M., revaluation) | 4, 8, 8A |
@@ -62,6 +64,24 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
    - Show **Version history**.
 
 > "This is the RFP's Section 6.3: attendance, grading and grace are configured by the Academic Section and COE. No vendor change request."
+
+---
+
+## Act 2A — Faculty internal marks entry (4 min) · NIQ 3 (internal assessment) · RFP §8.4, §14.1
+
+*Run at* **Fresh start**. *Fallback:* any later stage has both sheets completed and verified.
+
+1. **Switch → Dr. Ananya Bora (Faculty) → Dashboard**: *"Enter internal marks (1 sheet open)"* → **Internal Marks** → her 13 sheets; **BL3.5 Jurisprudence — Written Project** is a draft, 8/10 entered.
+2. Open it. Type **25** for BAL25-004 → flagged *"outside 0–20"* instantly. Correct it to **14**; enter **12.5** for BAL25-008 (Enter moves down). Statistics update live (mean, range, distribution).
+3. Point out **Excel template** / **Import Excel**: the same sheet can be filled offline; wrong roll numbers or out-of-range marks are rejected with row-level messages.
+4. **Save draft** → **Submit & sign** → confirm. The sheet is now read-only, signed, and timestamped.
+5. **Switch → Prof. N. Goswami (Dean) → Dashboard**: *"2 internal-marks sheet(s) awaiting verification"*.
+   - Open **BL3.5** → review distribution → **Verify & lock** (the system re-checks the teacher's signature first).
+   - Open **BL3.6 Special Contracts — Mid-Semester** (Dr. Gogoi) → optionally **Return for correction** with a note, or **Verify & lock**.
+   - **With teachers** filter → **Remind** sends SMS/e-mail (logged).
+6. **Result Processing** readiness checklist (as COE) shows *"38/38 sheets verified"* once both sheets are verified. *"Any sheet still with a teacher makes that course **W — withheld**, never a silent zero."*
+
+> "Only the course teacher can enter; only the Dean or COE can verify; only the COE can unlock a verified sheet — with a reason, and never after results are published."
 
 ---
 

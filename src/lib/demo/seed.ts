@@ -15,9 +15,27 @@ import {
 } from "./scenarios";
 import { LEGACY_BALLB_2019, LEGACY_BALLB_2025, academicYearOf } from "./legacy";
 import { gradeFor, type GradingParams } from "../rules/engine";
+import { INTERNAL_SOURCES, sheetSignature } from "../marks/internal";
+import { DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET } from "./constants";
+
+/** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
+function splitRubric(total: number, criteria: { code: string; max: number }[]) {
+  const share = Math.round((total / criteria.length) * 2) / 2;
+  const detail: Record<string, number> = {};
+  let left = total;
+  criteria.forEach((c, i) => {
+    const v = i === criteria.length - 1 ? left : Math.min(c.max, share, left);
+    detail[c.code] = v;
+    left -= v;
+  });
+  return detail;
+}
+
+const sheetStatusFor = (code: string, comp: string) =>
+  code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -189,7 +207,7 @@ export async function seedDemo() {
       ],
     },
   ];
-  const courses: Record<string, { id: string; code: string; credits: number; scheme: string; semester: number }> = {};
+  const courses: Record<string, { id: string; code: string; credits: number; scheme: string; semester: number; facultyId: string | null }> = {};
   for (const group of courseDefs) {
     for (const c of group.list) {
       const created = await db.course.create({
@@ -198,7 +216,7 @@ export async function seedDemo() {
           category: c.category, schemeId: schemes[c.scheme].id, facultyId: c.faculty ? users[c.faculty] : null,
         },
       });
-      courses[c.code] = { id: created.id, code: c.code, credits: c.credits, scheme: c.scheme, semester: c.semester };
+      courses[c.code] = { id: created.id, code: c.code, credits: c.credits, scheme: c.scheme, semester: c.semester, facultyId: created.facultyId };
     }
   }
 
@@ -315,11 +333,19 @@ export async function seedDemo() {
         const scheme = schemes[course.scheme];
         for (const comp of scheme.components) {
           if (comp.source === "EXAM") continue;
-          let marks: number;
+          let marks: number | null;
           if (comp.source === "SYSTEM") marks = attendanceMarks((attended / CLASSES_HELD) * 100);
           else marks = s.internals?.[code]?.[comp.code] ?? genMark(comp.maxMarks, s.ability, r);
+          const sheetStatus = comp.source === "SYSTEM" ? "VERIFIED" : sheetStatusFor(code, comp.code);
+          if (sheetStatus === "DRAFT" && student.rollNo in DEMO_MARKS_SHEET.pending) marks = null;
+          const criteria = Array.isArray(comp.subCriteria) ? (comp.subCriteria as { code: string; max: number }[]) : [];
           await db.markEntry.create({
-            data: { enrolmentId: enrol.id, componentId: comp.id, marks, status: "SUBMITTED", source: comp.source, enteredById: comp.source === "SYSTEM" ? null : users.fac1 },
+            data: {
+              enrolmentId: enrol.id, componentId: comp.id, marks, source: comp.source,
+              status: sheetStatus === "VERIFIED" ? "LOCKED" : sheetStatus,
+              detail: criteria.length && marks != null ? splitRubric(marks, criteria) : undefined,
+              enteredById: comp.source === "SYSTEM" ? null : course.facultyId,
+            },
           });
         }
       }
@@ -333,6 +359,24 @@ export async function seedDemo() {
       if (cohort.batch.code === "BALLB-2022" && i === 0) {
         await db.user.create({ data: { name: s.name, email: "student@nluassam.ac.in", role: "STUDENT", designation: "B.A. LL.B. (Hons.) — Semester IX", passwordHash, studentId: student.id } });
         await db.user.create({ data: { name: `Mr. Pranab Baruah`, email: "parent@nluassam.ac.in", role: "PARENT", designation: "Parent of Aditi Baruah", passwordHash, wardId: student.id } });
+      }
+    }
+  }
+
+  // ── Internal-assessment marks sheets (one per course × teacher-entered component) ──
+  for (const cohort of cohorts) {
+    for (const code of cohort.codes) {
+      const course = courses[code];
+      for (const comp of schemes[course.scheme].components.filter((c) => INTERNAL_SOURCES.includes(c.source))) {
+        const status = sheetStatusFor(code, comp.code);
+        const sheet = await db.internalMarksSheet.create({
+          data: {
+            courseId: course.id, componentId: comp.id, academicYear: cohort.ay, status, deadline: new Date("2026-11-16T12:30:00Z"),
+            submittedById: status === "DRAFT" ? null : course.facultyId, submittedAt: status === "DRAFT" ? null : new Date("2026-11-03T10:30:00Z"),
+            verifiedById: status === "VERIFIED" ? users.hod : null, verifiedAt: status === "VERIFIED" ? new Date("2026-11-04T06:00:00Z") : null,
+          },
+        });
+        if (status !== "DRAFT") await db.internalMarksSheet.update({ where: { id: sheet.id }, data: { signatureHash: await sheetSignature(sheet.id) } });
       }
     }
   }

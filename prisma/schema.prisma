@@ -132,6 +132,7 @@ model AssessmentComponent {
   sortOrder Int              @default(0)
   subCriteria Json?
   markEntries MarkEntry[]
+  marksSheets InternalMarksSheet[]
 
   @@unique([schemeId, code])
 }
@@ -152,6 +153,7 @@ model Course {
   faculty             User?             @relation("CourseFaculty", fields: [facultyId], references: [id])
   enrolments          Enrolment[]
   examPapers          ExamPaper[]
+  marksSheets         InternalMarksSheet[]
 
   @@unique([curriculumVersionId, code])
 }
@@ -487,10 +489,32 @@ model MarkEntry {
   absent      Boolean             @default(false)
   status      String              @default("DRAFT") // DRAFT | SUBMITTED | LOCKED
   source      String              @default("FACULTY")
+  detail      Json?               // sub-criteria (rubric) marks, e.g. { FACTS: 4, LAW: 3.5 }
   enteredById String?
   updatedAt   DateTime            @updatedAt
 
   @@unique([enrolmentId, componentId])
+}
+
+/// One faculty marks sheet per course, internal component and academic year.
+model InternalMarksSheet {
+  id            String              @id @default(cuid())
+  courseId      String
+  course        Course              @relation(fields: [courseId], references: [id])
+  componentId   String
+  component     AssessmentComponent @relation(fields: [componentId], references: [id])
+  academicYear  String
+  status        String              @default("DRAFT") // DRAFT | SUBMITTED | VERIFIED | RETURNED
+  deadline      DateTime
+  submittedById String?
+  submittedAt   DateTime?
+  signatureHash String?
+  verifiedById  String?
+  verifiedAt    DateTime?
+  note          String?
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([courseId, componentId, academicYear])
 }
 
 model ResultRun {

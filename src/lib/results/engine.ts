@@ -3,6 +3,7 @@ import { db } from "../db";
 import { audit } from "../audit";
 import { asParams, divisionFor, gradeFor, round, type GraceParams, type GradingParams } from "../rules/engine";
 import { getActiveRule } from "../rules/store";
+import { INTERNAL_SOURCES } from "../marks/internal";
 
 export type ComponentResult = { code: string; name: string; max: number; marks: number | null; pass: number | null; ok: boolean };
 export type Flag = { code: string; detail: string };
@@ -60,9 +61,14 @@ function draftFor(e: EnrolmentRow, ctx: Ctx): Draft {
   const flags: Flag[] = [];
   const scheme = e.course.scheme;
   const max = scheme.components.reduce((a, c) => a + c.maxMarks, 0);
+  const unsubmitted = scheme.components.filter((c) => {
+    if (!INTERNAL_SOURCES.includes(c.source)) return false;
+    const m = e.markEntries.find((x) => x.componentId === c.id);
+    return !m || m.status === "DRAFT" || (m.marks == null && !m.absent);
+  });
   const components: ComponentResult[] = scheme.components.map((c) => {
     const m = e.markEntries.find((x) => x.componentId === c.id);
-    const marks = m?.absent ? null : m?.marks ?? null;
+    const marks = m?.absent || unsubmitted.includes(c) ? null : m?.marks ?? null;
     return { code: c.code, name: c.name, max: c.maxMarks, marks, pass: c.passMarks, ok: c.passMarks == null || (marks ?? 0) >= c.passMarks };
   });
   const rawTotal = round(components.reduce((a, c) => a + (c.marks ?? 0), 0), 2);
@@ -89,6 +95,10 @@ function draftFor(e: EnrolmentRow, ctx: Ctx): Draft {
       status = "W";
       flags.push({ code: "MARKS_MISSING", detail: "End-semester marks not received" });
     }
+  }
+  if (status === "PASS" && unsubmitted.length) {
+    status = "W";
+    flags.push({ code: "INTERNAL_PENDING", detail: `Internal assessment not submitted by the teacher: ${unsubmitted.map((c) => c.name).join(", ")}` });
   }
   if (status === "PASS" && !paper && components.some((c) => c.marks == null)) {
     status = "W";

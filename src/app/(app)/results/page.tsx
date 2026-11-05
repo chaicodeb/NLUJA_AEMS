@@ -26,15 +26,22 @@ export default async function ResultsPage() {
     getActiveRule("GRADING"),
     getActiveRule("GRACE"),
   ]);
-  const internals = await db.markEntry.count({ where: { component: { source: { not: "EXAM" } }, enrolment: { academicYear: exam.academicYear }, status: { in: ["SUBMITTED", "LOCKED"] } } });
+  const sheets = await db.internalMarksSheet.groupBy({ by: ["status"], where: { academicYear: exam.academicYear }, _count: { _all: true } });
+  const sheetCount = (s?: string) => sheets.filter((x) => !s || x.status === s).reduce((a, x) => a + x._count._all, 0);
   const people = await db.user.findMany({ where: { id: { in: runs.flatMap((r) => [r.processedById, r.approvedById ?? "", r.publishedById ?? ""]) } } });
   const name = (id: string | null) => people.find((p) => p.id === id)?.name ?? "—";
 
   const checks = [
     { ok: eligCount > 0, label: "Attendance eligibility determined", detail: `${eligCount} course registrations evaluated` },
     { ok: exam.admitCardsPublished, label: "Examination conducted with published admit cards", detail: exam.admitCardsPublished ? "Admit cards issued" : "Not yet" },
-    { ok: internals > 0, label: "Internal assessment marks submitted by faculty", detail: `${internals} component marks received` },
-    { ok: scripts > 0 && finalised === scripts, label: "All answer scripts evaluated and finalised", detail: `${finalised}/${scripts} finalised · ${pendingEvals} evaluation(s) pending${thirdEvals ? ` · ${thirdEvals} awaiting third evaluation` : ""}`, warn: scripts > 0 && finalised < scripts },
+    {
+      ok: sheetCount() > 0 && sheetCount("VERIFIED") === sheetCount(),
+      label: "Internal assessment marks submitted by faculty and verified",
+      detail: `${sheetCount("VERIFIED")}/${sheetCount()} sheets verified${sheetCount("SUBMITTED") ? ` · ${sheetCount("SUBMITTED")} awaiting verification` : ""}${sheetCount("DRAFT") + sheetCount("RETURNED") ? ` · ${sheetCount("DRAFT") + sheetCount("RETURNED")} with teachers (courses will be withheld)` : ""}`,
+      warn: sheetCount("DRAFT") + sheetCount("RETURNED") > 0,
+      href: "/marks",
+    },
+    { ok: scripts > 0 && finalised === scripts, label: "All answer scripts evaluated and finalised", detail: `${finalised}/${scripts} finalised · ${pendingEvals} evaluation(s) pending${thirdEvals ? ` · ${thirdEvals} awaiting third evaluation` : ""}`, warn: scripts > 0 && finalised < scripts, href: `/exams/${exam.id}?tab=scripts` },
   ];
   const canProcess = ["ADMIN", "COE", "EXAM_STAFF"].includes(user.role);
 
@@ -57,7 +64,7 @@ export default async function ResultsPage() {
                   <div className="font-medium">{c.label}</div>
                   <div className="text-xs text-muted-foreground">
                     {c.detail}
-                    {c.warn && <> — <Link href={`/exams/${exam.id}?tab=scripts`} className="text-brand-700 hover:underline">view scripts</Link></>}
+                    {c.warn && c.href && <> — <Link href={c.href} className="text-brand-700 hover:underline">view</Link></>}
                   </div>
                 </div>
               </li>

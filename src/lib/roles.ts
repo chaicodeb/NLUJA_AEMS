@@ -32,6 +32,7 @@ export const NAV: NavSection[] = [
       { href: "/academics/schemes", label: "Evaluation Schemes", icon: "ListChecks", roles: ["ADMIN", "COE", "ACADEMIC_STAFF"] },
       { href: "/students", label: "Students", icon: "Users", roles: ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC"] },
       { href: "/attendance", label: "Attendance", icon: "CalendarCheck", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "HOD", "FACULTY"] },
+      { href: "/marks", label: "Internal Marks", icon: "NotebookPen", roles: ["FACULTY", "HOD", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "ADMIN"] },
     ],
   },
   {

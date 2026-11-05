@@ -1,6 +1,7 @@
 import { db } from "../db";
 import { seedDemo } from "./seed";
-import { LIVE_STUDENT_EMAIL } from "./constants";
+import { DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET, LIVE_STUDENT_EMAIL } from "./constants";
+import { loadSheet, saveSheetDraft, submitSheet, verifySheet } from "../marks/internal";
 import { computeEligibility } from "../exams/eligibility";
 import { bulkRegisterEligible, getStudentExamView, registerStudent } from "../exams/registration";
 import { generateSeating } from "../exams/seating";
@@ -11,8 +12,8 @@ import { approveRun, publishRun } from "../results/workflow";
 import { applyRevaluation } from "../results/revaluation";
 
 export const DEMO_STAGES = [
-  { key: "start", label: "Fresh start", hint: "Rules configured; eligibility not yet run; one relaxation request pending" },
-  { key: "eligibility", label: "Eligibility decided", hint: "Eligibility computed and the VC has approved Priyanka's relaxation" },
+  { key: "start", label: "Fresh start", hint: "Rules configured; eligibility not yet run; one relaxation request pending; two internal-marks sheets open" },
+  { key: "eligibility", label: "Eligibility decided", hint: "Internal marks all verified; eligibility computed and the VC has approved Priyanka's relaxation" },
   { key: "registered", label: "Students registered", hint: "Everyone except Aditi has registered — she registers live" },
   { key: "admit", label: "Admit cards published", hint: "Aditi registered, seating generated, admit cards issued" },
   { key: "conducted", label: "Exam conducted", hint: "Scripts scanned; 3 evaluations left for the live evaluator demo" },
@@ -23,6 +24,21 @@ export const DEMO_STAGES = [
 ] as const;
 
 export type DemoStage = (typeof DEMO_STAGES)[number]["key"];
+
+/** What the teacher and the Dean do live in the internal-marks act. */
+async function completeDemoMarksSheets() {
+  const hod = await db.user.findFirstOrThrow({ where: { role: "HOD" } });
+  for (const d of [DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET]) {
+    const sheet = await db.internalMarksSheet.findFirstOrThrow({ where: { course: { code: d.course }, component: { code: d.component } }, include: { course: true } });
+    const teacher = { id: sheet.course.facultyId!, role: "FACULTY" };
+    if (sheet.status === "DRAFT") {
+      const { rows } = (await loadSheet(sheet.id))!;
+      await saveSheetDraft(sheet.id, rows.map((r) => ({ enrolmentId: r.enrolmentId, absent: r.absent, detail: r.detail, marks: r.marks ?? DEMO_MARKS_SHEET.pending[r.rollNo] ?? null })), teacher);
+      await submitSheet(sheet.id, teacher);
+    }
+    await verifySheet(sheet.id, { id: hod.id, role: "HOD" });
+  }
+}
 
 /** Rebuilds the demo from scratch and replays the real workflow up to the requested stage. */
 export async function jumpToStage(stage: DemoStage) {
@@ -38,6 +54,8 @@ export async function jumpToStage(stage: DemoStage) {
   ]);
   const exam = await db.exam.findFirstOrThrow({ where: { code: "ESE-ODD-2026" } });
   const as = (u: { id: string; role: string }) => ({ id: u.id, role: u.role });
+
+  await completeDemoMarksSheets();
 
   await computeEligibility(exam.id, as(coe));
   const pending = await db.relaxationRequest.findMany({ where: { status: "PENDING" } });
