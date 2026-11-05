@@ -49,7 +49,10 @@ export const NAV: NavSection[] = [
   },
   {
     title: "Governance",
-    items: [{ href: "/audit", label: "Audit Trail", icon: "History", roles: ["ADMIN", "COE", "VC", "REGISTRAR"] }],
+    items: [
+      { href: "/reports", label: "Report Builder", icon: "BarChart3", roles: ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "HOD", "IQAC"] },
+      { href: "/audit", label: "Audit Trail", icon: "History", roles: ["ADMIN", "COE", "VC", "REGISTRAR"] },
+    ],
   },
   {
     title: "My Portal",

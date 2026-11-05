@@ -568,6 +568,18 @@ model Document {
   issuedAt    DateTime @default(now())
 }
 
+// ─── Self-service reports ─────────────────────────────────────────────
+
+model SavedReport {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  dataset     String
+  config      Json
+  createdById String?
+  createdAt   DateTime @default(now())
+}
+
 // ─── Audit trail (hash-chained, tamper-evident) ───────────────────────
 
 model AuditLog {

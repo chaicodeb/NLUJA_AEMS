@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, Download } from "lucide-react";
+import { Check, Download, FileSpreadsheet } from "lucide-react";
 import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
 import { flagsOf } from "@/lib/results/workflow";
@@ -56,8 +56,11 @@ export default async function RunPage({ params, searchParams }: PageProps<"/resu
         description={`Rules applied: ${rules.grading.key} v${rules.grading.version}${rules.grace ? `, ${rules.grace.key} v${rules.grace.version}` : ""} · component minimums from evaluation schemes`}
         actions={
           <>
-            <a href={`/results/${run.id}/export`} className={buttonVariants({ variant: "outline" })}>
-              <Download className="h-4 w-4" /> Export for verification (CSV)
+            <a href={`/results/${run.id}/excel`} className={buttonVariants({ variant: "outline" })}>
+              <FileSpreadsheet className="h-4 w-4" /> Verification workbook (Excel)
+            </a>
+            <a href={`/results/${run.id}/export`} className={buttonVariants({ variant: "ghost" })}>
+              <Download className="h-4 w-4" /> CSV
             </a>
             {run.status === "PROCESSED" && user.role === "COE" && <ApproveButton runId={run.id} />}
             {run.status === "APPROVED" && user.role === "VC" && <PublishButton runId={run.id} />}

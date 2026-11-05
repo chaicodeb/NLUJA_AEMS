@@ -15,7 +15,7 @@ import {
 } from "./scenarios";
 
 const TABLES = [
-  "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -391,6 +391,23 @@ export async function seedDemo() {
       examId: exam.id, studentId: priyanka.id, enrolmentId: adrEnrol.id, ground: "MEDICAL",
       remarks: "Hospitalised 12–19 Sept 2026 (dengue). Discharge summary from GMCH attached.", requestedById: users.academic,
     },
+  });
+
+  await db.savedReport.createMany({
+    data: [
+      {
+        name: "Attendance shortfall list (below 75%)", description: "Monthly list for parents' alerts", dataset: "course_results", createdById: users.academic,
+        config: { dataset: "course_results", columns: ["rollNo", "name", "batch", "courseCode", "attendancePct", "eligibility"], filters: [{ column: "attendancePct", op: "lt", value: "75" }], sort: { column: "attendancePct", dir: "asc" } },
+      },
+      {
+        name: "Result status by batch (NAAC 2.6.3)", description: "Pass / backlog / withheld counts", dataset: "student_performance", createdById: users.iqac,
+        config: { dataset: "student_performance", columns: [], filters: [], groupBy: "result", aggregate: { fn: "count" } },
+      },
+      {
+        name: "Average CGPA by social category (AISHE)", dataset: "student_performance", createdById: users.registrar,
+        config: { dataset: "student_performance", columns: [], filters: [], groupBy: "category", aggregate: { fn: "avg", column: "cgpa" } },
+      },
+    ],
   });
 
   // Audit: record the seed/migration itself
