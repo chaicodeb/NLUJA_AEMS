@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { audit } from "../audit";
 import { issueDocument } from "../docs";
-import type { Flag } from "./engine";
+import { publishedSemesters, type Flag } from "./engine";
 
 export type GradeSheetPayload = {
   exam: { code: string; name: string };
@@ -38,7 +38,7 @@ export async function buildGradeSheetPayload(semResultId: string): Promise<Grade
     include: { run: { include: { exam: true } }, student: { include: { batch: { include: { programme: true } } } } },
   });
   const [history, courseResults] = await Promise.all([
-    db.semesterResult.findMany({ where: { studentId: sr.studentId, semester: { lt: sr.semester }, run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } }),
+    publishedSemesters(sr.studentId, sr.semester),
     db.courseResult.findMany({ where: { runId: sr.runId, studentId: sr.studentId }, include: { enrolment: { include: { course: true } } } }),
   ]);
   const courses = courseResults

@@ -7,6 +7,13 @@ export const DEMO_MARKS_SHEET = { course: "BL3.5", component: "PROJ", pending: {
 export const DEMO_VERIFY_SHEET = { course: "BL3.6", component: "MID" };
 /** Last class of the semester, marked live: Rahul's absence takes him from 36/51 (70.6%) to 36/52 (69.2%). */
 export const DEMO_LIVE_CLASS = { course: "BL9.2", absent: ["BAL22-002", "BAL22-011"] };
+/** A paper set harder than intended: its end-semester marks come out low and it is flagged for the Moderation Board. */
+export const DEMO_TOUGH_PAPER = { course: "BL3.4", factor: 0.65, delta: 2.5 };
+/** Candidates already registered for the supplementary examination at that stage; Arindam registers live. Award-list marks used in the demo. */
+export const DEMO_SUPPLEMENTARY = {
+  preRegistered: [["Lalrinpuii Ralte", "BL9.4"], ["Sourav Singha", "BL9.2"]] as [string, string][],
+  marks: { "BL9.4": { "Lalrinpuii Ralte": 52 }, "BL9.2": { "Sourav Singha": 45 }, "BL9.3": { "Arindam Hazarika": 38 } } as Record<string, Record<string, number>>,
+};
 /** Leave applications: one approved medical leave (supports Priyanka's relaxation), one duty leave for the Dean to approve live. */
 export const DEMO_LEAVES = [
   { roll: "BAL22-003", type: "MEDICAL", from: "2026-09-14", to: "2026-09-18", status: "APPROVED", reason: "Hospitalised with dengue at GMCH, 12–19 September 2026", document: "GMCH_discharge_summary.pdf" },

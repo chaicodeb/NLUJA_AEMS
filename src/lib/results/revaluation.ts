@@ -28,7 +28,7 @@ async function activeRule() {
 
 async function publishedRun(examId?: string) {
   return db.resultRun.findFirst({
-    where: { status: "PUBLISHED", exam: examId ? { id: examId } : { code: { not: "LEGACY-MIGRATION" } } },
+    where: { status: "PUBLISHED", exam: examId ? { id: examId } : { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" } },
     orderBy: { publishedAt: "desc" },
     include: { exam: true },
   });

@@ -5,6 +5,7 @@ import { Badge, Card, CardBody, CardHeader, PageHeader, Table, TD, TH, THead, TR
 import { formatDate } from "@/lib/utils";
 import type { TranscriptPayload } from "@/lib/results/transcript";
 import { IssueOfficialForm } from "../../transcripts/transcript-buttons";
+import { PUBLISHED_ORDER, firstPerSemester } from "@/lib/results/engine";
 
 export default async function StudentDetail({ params }: PageProps<"/students/[id]">) {
   const user = await requirePage("/students");
@@ -20,10 +21,11 @@ export default async function StudentDetail({ params }: PageProps<"/students/[id
         include: { course: { include: { scheme: { include: { components: { orderBy: { sortOrder: "asc" } } } } } }, attendance: true, markEntries: true },
         orderBy: { course: { code: "asc" } },
       },
-      semResults: { where: { run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } },
+      semResults: { where: { run: { status: "PUBLISHED" } }, orderBy: PUBLISHED_ORDER },
     },
   });
   if (!s) notFound();
+  s.semResults = firstPerSemester(s.semResults);
 
   const totalHeld = s.enrolments.reduce((a, e) => a + (e.attendance?.classesHeld ?? 0), 0);
   const totalAtt = s.enrolments.reduce((a, e) => a + (e.attendance?.classesAttended ?? 0), 0);

@@ -36,9 +36,9 @@ export default async function ExamsPage() {
               <TR key={e.id}>
                 <TD className="font-mono text-xs">{e.code}</TD>
                 <TD>
-                  <Link href={`/exams/${e.id}`} className="font-medium text-brand-700 hover:underline">{e.name}</Link>
+                  <Link href={e.type === "REGULAR" ? `/exams/${e.id}` : "/supplementary"} className="font-medium text-brand-700 hover:underline">{e.name}</Link>
                 </TD>
-                <TD><Badge>{e.type}</Badge></TD>
+                <TD><Badge>{e.type === "REPEAT" ? "SUPPLEMENTARY" : e.type}</Badge></TD>
                 <TD className="text-sm">{formatDate(e.startDate)} – {formatDate(e.endDate)}</TD>
                 <TD className="text-right">{e._count.papers}</TD>
                 <TD className="text-right">{e._count.registrations}</TD>

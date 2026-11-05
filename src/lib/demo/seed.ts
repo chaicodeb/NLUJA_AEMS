@@ -36,7 +36,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -356,6 +356,9 @@ export async function seedDemo() {
       if (cohort.batch.code === "BALLB-2022" && i === 1) {
         await db.user.create({ data: { name: s.name, email: "student2@nluassam.ac.in", role: "STUDENT", designation: "B.A. LL.B. (Hons.) — Semester IX", passwordHash, studentId: student.id } });
       }
+      if (cohort.batch.code === "BALLB-2022" && s.name === "Arindam Hazarika") {
+        await db.user.create({ data: { name: s.name, email: "student4@nluassam.ac.in", role: "STUDENT", designation: "B.A. LL.B. (Hons.) — Semester IX", passwordHash, studentId: student.id } });
+      }
       if (cohort.batch.code === "LLM-2026" && s.name === "Sneha Iyer") {
         await db.user.create({ data: { name: s.name, email: "student3@nluassam.ac.in", role: "STUDENT", designation: "LL.M. — Semester I", passwordHash, studentId: student.id } });
       }
@@ -423,6 +426,18 @@ export async function seedDemo() {
         key: "REVAL-NLUJA", type: "REVALUATION", name: "Revaluation & scrutiny policy",
         description: "Applications within the window after publication; blind re-evaluation by a fresh evaluator; revised marks adopted only when the change meets the threshold.",
         params: { windowDays: 15, feeRevaluation: 1000, feeScrutiny: 300, minChangePct: 5, allowDecrease: true, maxPapers: 3 },
+        createdById: users.coe, changeNote: "Initial configuration",
+      },
+      {
+        key: "MOD-NLUJA", type: "MODERATION", name: "Moderation of end-semester papers",
+        description: "Papers whose results fall outside the expected range are flagged for the Moderation Board; any uniform addition is capped and needs the Vice-Chancellor's approval.",
+        params: { flagPassPctBelow: 75, flagMeanPctBelow: 55, maxAddPct: 5, approvalAuthority: "VC" },
+        createdById: users.coe, changeNote: "Examination Committee resolution",
+      },
+      {
+        key: "SUP-NLUJA", type: "SUPPLEMENTARY", name: "Supplementary (backlog & improvement) examination",
+        description: "Failed or absent papers may be cleared in the supplementary examination; passed papers with a low grade may be improved once. Internal assessment is carried forward.",
+        params: { feePerPaper: 1000, improvementMaxGrade: "B", maxImprovementPapers: 2, backlogGradeCap: null, improvementPolicy: "BEST_OF" },
         createdById: users.coe, changeNote: "Initial configuration",
       },
     ],

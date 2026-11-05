@@ -27,10 +27,10 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | Head of Department (Dean) | Prof. N. Goswami | 2A, 2B |
 | Vice-Chancellor | Prof. (Dr.) A. K. Sharma | 3, 7 |
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
-| Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation) | 2B, 4, 8, 8A |
+| Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation), Arindam Hazarika (backlog) | 2B, 4, 8, 8A, 8B |
 | Parent | Mr. Pranab Baruah | 8 |
 
-**Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published · Revaluation window.
+**Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published · Revaluation window · Supplementary exam.
 
 ---
 
@@ -155,6 +155,19 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
+## Act 6A — Moderation of an out-of-line paper (3 min) · NIQ 3 (moderation) · RFP §8.7
+
+*Run at* **Evaluation complete**, *before Act 7. Fallback:* **Results processed** has the moderation applied.
+
+1. **COE → Moderation**: every paper's candidates, mean, standard deviation and course pass rate against **MOD-NLUJA** (flag if pass rate < 75% or mean < 55%). **BL3.4 Economics** is flagged — mean 41.4%.
+2. **Propose moderation** → the cap is 2.5 marks (5% of 50); live preview *"pass rate 80% → 100%; would pass: Nabajit Medhi, Debojit Mahanta"* → record the board's reasoning → **Submit proposal**.
+3. **Switch → Vice-Chancellor → Moderation** → **Approve** → *"applied to 10 candidates"*. The proposer could not have approved it (blocked and logged).
+4. In Act 7 the BL3.4 results carry a **MODERATED +2.5** flag; the evaluated script marks are unchanged, so revaluation and scrutiny still work on the original evaluation.
+
+> "One uniform addition, capped by your rule, approved by the Vice-Chancellor, before results — never a silent change to an individual mark."
+
+---
+
 ## Act 7 — Result processing, maker–checker, publication (5 min) · RFP §8.7, §14.1, §18 (UAT criterion), §28
 
 1. **Switch role → Examination Branch** (OTP) → dashboard: *"All scripts evaluated — process results"* → **Result Processing**: readiness checklist and the exact rule versions that will be applied → **Process results**.
@@ -196,6 +209,23 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 5. **Switch → Sneha → Results**: ML1.3 now **A**, SGPA 7.20 FAIL → **8.80 PASS**; grade sheet carries *REVISED — after revaluation of ML1.3 · supersedes …*. Verify the **old** code → *Document superseded / revoked — replaced by …*.
 
 > "Window, fees, threshold and whether marks may go down are all in **Rule Configuration → Revaluation & scrutiny policy**, versioned like every other rule. Every step — application, assignment, blocked assignment, amendment — is in the audit trail."
+
+---
+
+## Act 8B — Supplementary (backlog & improvement) examination (4 min) · NIQ 3 (backlog/improvement) · RFP §8.5, §8.7
+
+*Fallback:* **Presenter → Supplementary exam → Jump** — exam created, Lalrinpuii (absent in BL9.4) and Sourav (improvement in BL9.2) already registered.
+
+1. **COE → Supplementary Exams**: rule **SUP-NLUJA** (₹1000/paper, improvement for grades B and below, better of two attempts). If not yet created: **Create supplementary examination** — papers scheduled in January automatically.
+2. **Switch → Arindam Hazarika (Student) → Exam Registration**: BL9.3 (F, 41/100) pre-selected as **Backlog**; B/C grades offered for **Improvement**; BL9.5 (moot) not offered. **Pay & register**. (*Neha Das's attendance-shortage papers are refused — "must repeat the course".*)
+3. **Switch → Examination Branch (Mr. Kalita) → Supplementary Exams** → award lists: **BL9.2 Sourav 45**, **BL9.3 Arindam 38**, **BL9.4 Lalrinpuii 52** → submit each → **Process results**.
+4. Same maker–checker as Act 7: **COE approves**, **VC publishes** → 3 supplementary grade sheets.
+   - Arindam BL9.3 **F → C**, semester **FAIL → PASS**, SGPA 4.6 → 5.6.
+   - Lalrinpuii BL9.4 **AB → A+**, semester **PASS**.
+   - Sourav BL9.2 **C → B** (better of the two attempts kept).
+5. **Switch → Arindam → Results**: the supplementary grade sheet is the current one; academic history and the transcript count semester IX once.
+
+> "Internal marks carry forward, only the end-semester paper is retaken, and CGPA, grade sheets and transcripts update through the same verified pipeline."
 
 ---
 

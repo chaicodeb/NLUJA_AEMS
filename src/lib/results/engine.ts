@@ -16,7 +16,7 @@ type Draft = {
   aggregateShortfall: number; componentFail: boolean;
 };
 
-type CourseRow = Omit<Prisma.CourseResultCreateManyInput, "runId">;
+export type CourseRow = Omit<Prisma.CourseResultCreateManyInput, "runId">;
 
 type Ctx = {
   exam: Prisma.ExamGetPayload<{ include: { papers: true } }>;
@@ -56,6 +56,28 @@ async function loadCtx(examId: string, rules?: RulesUsed): Promise<Ctx | null> {
   };
 }
 
+/** Pass rule of an evaluation scheme: aggregate pass mark, plus every component minimum under COMPONENT_AND_AGGREGATE. */
+export function assessPass(components: ComponentResult[], scheme: { passRule: string; aggregatePassPct: number }, rawTotal: number, max: number) {
+  const flags: Flag[] = [];
+  let status: "PASS" | "FAIL" = "PASS";
+  let componentFail = false;
+  let aggregateShortfall = 0;
+  const passMark = (max * scheme.aggregatePassPct) / 100;
+  const failedComponents = scheme.passRule === "COMPONENT_AND_AGGREGATE" ? components.filter((c) => !c.ok) : [];
+  if (failedComponents.length) {
+    componentFail = true;
+    status = "FAIL";
+    for (const c of failedComponents) flags.push({ code: "COMPONENT_FAIL", detail: `${c.name}: ${c.marks ?? 0}/${c.max} below minimum ${c.pass}` });
+    if (rawTotal >= passMark) flags.push({ code: "AGGREGATE_PASS_COMPONENT_FAIL", detail: `Aggregate ${rawTotal}/${max} meets ${passMark}, but a component minimum was not met` });
+  }
+  if (rawTotal < passMark) {
+    status = "FAIL";
+    aggregateShortfall = round(passMark - rawTotal, 2);
+    flags.push({ code: "AGGREGATE_FAIL", detail: `${rawTotal}/${max} below pass mark ${passMark}` });
+  }
+  return { status, flags, componentFail, aggregateShortfall, passMark };
+}
+
 function draftFor(e: EnrolmentRow, ctx: Ctx): Draft {
   const paper = ctx.exam.papers.find((p) => p.courseId === e.courseId);
   const flags: Flag[] = [];
@@ -66,11 +88,18 @@ function draftFor(e: EnrolmentRow, ctx: Ctx): Draft {
     const m = e.markEntries.find((x) => x.componentId === c.id);
     return !m || m.status === "DRAFT" || (m.marks == null && !m.absent);
   });
+  let moderated = 0;
   const components: ComponentResult[] = scheme.components.map((c) => {
     const m = e.markEntries.find((x) => x.componentId === c.id);
-    const marks = m?.absent || unsubmitted.includes(c) ? null : m?.marks ?? null;
+    let marks = m?.absent || unsubmitted.includes(c) ? null : m?.marks ?? null;
+    if (marks != null && m?.moderation) {
+      const raised = Math.min(c.maxMarks, marks + m.moderation);
+      moderated = round(raised - marks, 2);
+      marks = raised;
+    }
     return { code: c.code, name: c.name, max: c.maxMarks, marks, pass: c.passMarks, ok: c.passMarks == null || (marks ?? 0) >= c.passMarks };
   });
+  if (moderated) flags.push({ code: "MODERATED", detail: `+${moderated} added to the end-semester mark by approved paper moderation` });
   const rawTotal = round(components.reduce((a, c) => a + (c.marks ?? 0), 0), 2);
   let status: CourseStatus = "PASS";
 
@@ -108,19 +137,11 @@ function draftFor(e: EnrolmentRow, ctx: Ctx): Draft {
   let aggregateShortfall = 0;
   let componentFail = false;
   if (status === "PASS") {
-    const passMark = (max * scheme.aggregatePassPct) / 100;
-    const failedComponents = scheme.passRule === "COMPONENT_AND_AGGREGATE" ? components.filter((c) => !c.ok) : [];
-    if (failedComponents.length) {
-      componentFail = true;
-      status = "FAIL";
-      for (const c of failedComponents) flags.push({ code: "COMPONENT_FAIL", detail: `${c.name}: ${c.marks ?? 0}/${c.max} below minimum ${c.pass}` });
-      if (rawTotal >= passMark) flags.push({ code: "AGGREGATE_PASS_COMPONENT_FAIL", detail: `Aggregate ${rawTotal}/${max} meets ${passMark}, but a component minimum was not met` });
-    }
-    if (rawTotal < passMark) {
-      status = "FAIL";
-      aggregateShortfall = round(passMark - rawTotal, 2);
-      flags.push({ code: "AGGREGATE_FAIL", detail: `${rawTotal}/${max} below pass mark ${passMark}` });
-    }
+    const verdict = assessPass(components, scheme, rawTotal, max);
+    status = verdict.status;
+    aggregateShortfall = verdict.aggregateShortfall;
+    componentFail = verdict.componentFail;
+    flags.push(...verdict.flags);
   }
   return {
     enrolmentId: e.id, studentId: e.studentId, courseId: e.courseId, code: e.course.code, title: e.course.title, credits: e.course.credits, semester: e.semester,
@@ -160,11 +181,29 @@ function courseRow(d: Draft, grace: number, grading: GradingParams): CourseRow {
   };
 }
 
-async function semesterRow(studentId: string, semester: number, rows: CourseRow[], grading: GradingParams) {
+/** Rows must be ordered by semester, then newest publication first: a supplementary result supersedes the regular one. */
+export function firstPerSemester<T extends { semester: number }>(rows: T[]) {
+  const out: T[] = [];
+  for (const r of rows) if (!out.some((x) => x.semester === r.semester)) out.push(r);
+  return out;
+}
+
+export const PUBLISHED_ORDER = [{ semester: "asc" as const }, { run: { publishedAt: "desc" as const } }];
+
+export async function publishedSemesters(studentId: string, beforeSemester?: number) {
+  return firstPerSemester(
+    await db.semesterResult.findMany({
+      where: { studentId, run: { status: "PUBLISHED" }, ...(beforeSemester != null ? { semester: { lt: beforeSemester } } : {}) },
+      orderBy: PUBLISHED_ORDER,
+    }),
+  );
+}
+
+export async function semesterRow(studentId: string, semester: number, rows: CourseRow[], grading: GradingParams) {
   const credits = rows.reduce((a, r) => a + r.credits, 0);
   const earned = rows.filter((r) => r.status === "PASS").reduce((a, r) => a + r.credits, 0);
   const sgpa = round(rows.reduce((a, r) => a + r.credits * r.gradePoint, 0) / credits, grading.rounding);
-  const prior = await db.semesterResult.findMany({ where: { studentId, semester: { lt: semester }, run: { status: "PUBLISHED" } } });
+  const prior = await publishedSemesters(studentId, semester);
   const cgpa = round((prior.reduce((a, p) => a + p.sgpa * p.credits, 0) + sgpa * credits) / (prior.reduce((a, p) => a + p.credits, 0) + credits), grading.rounding);
   const withheld = rows.some((r) => r.status === "W");
   const failed = rows.filter((r) => ["FAIL", "AB", "NA"].includes(r.status)).length;

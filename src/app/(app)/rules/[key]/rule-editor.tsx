@@ -37,6 +37,8 @@ export function RuleEditor({ ruleKey, type, params, canEdit }: Props) {
           {type === "GRADING" && <GradingForm value={draft as GradingParams} onChange={setDraft} disabled={!canEdit} />}
           {type === "GRACE" && <GraceForm value={draft as GraceParams} onChange={setDraft} disabled={!canEdit} />}
           {type === "REVALUATION" && <RevaluationForm value={draft as RevaluationParams} onChange={setDraft} disabled={!canEdit} />}
+          {type === "MODERATION" && <ModerationForm value={draft as ModerationParams} onChange={setDraft} disabled={!canEdit} />}
+          {type === "SUPPLEMENTARY" && <SupplementaryForm value={draft as SupplementaryParams} onChange={setDraft} disabled={!canEdit} />}
           {canEdit && (
             <div className="space-y-2 border-t border-border pt-4">
               <Label htmlFor="note">Reason for change / authority reference</Label>
@@ -288,6 +290,60 @@ function GradingTester({ params }: { params: GradingParams }) {
         </div>
       </CardBody>
     </Card>
+  );
+}
+
+type ModerationParams = { flagPassPctBelow: number; flagMeanPctBelow: number; maxAddPct: number; approvalAuthority: string };
+
+function ModerationForm({ value: p, onChange, disabled }: { value: ModerationParams; onChange: (v: Record<string, unknown>) => void; disabled: boolean }) {
+  const set = (patch: Partial<ModerationParams>) => onChange({ ...p, ...patch });
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Flag a paper if course pass rate is below (%)">
+        <Input type="number" value={p.flagPassPctBelow} disabled={disabled} onChange={(e) => set({ flagPassPctBelow: num(e.target.value) })} />
+      </Field>
+      <Field label="…or if the end-semester mean is below (% of maximum)">
+        <Input type="number" value={p.flagMeanPctBelow} disabled={disabled} onChange={(e) => set({ flagMeanPctBelow: num(e.target.value) })} />
+      </Field>
+      <Field label="Maximum uniform addition (% of the paper's maximum)" help="Applied equally to every candidate of the paper; never reduces marks.">
+        <Input type="number" value={p.maxAddPct} disabled={disabled} onChange={(e) => set({ maxAddPct: num(e.target.value) })} />
+      </Field>
+      <Field label="Approving authority">
+        <Select value={p.approvalAuthority} disabled={disabled} onChange={(e) => set({ approvalAuthority: e.target.value })}>
+          <option value="VC">Vice-Chancellor</option>
+          <option value="COE">Controller of Examinations</option>
+        </Select>
+      </Field>
+    </div>
+  );
+}
+
+type SupplementaryParams = { feePerPaper: number; improvementMaxGrade: string; maxImprovementPapers: number; backlogGradeCap: string | null; improvementPolicy: string };
+
+function SupplementaryForm({ value: p, onChange, disabled }: { value: SupplementaryParams; onChange: (v: Record<string, unknown>) => void; disabled: boolean }) {
+  const set = (patch: Partial<SupplementaryParams>) => onChange({ ...p, ...patch });
+  const grades = ["O", "A+", "A", "B+", "B", "C"];
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Fee per paper (₹)">
+        <Input type="number" value={p.feePerPaper} disabled={disabled} onChange={(e) => set({ feePerPaper: num(e.target.value) })} />
+      </Field>
+      <Field label="Improvement allowed for grades at or below">
+        <Select value={p.improvementMaxGrade} disabled={disabled} onChange={(e) => set({ improvementMaxGrade: e.target.value })}>
+          {grades.map((g) => <option key={g} value={g}>{g}</option>)}
+        </Select>
+      </Field>
+      <Field label="Maximum improvement papers per semester">
+        <Input type="number" value={p.maxImprovementPapers} disabled={disabled} onChange={(e) => set({ maxImprovementPapers: num(e.target.value) })} />
+      </Field>
+      <Field label="Highest grade on clearing a backlog" help="Some regulations cap the grade awarded in a supplementary attempt.">
+        <Select value={p.backlogGradeCap ?? ""} disabled={disabled} onChange={(e) => set({ backlogGradeCap: e.target.value || null })}>
+          <option value="">No cap</option>
+          {grades.map((g) => <option key={g} value={g}>{g}</option>)}
+        </Select>
+      </Field>
+      <p className="text-xs text-muted-foreground sm:col-span-2">Improvement keeps the better of the two attempts. Internal assessment is carried forward; grace marks apply to regular examinations only.</p>
+    </div>
   );
 }
 

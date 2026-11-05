@@ -6,8 +6,10 @@ import { Badge, Card, Callout, PageHeader } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import type { AttendanceParams, GraceParams, GradingParams } from "@/lib/rules/engine";
 import type { RevaluationParams } from "@/lib/results/revaluation";
+import type { ModerationParams } from "@/lib/results/moderation";
+import type { SupplementaryParams } from "@/lib/results/supplementary";
 
-const TYPE_LABEL = { ATTENDANCE: "Attendance & eligibility", GRADING: "Grading", GRACE: "Grace marks", PROMOTION: "Promotion", REVALUATION: "Revaluation" } as const;
+const TYPE_LABEL = { ATTENDANCE: "Attendance & eligibility", GRADING: "Grading", GRACE: "Grace marks", PROMOTION: "Promotion", REVALUATION: "Revaluation", MODERATION: "Moderation", SUPPLEMENTARY: "Supplementary exam" } as const;
 
 export default async function RulesPage() {
   await requirePage("/rules");
@@ -83,6 +85,22 @@ function RuleSummary({ type, params }: { type: string; params: unknown }) {
           <strong>{p.failGrade}</strong> &lt;{Math.min(...p.bands.map((b) => b.min))}
         </span>
       </div>
+    );
+  }
+  if (type === "MODERATION") {
+    const p = params as ModerationParams;
+    return (
+      <span>
+        Flag a paper if pass rate &lt; <strong>{p.flagPassPctBelow}%</strong> or mean &lt; <strong>{p.flagMeanPctBelow}%</strong> · uniform addition up to <strong>{p.maxAddPct}%</strong> of the paper · approved by <strong>{p.approvalAuthority}</strong>
+      </span>
+    );
+  }
+  if (type === "SUPPLEMENTARY") {
+    const p = params as SupplementaryParams;
+    return (
+      <span>
+        ₹<strong>{p.feePerPaper}</strong>/paper · improvement for grades <strong>{p.improvementMaxGrade}</strong> and below (max <strong>{p.maxImprovementPapers}</strong>, better of two) · backlog grade cap: <strong>{p.backlogGradeCap ?? "none"}</strong>
+      </span>
     );
   }
   if (type === "REVALUATION") {

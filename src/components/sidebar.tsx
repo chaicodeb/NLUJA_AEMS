@@ -5,14 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3, BookOpen, Calculator, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
-  ListChecks, NotebookPen, PenLine, RefreshCcw, ShieldCheck, SlidersHorizontal, Users, type LucideIcon,
+  ListChecks, NotebookPen, PenLine, RefreshCcw, Repeat, Scale, ShieldCheck, SlidersHorizontal, Users, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavSection } from "@/lib/roles";
 
 const ICONS: Record<string, LucideIcon> = {
   BarChart3, BookOpen, Calculator, CalendarCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
-  ListChecks, NotebookPen, PenLine, ShieldCheck, SlidersHorizontal, Users, RefreshCcw, CalendarClock, ClipboardCheck,
+  ListChecks, NotebookPen, PenLine, ShieldCheck, SlidersHorizontal, Users, RefreshCcw, CalendarClock, ClipboardCheck, Repeat, Scale,
 };
 
 export function Sidebar({ sections }: { sections: NavSection[] }) {

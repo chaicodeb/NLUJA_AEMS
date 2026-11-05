@@ -309,6 +309,8 @@ enum RuleType {
   GRACE
   PROMOTION
   REVALUATION
+  MODERATION
+  SUPPLEMENTARY
 }
 
 model RuleSet {
@@ -363,6 +365,7 @@ model Exam {
   resultRuns       ResultRun[]
   relaxations      RelaxationRequest[]
   revaluations     RevaluationRequest[]
+  moderations      ModerationAction[]
 }
 
 model ExamPaper {
@@ -382,6 +385,7 @@ model ExamPaper {
   seats          SeatAllocation[]
   scripts        AnswerScript[]
   registrationPapers RegistrationPaper[]
+  moderations    ModerationAction[]
 
   @@unique([examId, courseId])
 }
@@ -445,8 +449,41 @@ model RegistrationPaper {
   registration   ExamRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   examPaperId    String
   examPaper      ExamPaper        @relation(fields: [examPaperId], references: [id])
+  kind           String           @default("REGULAR") // REGULAR | BACKLOG | IMPROVEMENT
+  supMark        SupplementaryMark?
 
   @@unique([registrationId, examPaperId])
+}
+
+/// Award-list mark for a backlog / improvement paper (the regular attempt's marks are never overwritten).
+model SupplementaryMark {
+  id                  String            @id @default(cuid())
+  registrationPaperId String            @unique
+  registrationPaper   RegistrationPaper @relation(fields: [registrationPaperId], references: [id], onDelete: Cascade)
+  marks               Float?
+  absent              Boolean           @default(false)
+  status              String            @default("DRAFT") // DRAFT | SUBMITTED
+  enteredById         String?
+  updatedAt           DateTime          @updatedAt
+}
+
+model ModerationAction {
+  id           String    @id @default(cuid())
+  examId       String
+  exam         Exam      @relation(fields: [examId], references: [id])
+  examPaperId  String
+  examPaper    ExamPaper @relation(fields: [examPaperId], references: [id])
+  delta        Float
+  reason       String
+  status       String    @default("PROPOSED") // PROPOSED | APPROVED | REJECTED
+  before       Json
+  after        Json
+  ruleVersion  Int
+  proposedById String
+  proposedAt   DateTime  @default(now())
+  decidedById  String?
+  decidedAt    DateTime?
+  decisionNote String?
 }
 
 model Room {
@@ -559,6 +596,7 @@ model MarkEntry {
   status      String              @default("DRAFT") // DRAFT | SUBMITTED | LOCKED
   source      String              @default("FACULTY")
   detail      Json?               // sub-criteria (rubric) marks, e.g. { FACTS: 4, LAW: 3.5 }
+  moderation  Float               @default(0) // added by an approved paper moderation; raw marks stay as evaluated
   enteredById String?
   updatedAt   DateTime            @updatedAt
 

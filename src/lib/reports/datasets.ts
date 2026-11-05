@@ -71,7 +71,7 @@ export const DATASETS: Dataset[] = [
 const pct = (a?: number | null, h?: number | null) => (h ? Math.round(((a ?? 0) / h) * 10000) / 100 : null);
 
 export async function loadDataset(key: string): Promise<Row[]> {
-  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" } }, orderBy: { startDate: "desc" } });
+  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
   const run = exam ? await db.resultRun.findFirst({ where: { examId: exam.id, status: { not: "WITHDRAWN" } }, orderBy: { processedAt: "desc" } }) : null;
 
   if (key === "student_performance") {

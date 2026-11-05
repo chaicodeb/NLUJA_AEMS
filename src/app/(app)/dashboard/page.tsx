@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BellRing, CalendarClock, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, NotebookPen, PenLine } from "lucide-react";
 import { dueClassCount } from "@/lib/attendance/daily";
+import { PUBLISHED_ORDER, firstPerSemester } from "@/lib/results/engine";
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requirePage, type CurrentUser } from "@/lib/session";
@@ -33,7 +34,7 @@ export default async function DashboardPage() {
 }
 
 async function currentExam() {
-  return db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" } }, orderBy: { startDate: "desc" } });
+  return db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
 }
 
 async function actionItems(role: Role, examId: string | undefined): Promise<ActionItem[]> {
@@ -366,13 +367,13 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
     where: { id: student.id },
     include: {
       batch: { include: { programme: true } },
-      semResults: { where: { run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } },
+      semResults: { where: { run: { status: "PUBLISHED" } }, orderBy: PUBLISHED_ORDER },
       enrolments: { include: { course: true, attendance: true }, where: { status: "ACTIVE" }, orderBy: { course: { code: "asc" } } },
     },
   });
   const exam = await currentExam();
   const reg = exam ? await db.examRegistration.findUnique({ where: { examId_studentId: { examId: exam.id, studentId: full.id } } }) : null;
-  const latest = full.semResults.at(-1);
+  const latest = firstPerSemester(full.semResults).at(-1);
   const isParent = user.role === "PARENT";
   const alerts = await db.attendanceAlert.findMany({ where: { studentId: full.id, level: { in: ["SHORTAGE", "CRITICAL", "NOTICE"] } }, orderBy: { createdAt: "desc" }, take: 2 });
 

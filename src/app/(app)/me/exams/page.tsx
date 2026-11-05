@@ -5,13 +5,18 @@ import { getStudentExamView } from "@/lib/exams/registration";
 import { Badge, Callout, Card, CardHeader, EmptyState, PageHeader, Table, TD, TH, THead, TR, buttonVariants } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { RegistrationForm } from "./registration-form";
+import { currentSupplementary, supplementaryOptions } from "@/lib/results/supplementary";
+import { SupplementaryRegistration } from "../../supplementary/client";
 
 export default async function MyExamsPage() {
   const user = await requirePage("/me/exams");
   if (!user.studentId) return <EmptyState title="No student record linked" />;
-  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" } }, orderBy: { startDate: "desc" } });
+  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
   if (!exam) return <EmptyState title="No examinations scheduled" />;
   const view = await getStudentExamView(user.studentId, exam.id);
+  const sup = await currentSupplementary();
+  const supView = sup ? await supplementaryOptions(user.studentId, sup.id) : null;
+  const supEligible = supView?.options.filter((o) => o.kind) ?? [];
 
   return (
     <div className="space-y-6">
@@ -27,6 +32,29 @@ export default async function MyExamsPage() {
           ) : null
         }
       />
+      {sup && supView && (supView.registration || (sup.registrationOpen && supEligible.length > 0)) && (
+        <Card>
+          <CardHeader
+            title={sup.name}
+            description={`${formatDate(sup.startDate)} – ${formatDate(sup.endDate)} · ₹${supView.params.feePerPaper} per paper · internal assessment carried forward`}
+            action={<Badge tone={supView.registration ? "green" : "amber"}>{supView.registration ? "Registered" : "Registration open"}</Badge>}
+          />
+          <div className="px-5 py-4">
+            {supView.registration ? (
+              <div className="space-y-2 text-sm">
+                <p>Fee received · <span className="font-mono">{supView.registration.paymentRef}</span> · {formatDate(supView.registration.submittedAt, true)}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {supView.registration.papers.map((rp) => (
+                    <Badge key={rp.id} tone={rp.kind === "BACKLOG" ? "amber" : "blue"}>{rp.examPaper.course.code} · {rp.kind === "BACKLOG" ? "backlog" : "improvement"} · {formatDate(rp.examPaper.date)}</Badge>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <SupplementaryRegistration examId={sup.id} options={supView.options} fee={supView.params.feePerPaper} maxImprovement={supView.params.maxImprovementPapers} />
+            )}
+          </div>
+        </Card>
+      )}
 
       {view.registration ? (
         <>

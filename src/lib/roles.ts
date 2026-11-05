@@ -48,7 +48,9 @@ export const NAV: NavSection[] = [
       { href: "/relaxations", label: "Attendance Relaxations", icon: "ShieldCheck", roles: ["VC", "COE", "ACADEMIC_STAFF", "ADMIN"] },
       { href: "/evaluation", label: "My Evaluations", icon: "PenLine", roles: ["EVALUATOR", "FACULTY"] },
       { href: "/results", label: "Result Processing", icon: "Calculator", roles: ["ADMIN", "COE", "EXAM_STAFF", "VC", "REGISTRAR"] },
+      { href: "/moderation", label: "Moderation", icon: "Scale", roles: ["ADMIN", "COE", "EXAM_STAFF", "VC"] },
       { href: "/revaluations", label: "Revaluation & Scrutiny", icon: "RefreshCcw", roles: ["ADMIN", "COE", "EXAM_STAFF", "VC", "REGISTRAR"] },
+      { href: "/supplementary", label: "Supplementary Exams", icon: "Repeat", roles: ["ADMIN", "COE", "EXAM_STAFF", "VC", "REGISTRAR"] },
     ],
   },
   {

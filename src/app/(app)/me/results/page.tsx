@@ -5,6 +5,7 @@ import type { GradeSheetPayload } from "@/lib/results/workflow";
 import type { TranscriptPayload } from "@/lib/results/transcript";
 import { StudentCopyButton } from "../../transcripts/transcript-buttons";
 import { revaluationOptions } from "@/lib/results/revaluation";
+import { publishedSemesters } from "@/lib/results/engine";
 import { ApplyForm } from "../../revaluations/client";
 import { Badge, Callout, Card, CardHeader, EmptyState, PageHeader, Stat, Table, TD, TH, THead, TR, buttonVariants, type BadgeTone } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
@@ -17,7 +18,7 @@ export default async function MyResultsPage() {
   if (!studentId) return <EmptyState title="No student record linked" />;
   const student = await db.student.findUniqueOrThrow({ where: { id: studentId }, include: { batch: true } });
   const sheets = await db.document.findMany({ where: { studentId, type: "GRADE_SHEET", revoked: false }, orderBy: { issuedAt: "desc" } });
-  const history = await db.semesterResult.findMany({ where: { studentId, run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } });
+  const history = await publishedSemesters(studentId);
   const reval = await revaluationOptions(studentId);
   const transcripts = await db.document.findMany({ where: { studentId, type: "TRANSCRIPT", revoked: false }, orderBy: { issuedAt: "desc" }, take: 10 });
   const latest = sheets[0];

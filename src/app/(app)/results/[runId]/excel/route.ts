@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { canAccess } from "@/lib/roles";
-import type { ComponentResult } from "@/lib/results/engine";
+import { publishedSemesters, type ComponentResult } from "@/lib/results/engine";
 import type { GradingParams } from "@/lib/rules/engine";
 
 const MAX_COMPONENTS = 5;
@@ -134,7 +134,7 @@ export async function GET(_: Request, ctx: RouteContext<"/results/[runId]/excel"
   const cpCol = `'Course results'!$${col("mcp")}$2:$${col("mcp")}$${lastCourseRow}`;
   for (const [i, s] of sems.entries()) {
     const r = i + 2;
-    const prior = await db.semesterResult.findMany({ where: { studentId: s.studentId, semester: { lt: s.semester }, run: { status: "PUBLISHED" } } });
+    const prior = await publishedSemesters(s.studentId, s.semester);
     const pcr = prior.reduce((a, p) => a + p.credits, 0);
     const pcp = Math.round(prior.reduce((a, p) => a + p.sgpa * p.credits, 0) * 10000) / 10000;
     ss.addRow({ roll: s.student.rollNo, name: s.student.name, ssgpa: s.sgpa, pcr, pcp, scgpa: s.cgpa });

@@ -4,6 +4,7 @@ import { db } from "../db";
 import { audit } from "../audit";
 import { hashPayload } from "../docs";
 import { BALLB_2022, BALLB_2025, LLM_2026, genMark, rng, type StudentSeed } from "../demo/scenarios";
+import { DEMO_TOUGH_PAPER } from "../demo/constants";
 
 export type QuestionScheme = { q: string; max: number }[];
 export type Annotation = { page: number; x: number; y: number; kind: "tick" | "cross" | "comment"; text?: string };
@@ -102,7 +103,8 @@ export async function conductExam(examId: string, actor: { id: string; role: str
 
     const scheme = (s.examPaper.questionScheme as QuestionScheme) ?? [];
     const max = s.examPaper.maxMarks;
-    const target = typeof seed?.end?.[code] === "number" ? (seed.end[code] as number) : genMark(max, seed?.ability ?? 0.65, r, 0.1);
+    const ability = (seed?.ability ?? 0.65) * (code === DEMO_TOUGH_PAPER.course ? DEMO_TOUGH_PAPER.factor : 1);
+    const target = typeof seed?.end?.[code] === "number" ? (seed.end[code] as number) : genMark(max, ability, r, 0.1);
     const round1Evaluator = code.startsWith("ML") ? evalB : evalA;
     const pending1 = code === LIVE_PENDING.round1.course && LIVE_PENDING.round1.students.includes(s.student.name);
     const q1 = splitTotal(target, scheme, r);
