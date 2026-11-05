@@ -29,7 +29,8 @@ services:
     environment:
       <<: *db-env
       SESSION_SECRET: ${SESSION_SECRET:-change-me-docker-demo-secret-0123456789}
-    command: sh -c "npx prisma db push --skip-generate && npx tsx prisma/setup.ts"
+      FORCE_RESEED: ${FORCE_RESEED:-0}
+    command: sh -c "npx prisma db push --skip-generate --accept-data-loss && npx tsx prisma/setup.ts"
     depends_on:
       db:
         condition: service_healthy

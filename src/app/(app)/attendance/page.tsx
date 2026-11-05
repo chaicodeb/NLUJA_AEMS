@@ -17,7 +17,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
   const students = await db.student.findMany({
     where: { batchId: batch.id },
     orderBy: { rollNo: "asc" },
-    include: { enrolments: { include: { attendance: true, course: true }, orderBy: { course: { code: "asc" } } } },
+    include: { enrolments: { where: { status: "ACTIVE" }, include: { attendance: true, course: true }, orderBy: { course: { code: "asc" } } } },
   });
   const courses = students[0]?.enrolments.map((e) => e.course) ?? [];
 

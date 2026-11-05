@@ -3,19 +3,24 @@ import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
 import { Badge, Card, CardBody, CardHeader, PageHeader, Table, TD, TH, THead, TR } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import type { TranscriptPayload } from "@/lib/results/transcript";
+import { IssueOfficialForm } from "../../transcripts/transcript-buttons";
 
 export default async function StudentDetail({ params }: PageProps<"/students/[id]">) {
-  await requirePage("/students");
+  const user = await requirePage("/students");
+  const canIssue = ["COE", "REGISTRAR", "ADMIN"].includes(user.role);
   const { id } = await params;
+  const transcripts = await db.document.findMany({ where: { studentId: id, type: "TRANSCRIPT", revoked: false }, orderBy: { issuedAt: "desc" } });
   const s = await db.student.findUnique({
     where: { id },
     include: {
       batch: { include: { programme: true, curriculumVersion: true } },
       enrolments: {
+        where: { status: "ACTIVE" },
         include: { course: { include: { scheme: { include: { components: { orderBy: { sortOrder: "asc" } } } } } }, attendance: true, markEntries: true },
         orderBy: { course: { code: "asc" } },
       },
-      semResults: { orderBy: { semester: "asc" } },
+      semResults: { where: { run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } },
     },
   });
   if (!s) notFound();
@@ -123,6 +128,45 @@ export default async function StudentDetail({ params }: PageProps<"/students/[id
             })}
           </tbody>
         </Table>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Consolidated transcripts"
+          description="Official transcripts are digitally signed by the Controller of Examinations; every issue is logged"
+          action={transcripts.length > 0 ? <Badge tone="brand">{transcripts.length} issued</Badge> : undefined}
+        />
+        <CardBody className="space-y-4">
+          {canIssue && s.semResults.length > 0 && <IssueOfficialForm studentId={s.id} />}
+          {transcripts.length > 0 && (
+            <Table>
+              <THead>
+                <tr>
+                  <TH>Type</TH>
+                  <TH>Purpose</TH>
+                  <TH>Issued</TH>
+                  <TH>Verification</TH>
+                  <TH />
+                </tr>
+              </THead>
+              <tbody>
+                {transcripts.map((t) => {
+                  const tp = t.payload as unknown as TranscriptPayload;
+                  return (
+                    <TR key={t.id}>
+                      <TD><Badge tone={tp.variant === "OFFICIAL" ? "green" : "neutral"}>{tp.variant === "OFFICIAL" ? "Official" : "Student copy"}</Badge></TD>
+                      <TD className="text-sm text-muted-foreground">{tp.purpose ?? "—"}</TD>
+                      <TD className="text-xs">{formatDate(t.issuedAt, true)}</TD>
+                      <TD><a href={`/verify/${t.verifyCode}`} target="_blank" className="font-mono text-xs text-brand-700 hover:underline">{t.verifyCode}</a></TD>
+                      <TD className="text-right"><a href={`/api/transcript/${t.id}`} target="_blank" className="text-sm font-medium text-brand-700 hover:underline">Open PDF</a></TD>
+                    </TR>
+                  );
+                })}
+              </tbody>
+            </Table>
+          )}
+          {transcripts.length === 0 && !canIssue && <p className="text-sm text-muted-foreground">No transcripts issued.</p>}
+        </CardBody>
       </Card>
     </div>
   );

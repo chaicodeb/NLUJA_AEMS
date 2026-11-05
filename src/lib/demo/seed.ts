@@ -13,6 +13,8 @@ import {
   rng,
   type StudentSeed,
 } from "./scenarios";
+import { LEGACY_BALLB_2019, LEGACY_BALLB_2025, academicYearOf } from "./legacy";
+import { gradeFor, type GradingParams } from "../rules/engine";
 
 const TABLES = [
   "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
@@ -200,6 +202,22 @@ export async function seedDemo() {
     }
   }
 
+  // Earlier-semester courses (migrated from legacy records)
+  const legacyCourses: Record<string, Record<number, { id: string; code: string; credits: number }[]>> = {};
+  for (const [cur, table, credits] of [[cur2019, LEGACY_BALLB_2019, 5], [cur2025, LEGACY_BALLB_2025, 4]] as const) {
+    legacyCourses[cur.id] = {};
+    for (const [semStr, list] of Object.entries(table)) {
+      const sem = Number(semStr);
+      legacyCourses[cur.id][sem] = await db.course.createManyAndReturn({
+        data: list.map(([code, title, category]) => ({
+          curriculumVersionId: cur.id, code, title, semester: sem, credits, category: category as Prisma.CourseCreateManyInput["category"], schemeId: schemes["BALLB-S18"].id,
+        })),
+        select: { id: true, code: true, credits: true },
+      });
+    }
+  }
+  const gradingParams: GradingParams = { bands: GRADE_BANDS, failGrade: "F", failPoint: 0, rounding: 2, divisions: [], degreeMinCgpa: 5 };
+
   // ── Batches ───────────────────────────────────────────────────────
   const b2022 = await db.batch.create({ data: { code: "BALLB-2022", name: "B.A. LL.B. (Hons.) 2022–27", programmeId: ballb.id, curriculumVersionId: cur2019.id, admissionYear: 2022, currentSemester: 9 } });
   const b2025 = await db.batch.create({ data: { code: "BALLB-2025", name: "B.A. LL.B. (Hons.) 2025–30", programmeId: ballb.id, curriculumVersionId: cur2025.id, admissionYear: 2025, currentSemester: 3 } });
@@ -250,16 +268,34 @@ export async function seedDemo() {
       });
       if (cohort.batch.code === "BALLB-2022" && i === 0) demoStudentId = student.id;
 
-      // migrated prior semesters
+      // migrated prior semesters: course-level grades, with SGPA/CGPA derived from them
       let cgpaNum = 0;
       let cgpaDen = 0;
       for (let sem = 1; sem <= cohort.priorSems; sem++) {
-        const sgpa = Math.round(Math.min(9.6, Math.max(5.4, s.ability * 10 + (r() - 0.5) * 1.2)) * 100) / 100;
-        cgpaNum += sgpa * cohort.creditsPerSem;
-        cgpaDen += cohort.creditsPerSem;
+        const semCourses = legacyCourses[cohort.batch.curriculumVersionId][sem];
+        const enrols = await db.enrolment.createManyAndReturn({
+          data: semCourses.map((c) => ({ studentId: student.id, courseId: c.id, academicYear: academicYearOf(year, sem), semester: sem, status: "COMPLETED" })),
+          select: { id: true, courseId: true },
+        });
+        const rows = semCourses.map((c) => {
+          const marks = Math.max(52, genMark(100, s.ability, r, 0.12));
+          const g = gradeFor(gradingParams, marks);
+          return { course: c, marks, grade: g.grade, point: g.point, enrolmentId: enrols.find((e) => e.courseId === c.id)!.id };
+        });
+        await db.courseResult.createMany({
+          data: rows.map((x) => ({
+            runId: legacyRun.id, enrolmentId: x.enrolmentId, studentId: student.id, courseId: x.course.id,
+            components: [{ code: "TOTAL", name: "Total (migrated)", max: 100, marks: x.marks, pass: null, ok: true }],
+            rawTotal: x.marks, total: x.marks, grade: x.grade, gradePoint: x.point, credits: x.course.credits, status: "PASS",
+          })),
+        });
+        const credits = rows.reduce((a, x) => a + x.course.credits, 0);
+        const sgpa = Math.round((rows.reduce((a, x) => a + x.course.credits * x.point, 0) / credits) * 100) / 100;
+        cgpaNum += sgpa * credits;
+        cgpaDen += credits;
         await db.semesterResult.create({
           data: {
-            runId: legacyRun.id, studentId: student.id, semester: sem, credits: cohort.creditsPerSem, earnedCredits: cohort.creditsPerSem,
+            runId: legacyRun.id, studentId: student.id, semester: sem, credits, earnedCredits: credits,
             sgpa, cgpa: Math.round((cgpaNum / cgpaDen) * 100) / 100, result: "PASS",
           },
         });

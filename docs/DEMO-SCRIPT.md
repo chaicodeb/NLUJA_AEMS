@@ -137,10 +137,12 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
-## Act 8 — Grade sheet, verification, parent view (2 min) · RFP §8.8, §8.14, §13
+## Act 8 — Grade sheet, transcript, verification, parent view (3 min) · RFP §8.8, §8.14, §13 · NIQ 3.7
 
 1. **Switch → Aditi → Results & Grade Sheets**: SGPA, CGPA, class → **Download grade sheet** (QR, barcode, signature, legend) → scan QR → **Authentic Semester Grade Sheet**.
-2. **Switch → Parent** → same data, read-only, consent note (DPDP Act 2023).
+2. Same page → **Consolidated transcript → Download student copy**: all nine semesters on one page (migrated Sem I–VIII + this semester), CGPA, credits 225/250, classification, *STUDENT COPY* watermark.
+3. **Switch → Registrar → Students → Rahul Kalita → Consolidated transcripts**: purpose *"Enrolment — Bar Council of Assam"* → **Issue official transcript** → open PDF / scan QR → *Authentic Consolidated Transcript* (classification withheld while a backlog is pending).
+4. **Switch → Parent** → same data, read-only, consent note (DPDP Act 2023).
 
 > "In production these documents are pushed to DigiLocker / NAD and credits to ABC via their APIs."
 

@@ -2,6 +2,8 @@ import { Download, ShieldCheck } from "lucide-react";
 import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
 import type { GradeSheetPayload } from "@/lib/results/workflow";
+import type { TranscriptPayload } from "@/lib/results/transcript";
+import { StudentCopyButton } from "../../transcripts/transcript-buttons";
 import { Badge, Callout, Card, CardHeader, EmptyState, PageHeader, Stat, Table, TD, TH, THead, TR, buttonVariants, type BadgeTone } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
@@ -14,6 +16,7 @@ export default async function MyResultsPage() {
   const student = await db.student.findUniqueOrThrow({ where: { id: studentId }, include: { batch: true } });
   const sheets = await db.document.findMany({ where: { studentId, type: "GRADE_SHEET", revoked: false }, orderBy: { issuedAt: "desc" } });
   const history = await db.semesterResult.findMany({ where: { studentId, run: { status: "PUBLISHED" } }, orderBy: { semester: "asc" } });
+  const transcripts = await db.document.findMany({ where: { studentId, type: "TRANSCRIPT", revoked: false }, orderBy: { issuedAt: "desc" }, take: 10 });
   const latest = sheets[0];
   const p = latest?.payload as GradeSheetPayload | undefined;
 
@@ -80,6 +83,44 @@ export default async function MyResultsPage() {
           </Card>
         </>
       )}
+      <Card>
+        <CardHeader
+          title="Consolidated transcript"
+          description="All semesters, credits, SGPA and CGPA in one QR-verifiable document"
+          action={user.role === "STUDENT" && history.length > 0 ? <StudentCopyButton /> : undefined}
+        />
+        {transcripts.length === 0 ? (
+          <div className="px-5 pb-5 text-sm text-muted-foreground">
+            No transcripts issued yet. Download a student copy for reference; official transcripts are issued by the Office of the Controller of Examinations on request.
+          </div>
+        ) : (
+          <Table>
+            <THead>
+              <tr>
+                <TH>Type</TH>
+                <TH>Purpose</TH>
+                <TH>Issued</TH>
+                <TH>Verification</TH>
+                <TH />
+              </tr>
+            </THead>
+            <tbody>
+              {transcripts.map((t) => {
+                const tp = t.payload as unknown as TranscriptPayload;
+                return (
+                  <TR key={t.id}>
+                    <TD><Badge tone={tp.variant === "OFFICIAL" ? "green" : "neutral"}>{tp.variant === "OFFICIAL" ? "Official" : "Student copy"}</Badge></TD>
+                    <TD className="text-sm text-muted-foreground">{tp.purpose ?? "—"}</TD>
+                    <TD className="text-xs">{formatDate(t.issuedAt, true)}</TD>
+                    <TD><a href={`/verify/${t.verifyCode}`} target="_blank" className="font-mono text-xs text-brand-700 hover:underline">{t.verifyCode}</a></TD>
+                    <TD className="text-right"><a href={`/api/transcript/${t.id}`} target="_blank" className="text-sm font-medium text-brand-700 hover:underline">Download</a></TD>
+                  </TR>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
+      </Card>
       <Card>
         <CardHeader title="Academic history" description="SGPA / CGPA across all published semesters" />
         <Table>
