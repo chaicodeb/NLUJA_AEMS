@@ -147,6 +147,7 @@ model Course {
   credits             Int
   category            CourseCategory
   maxMarks            Int               @default(100)
+  plannedSessions     Int               @default(52)
   schemeId            String
   scheme              EvaluationScheme  @relation(fields: [schemeId], references: [id])
   facultyId           String?
@@ -154,6 +155,7 @@ model Course {
   enrolments          Enrolment[]
   examPapers          ExamPaper[]
   marksSheets         InternalMarksSheet[]
+  classSessions       ClassSession[]
 
   @@unique([curriculumVersionId, code])
 }
@@ -191,6 +193,8 @@ model Student {
   documents     Document[]
   relaxations   RelaxationRequest[]
   revaluations  RevaluationRequest[]
+  leaves        LeaveRequest[]
+  attendanceAlerts AttendanceAlert[]
 }
 
 enum EnrolmentType {
@@ -217,6 +221,8 @@ model Enrolment {
   eligibilities Eligibility[]
   courseResults CourseResult[]
   relaxations   RelaxationRequest[]
+  attendanceRecords AttendanceRecord[]
+  attendanceAlerts  AttendanceAlert[]
 
   @@unique([studentId, courseId, academicYear, attempt])
 }
@@ -230,6 +236,69 @@ model AttendanceSummary {
   medicalLeaveDays Int       @default(0)
   biometricCount   Int?
   updatedAt        DateTime  @updatedAt
+}
+
+/// One scheduled class meeting of a course; its records roll up into AttendanceSummary.
+model ClassSession {
+  id           String             @id @default(cuid())
+  courseId     String
+  course       Course             @relation(fields: [courseId], references: [id])
+  academicYear String
+  startsAt     DateTime
+  kind         String             @default("LECTURE") // LECTURE | TUTORIAL | MOOT_PRACTICE
+  topic        String?
+  status       String             @default("SCHEDULED") // SCHEDULED | MARKED
+  source       String?            // FACULTY | BIOMETRIC
+  markedById   String?
+  markedAt     DateTime?
+  records      AttendanceRecord[]
+
+  @@unique([courseId, academicYear, startsAt])
+  @@index([academicYear, startsAt])
+}
+
+model AttendanceRecord {
+  id          String       @id @default(cuid())
+  sessionId   String
+  session     ClassSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  enrolmentId String
+  enrolment   Enrolment    @relation(fields: [enrolmentId], references: [id], onDelete: Cascade)
+  status      String       // PRESENT | ABSENT | DUTY_LEAVE | MEDICAL_LEAVE
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([sessionId, enrolmentId])
+  @@index([enrolmentId])
+}
+
+model LeaveRequest {
+  id           String    @id @default(cuid())
+  studentId    String
+  student      Student   @relation(fields: [studentId], references: [id])
+  type         String    // MEDICAL | DUTY
+  fromDate     DateTime
+  toDate       DateTime
+  reason       String
+  document     String?
+  status       String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  decidedById  String?
+  decidedAt    DateTime?
+  decisionNote String?
+  sessions     Int       @default(0)
+  createdAt    DateTime  @default(now())
+}
+
+model AttendanceAlert {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  enrolmentId String
+  enrolment   Enrolment @relation(fields: [enrolmentId], references: [id], onDelete: Cascade)
+  level       String    // WARNING | SHORTAGE | CRITICAL | NOTICE
+  pct         Float
+  message     String
+  channels    String    @default("SMS, e-mail (student and parent)")
+  sentById    String?
+  createdAt   DateTime  @default(now())
 }
 
 // ─── Configurable rules (rule engine) ─────────────────────────────────

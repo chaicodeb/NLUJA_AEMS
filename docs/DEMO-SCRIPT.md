@@ -23,11 +23,11 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 3, 5, 6, 7, 8A |
 | Examination Branch 🔑 | Mr. D. Kalita | 7 |
 | Academic Section | Ms. J. Bora | 2 (optional) |
-| Faculty | Dr. Ananya Bora (BL3.5 marks sheet) | 2A |
-| Head of Department (Dean) | Prof. N. Goswami | 2A |
+| Faculty | Dr. Ananya Bora (BL3.5 marks sheet), Dr. Rituraj Gogoi (BL9.2 class) | 2A, 2B |
+| Head of Department (Dean) | Prof. N. Goswami | 2A, 2B |
 | Vice-Chancellor | Prof. (Dr.) A. K. Sharma | 3, 7 |
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
-| Student | Aditi Baruah (registers live), Rahul Kalita (blocked paper), Sneha Iyer (LL.M., revaluation) | 4, 8, 8A |
+| Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation) | 2B, 4, 8, 8A |
 | Parent | Mr. Pranab Baruah | 8 |
 
 **Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published · Revaluation window.
@@ -82,6 +82,21 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 6. **Result Processing** readiness checklist (as COE) shows *"38/38 sheets verified"* once both sheets are verified. *"Any sheet still with a teacher makes that course **W — withheld**, never a silent zero."*
 
 > "Only the course teacher can enter; only the Dean or COE can verify; only the COE can unlock a verified sheet — with a reason, and never after results are published."
+
+---
+
+## Act 2B — Daily attendance and shortage alerts (4 min) · NIQ 3 (attendance) · RFP §8.2, §13 (biometric integration)
+
+*Run at* **Fresh start**, *before Act 3* (eligibility uses these totals). *Fallback:* any later stage has the class marked and the leave approved.
+
+1. **Switch → Dr. Rituraj Gogoi (Faculty) → Dashboard**: *"Take attendance (1 class awaiting)"* → today's **BL9.2 Taxation, 10:30 am**.
+2. The roll starts as all-present; every row shows the student's course attendance and where it will land. **Fetch biometric punches** → punch times fill in; **Rahul Kalita** and **Akash Borah** did not punch. Rahul's projection turns red: **70.6% → 69.2% — Below minimum**.
+3. **Save attendance** → *"1 attendance alert sent to students and parents — Rahul Kalita, BL9.2 now 69.2%"*. *"No one had to run a report: the rule did it."*
+4. **Switch → Rahul Kalita (Student)** → dashboard banner → **My Attendance**: course-wise %, *"Final: 69.2% — below 70%; relaxation may be sought"*, alert history, recent absences, **Apply for leave**.
+5. **Switch → Prof. N. Goswami (Dean) → Leave Applications**: Moumita Gogoi's **duty leave** (national moot, 8–9 Oct) → **Approve** → 10 class records become *duty leave*, counted as attendance. Priyanka's approved **medical leave** (14–18 Sept) is shown as evidence on the VC's relaxation request in Act 3.
+6. **Attendance Register**: shortage watch — below floor / below minimum / close / alerts sent; **Send shortage notices** issues formal notices to every student below the minimum.
+
+> "Teachers can change a class on the day they mark it; any later correction needs a reason and is logged. Another teacher cannot open the register at all."
 
 ---
 

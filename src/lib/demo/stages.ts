@@ -1,6 +1,7 @@
 import { db } from "../db";
 import { seedDemo } from "./seed";
-import { DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET, LIVE_STUDENT_EMAIL } from "./constants";
+import { DEMO_LIVE_CLASS, DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET, LIVE_STUDENT_EMAIL } from "./constants";
+import { biometricPunches, decideLeave, markSession } from "../attendance/daily";
 import { loadSheet, saveSheetDraft, submitSheet, verifySheet } from "../marks/internal";
 import { computeEligibility } from "../exams/eligibility";
 import { bulkRegisterEligible, getStudentExamView, registerStudent } from "../exams/registration";
@@ -12,8 +13,8 @@ import { approveRun, publishRun } from "../results/workflow";
 import { applyRevaluation } from "../results/revaluation";
 
 export const DEMO_STAGES = [
-  { key: "start", label: "Fresh start", hint: "Rules configured; eligibility not yet run; one relaxation request pending; two internal-marks sheets open" },
-  { key: "eligibility", label: "Eligibility decided", hint: "Internal marks all verified; eligibility computed and the VC has approved Priyanka's relaxation" },
+  { key: "start", label: "Fresh start", hint: "Rules configured; eligibility not yet run; one relaxation request pending; two internal-marks sheets open; today's Taxation class unmarked; one duty leave pending" },
+  { key: "eligibility", label: "Eligibility decided", hint: "Internal marks verified and attendance closed; eligibility computed and the VC has approved Priyanka's relaxation" },
   { key: "registered", label: "Students registered", hint: "Everyone except Aditi has registered — she registers live" },
   { key: "admit", label: "Admit cards published", hint: "Aditi registered, seating generated, admit cards issued" },
   { key: "conducted", label: "Exam conducted", hint: "Scripts scanned; 3 evaluations left for the live evaluator demo" },
@@ -40,6 +41,21 @@ async function completeDemoMarksSheets() {
   }
 }
 
+/** What the teacher and the Dean do live in the daily-attendance act. */
+async function completeDemoAttendance() {
+  const live = await db.classSession.findFirst({ where: { course: { code: DEMO_LIVE_CLASS.course }, status: "SCHEDULED" }, include: { course: true } });
+  if (live) {
+    const punches = await biometricPunches(live.id);
+    if ("punches" in punches && punches.punches) {
+      await markSession(live.id, punches.punches.map((p) => ({ enrolmentId: p.enrolmentId, status: p.status })), { id: live.course.facultyId!, role: "FACULTY" }, "BIOMETRIC");
+    }
+  }
+  const hod = await db.user.findFirstOrThrow({ where: { role: "HOD" } });
+  for (const leave of await db.leaveRequest.findMany({ where: { status: "PENDING" } })) {
+    await decideLeave(leave.id, true, "Participation certificate verified.", { id: hod.id, role: "HOD" });
+  }
+}
+
 /** Rebuilds the demo from scratch and replays the real workflow up to the requested stage. */
 export async function jumpToStage(stage: DemoStage) {
   const target = DEMO_STAGES.findIndex((s) => s.key === stage);
@@ -56,6 +72,7 @@ export async function jumpToStage(stage: DemoStage) {
   const as = (u: { id: string; role: string }) => ({ id: u.id, role: u.role });
 
   await completeDemoMarksSheets();
+  await completeDemoAttendance();
 
   await computeEligibility(exam.id, as(coe));
   const pending = await db.relaxationRequest.findMany({ where: { status: "PENDING" } });

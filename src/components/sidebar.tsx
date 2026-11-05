@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3, BookOpen, Calculator, CalendarCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
+  BarChart3, BookOpen, Calculator, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
   ListChecks, NotebookPen, PenLine, RefreshCcw, ShieldCheck, SlidersHorizontal, Users, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ import type { NavSection } from "@/lib/roles";
 
 const ICONS: Record<string, LucideIcon> = {
   BarChart3, BookOpen, Calculator, CalendarCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
-  ListChecks, NotebookPen, PenLine, ShieldCheck, SlidersHorizontal, Users, RefreshCcw,
+  ListChecks, NotebookPen, PenLine, ShieldCheck, SlidersHorizontal, Users, RefreshCcw, CalendarClock, ClipboardCheck,
 };
 
 export function Sidebar({ sections }: { sections: NavSection[] }) {

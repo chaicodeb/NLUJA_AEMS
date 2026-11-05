@@ -3,11 +3,14 @@ import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
 import { getActiveRule } from "@/lib/rules/store";
 import { asParams, type AttendanceParams } from "@/lib/rules/engine";
-import { Badge, Card, CardHeader, PageHeader, Table, TD, TH, THead, TR } from "@/components/ui";
+import { Badge, Card, CardHeader, PageHeader, Stat, Table, TD, TH, THead, TR } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { WARNING_MARGIN, levelFor } from "@/lib/attendance/shared";
+import { sevenDaysAgo } from "@/lib/attendance/daily";
+import { NoticesButton } from "./client";
 
 export default async function AttendancePage({ searchParams }: PageProps<"/attendance">) {
-  await requirePage("/attendance");
+  const user = await requirePage("/attendance");
   const sp = await searchParams;
   const batches = await db.batch.findMany({ orderBy: { code: "asc" }, include: { programme: true } });
   const batch = batches.find((b) => b.code === sp.batch) ?? batches[0];
@@ -20,6 +23,11 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
     include: { enrolments: { where: { status: "ACTIVE" }, include: { attendance: true, course: true }, orderBy: { course: { code: "asc" } } } },
   });
   const courses = students[0]?.enrolments.map((e) => e.course) ?? [];
+  const floor = p?.relaxationEnabled ? p.relaxedCourseMinPct : null;
+  const levels = students.flatMap((s) => s.enrolments.filter((e) => e.attendance?.classesHeld).map((e) => (p ? levelFor((e.attendance!.classesAttended / e.attendance!.classesHeld) * 100, p.courseMinPct, floor) : "OK")));
+  const count = (l: string) => levels.filter((x) => x === l).length;
+  const recentAlerts = await db.attendanceAlert.count({ where: { student: { batchId: batch.id }, createdAt: { gte: sevenDaysAgo() } } });
+  const canNotify = ["HOD", "ACADEMIC_STAFF", "COE", "ADMIN"].includes(user.role);
 
   const tone = (pct: number) => {
     if (!p) return "";
@@ -33,7 +41,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
       <PageHeader
         eyebrow="Attendance Management"
         title="Course-wise attendance register"
-        description="Faculty entry reconciled with biometric records. Shortfalls are flagged using the active attendance rule for the programme."
+        description="Course totals roll up from every class marked by teachers or the biometric readers. Shortfalls are flagged using the active attendance rule for the programme."
       />
       <div className="flex flex-wrap gap-2">
         {batches.map((b) => (
@@ -46,15 +54,22 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
           </Link>
         ))}
       </div>
+      <div className="grid gap-4 sm:grid-cols-4">
+        <Stat label="Below relaxation floor" value={count("CRITICAL")} tone={count("CRITICAL") ? "red" : "neutral"} hint={floor != null ? `under ${floor}% — not relaxable` : undefined} />
+        <Stat label="Below minimum" value={count("SHORTAGE")} tone={count("SHORTAGE") ? "amber" : "neutral"} hint={p ? `${floor ?? "—"}–${p.courseMinPct}% — relaxation possible` : undefined} />
+        <Stat label="Close to minimum" value={count("WARNING")} tone={count("WARNING") ? "amber" : "neutral"} hint={p ? `within ${WARNING_MARGIN} points of ${p.courseMinPct}%` : undefined} />
+        <Stat label="Alerts sent (7 days)" value={recentAlerts} hint="SMS + e-mail to students and parents" tone="brand" />
+      </div>
       <Card>
         <CardHeader
           title={batch.name}
           description={p ? `Rule ${rule?.key} v${rule?.version}: ${p.courseMinPct}% per course${p.relaxationEnabled ? `; relaxable to ${p.relaxedCourseMinPct}% with aggregate ≥ ${p.aggregateMinPct}%` : ""}` : "No attendance rule configured"}
           action={
-            <div className="flex gap-1.5 text-xs">
+            <div className="flex flex-wrap items-center justify-end gap-1.5 text-xs">
               <Badge tone="green">Meets rule</Badge>
               <Badge tone="amber">Relaxation band</Badge>
               <Badge tone="red">Below floor</Badge>
+              {canNotify && <NoticesButton batchId={batch.id} count={count("SHORTAGE") + count("CRITICAL")} />}
             </div>
           }
         />

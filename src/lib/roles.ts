@@ -31,7 +31,9 @@ export const NAV: NavSection[] = [
       { href: "/academics/programmes", label: "Programmes & Curricula", icon: "BookOpen", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC"] },
       { href: "/academics/schemes", label: "Evaluation Schemes", icon: "ListChecks", roles: ["ADMIN", "COE", "ACADEMIC_STAFF"] },
       { href: "/students", label: "Students", icon: "Users", roles: ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC"] },
-      { href: "/attendance", label: "Attendance", icon: "CalendarCheck", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "HOD", "FACULTY"] },
+      { href: "/attendance/classes", label: "Daily Attendance", icon: "CalendarClock", roles: ["FACULTY", "HOD", "ACADEMIC_STAFF", "COE", "ADMIN"] },
+      { href: "/attendance", label: "Attendance Register", icon: "CalendarCheck", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "HOD", "FACULTY"] },
+      { href: "/attendance/leave", label: "Leave Applications", icon: "ClipboardCheck", roles: ["HOD", "ACADEMIC_STAFF", "COE", "ADMIN"] },
       { href: "/marks", label: "Internal Marks", icon: "NotebookPen", roles: ["FACULTY", "HOD", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "ADMIN"] },
     ],
   },
@@ -59,6 +61,7 @@ export const NAV: NavSection[] = [
   {
     title: "My Portal",
     items: [
+      { href: "/me/attendance", label: "My Attendance", icon: "CalendarCheck", roles: ["STUDENT", "PARENT"] },
       { href: "/me/exams", label: "Exam Registration", icon: "FileCheck", roles: ["STUDENT"] },
       { href: "/me/results", label: "Results & Grade Sheets", icon: "GraduationCap", roles: ["STUDENT", "PARENT"] },
     ],

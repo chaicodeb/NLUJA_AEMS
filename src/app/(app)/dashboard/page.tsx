@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, NotebookPen, PenLine } from "lucide-react";
+import { ArrowRight, BellRing, CalendarClock, CheckCircle2, Circle, CircleAlert, Download, FileBadge, GraduationCap, NotebookPen, PenLine } from "lucide-react";
+import { dueClassCount } from "@/lib/attendance/daily";
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requirePage, type CurrentUser } from "@/lib/session";
@@ -54,6 +55,9 @@ async function actionItems(role: Role, examId: string | undefined): Promise<Acti
     db.internalMarksSheet.count({ where: { academicYear: exam.academicYear, status: "SUBMITTED" } }),
     db.internalMarksSheet.count({ where: { academicYear: exam.academicYear, status: { in: ["DRAFT", "RETURNED"] } } }),
   ]);
+  const [pendingLeave, dueClasses] = await Promise.all([db.leaveRequest.count({ where: { status: "PENDING" } }), dueClassCount()]);
+  if (["HOD", "ACADEMIC_STAFF"].includes(role) && pendingLeave) items.push({ label: `${pendingLeave} leave application(s) awaiting decision`, href: "/attendance/leave", tone: "amber" });
+  if (["ACADEMIC_STAFF", "COE", "HOD"].includes(role) && dueClasses) items.push({ label: `${dueClasses} class(es) held but attendance not yet marked`, href: "/attendance/classes", tone: "blue" });
   if ((role === "HOD" || role === "COE") && sheetsToVerify) items.push({ label: `${sheetsToVerify} internal-marks sheet(s) awaiting verification`, href: "/marks?status=SUBMITTED", tone: "amber" });
   if (["COE", "EXAM_STAFF", "ACADEMIC_STAFF", "HOD"].includes(role) && sheetsOpen) items.push({ label: `${sheetsOpen} internal-marks sheet(s) not yet submitted by teachers`, href: "/marks?status=open", tone: "blue" });
 
@@ -287,6 +291,7 @@ async function TeachingDashboard({ user }: { user: CurrentUser }) {
   const pending = evals.filter((e) => e.status !== "LOCKED").reduce((a, e) => a + e._count._all, 0);
   const done = evals.filter((e) => e.status === "LOCKED").reduce((a, e) => a + e._count._all, 0);
   const openSheets = courses.flatMap((c) => c.marksSheets).filter((s) => ["DRAFT", "RETURNED"].includes(s.status)).length;
+  const dueClasses = await dueClassCount(user.id);
 
   return (
     <div className="space-y-6">
@@ -296,8 +301,13 @@ async function TeachingDashboard({ user }: { user: CurrentUser }) {
         <Stat label="Scripts pending evaluation" value={pending} tone={pending ? "amber" : "green"} hint={pending ? undefined : "All allocated scripts evaluated"} />
         <Stat label="Evaluations submitted" value={done} tone="green" />
       </div>
-      {(pending > 0 || openSheets > 0) && (
+      {(pending > 0 || openSheets > 0 || dueClasses > 0) && (
         <div className="flex flex-wrap gap-3">
+          {dueClasses > 0 && (
+            <Link href="/attendance/classes" className={buttonVariants({ variant: "accent" })}>
+              <CalendarClock className="h-4 w-4" /> Take attendance ({dueClasses} class{dueClasses === 1 ? "" : "es"} awaiting)
+            </Link>
+          )}
           {openSheets > 0 && (
             <Link href="/marks" className={buttonVariants({ variant: "default" })}>
               <NotebookPen className="h-4 w-4" /> Enter internal marks ({openSheets} sheet{openSheets === 1 ? "" : "s"} open)
@@ -364,6 +374,7 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
   const reg = exam ? await db.examRegistration.findUnique({ where: { examId_studentId: { examId: exam.id, studentId: full.id } } }) : null;
   const latest = full.semResults.at(-1);
   const isParent = user.role === "PARENT";
+  const alerts = await db.attendanceAlert.findMany({ where: { studentId: full.id, level: { in: ["SHORTAGE", "CRITICAL", "NOTICE"] } }, orderBy: { createdAt: "desc" }, take: 2 });
 
   return (
     <div className="space-y-6">
@@ -405,8 +416,16 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
         </div>
       )}
       {isParent && <Callout tone="blue">Read-only access to your ward&apos;s records, shared with consent under the University&apos;s data-sharing policy (DPDP Act, 2023).</Callout>}
+      {alerts.length > 0 && (
+        <Link href="/me/attendance" className="block rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 hover:bg-red-100">
+          <div className="flex items-center gap-2 font-semibold"><BellRing className="h-4 w-4" /> Attendance alert</div>
+          {alerts.map((a) => (
+            <div key={a.id} className="mt-1">{a.message} <span className="text-xs text-red-700/80">· {formatDate(a.createdAt, true)}</span></div>
+          ))}
+        </Link>
+      )}
       <Card>
-        <CardHeader title="Attendance this semester" description="Updated from faculty entry and biometric records" />
+        <CardHeader title="Attendance this semester" description="Updated from faculty entry and biometric records" action={<Link href="/me/attendance" className="text-sm text-brand-700 hover:underline">Details & leave</Link>} />
         <Table>
           <THead>
             <tr>

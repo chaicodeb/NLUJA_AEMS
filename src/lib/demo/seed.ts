@@ -17,6 +17,7 @@ import { LEGACY_BALLB_2019, LEGACY_BALLB_2025, academicYearOf } from "./legacy";
 import { gradeFor, type GradingParams } from "../rules/engine";
 import { INTERNAL_SOURCES, sheetSignature } from "../marks/internal";
 import { DEMO_MARKS_SHEET, DEMO_VERIFY_SHEET } from "./constants";
+import { seedDailyAttendance, type AttendancePlan } from "./attendance-seed";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
 function splitRubric(total: number, criteria: { code: string; max: number }[]) {
@@ -35,7 +36,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -264,6 +265,7 @@ export async function seedDemo() {
 
   let demoStudentId = "";
   let uidCounter = 0;
+  const attendancePlan: AttendancePlan[] = [];
   for (const cohort of cohorts) {
     for (let i = 0; i < cohort.seeds.length; i++) {
       const s = cohort.seeds[i];
@@ -326,8 +328,9 @@ export async function seedDemo() {
         });
         const base = s.baseAttendance ?? 85;
         const attended = s.attendance?.[code] ?? Math.min(CLASSES_HELD, Math.max(37, Math.round((CLASSES_HELD * base) / 100 + (r() - 0.5) * 2)));
-        await db.attendanceSummary.create({
-          data: { enrolmentId: enrol.id, classesHeld: CLASSES_HELD, classesAttended: attended, biometricCount: attended },
+        attendancePlan.push({
+          enrolmentId: enrol.id, studentId: student.id, rollNo: student.rollNo, code, courseId: course.id, academicYear: cohort.ay,
+          slot: cohort.codes.indexOf(code), attended, programmeId: cohort.batch.programmeId,
         });
 
         const scheme = schemes[course.scheme];
@@ -471,6 +474,8 @@ export async function seedDemo() {
       { centre: "Main Campus, Amingaon", code: "AB-102", name: "Academic Block — Room 102", rows: 4, cols: 5 },
     ],
   });
+
+  await seedDailyAttendance(attendancePlan, CLASSES_HELD, users);
 
   // Pending VC relaxation request (Priyanka Saikia, ADR 67.3%)
   const priyanka = await db.student.findFirstOrThrow({ where: { name: "Priyanka Saikia" } });

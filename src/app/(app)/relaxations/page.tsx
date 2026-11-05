@@ -11,6 +11,7 @@ export default async function RelaxationsPage() {
     include: { student: { include: { batch: true } }, enrolment: { include: { course: true, attendance: true, eligibilities: true } }, exam: true },
   });
   const users = await db.user.findMany({ where: { id: { in: requests.flatMap((r) => [r.requestedById ?? "", r.decidedById ?? ""]) } } });
+  const leaves = await db.leaveRequest.findMany({ where: { studentId: { in: requests.map((r) => r.studentId) }, type: "MEDICAL", status: "APPROVED" } });
   const name = (id: string | null) => users.find((u) => u.id === id)?.name ?? "—";
   const pending = requests.filter((r) => r.status === "PENDING");
   const decided = requests.filter((r) => r.status !== "PENDING");
@@ -50,6 +51,13 @@ export default async function RelaxationsPage() {
                       <Badge>{r.ground}</Badge>
                     </div>
                     <p className="max-w-xl text-sm text-muted-foreground">{r.remarks}</p>
+                    {leaves.filter((l) => l.studentId === r.studentId).map((l) => (
+                      <p key={l.id} className="text-xs text-sky-800">
+                        Evidence: medical leave {formatDate(l.fromDate)} – {formatDate(l.toDate)} approved {l.decidedAt ? formatDate(l.decidedAt) : ""}
+                        {r.enrolment.attendance?.medicalLeaveDays ? ` · ${r.enrolment.attendance.medicalLeaveDays} ${r.enrolment.course.code} class(es) missed on medical leave` : ""}
+                        {l.document ? ` · ${l.document}` : ""}
+                      </p>
+                    ))}
                     <p className="text-xs text-muted-foreground">Raised by {name(r.requestedById)} · {formatDate(r.createdAt, true)}</p>
                   </div>
                   <DecisionButtons id={r.id} canDecide={user.role === "VC"} />

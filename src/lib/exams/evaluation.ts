@@ -58,6 +58,7 @@ export async function conductExam(examId: string, actor: { id: string; role: str
   const seats = await db.seatAllocation.findMany({
     where: { examPaper: { examId } },
     include: { student: true, room: true, examPaper: { include: { course: true } } },
+    orderBy: [{ examPaper: { course: { code: "asc" } } }, { student: { rollNo: "asc" } }],
   });
   const evaluators = await db.user.findMany({ where: { role: "EVALUATOR" }, orderBy: { email: "asc" } });
   const [evalA, evalB] = [evaluators.find((e) => e.email.includes("hazarika"))!, evaluators.find((e) => e.email.includes("lalremruati"))!];
