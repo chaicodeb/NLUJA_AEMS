@@ -13,7 +13,7 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 2. Open the app in Chrome, full screen (F11), browser zoom 90%.
 3. Sign in as **Controller of Examinations** (OTP `246810`).
 4. On the dashboard, use **Presenter → 1. Fresh start → Jump**. Everyone is signed out and the data is rebuilt.
-5. Keep a phone ready to scan QR codes (works only on the hosted URL or the same Wi-Fi network).
+5. Keep a phone ready to scan QR codes (works only on the hosted URL or the same Wi-Fi network). The sign-in page shows a QR code of the address in use — panel members can scan it to follow along on their phones (the menu folds into ☰ on a phone).
 6. Keep this script open on a second screen.
 
 **Demo accounts** (click on the login page; all passwords `Demo@123`; key icon = OTP `246810`):
@@ -24,8 +24,8 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | Examination Branch 🔑 | Mr. D. Kalita | 7 |
 | Academic Section | Ms. J. Bora | 1A, 2 (optional), 2C |
 | Applicant | Priya Bora (Ph.D. 2026-27, OBC-NCL) | 1A |
-| Faculty | Dr. Ananya Bora (BL3.5 marks sheet), Dr. Rituraj Gogoi (BL9.2 class) | 2A, 2B |
-| Head of Department (Dean) | Prof. N. Goswami | 1A, 2A, 2B |
+| Faculty | Dr. Ananya Bora (BL3.5 marks sheet), Dr. Rituraj Gogoi (BL9.2 class; sets BL9.2–9.4 papers) | 2A, 2B, 5A |
+| Head of Department (Dean) | Prof. N. Goswami (also question-paper moderator) | 1A, 2A, 2B, 5A |
 | Vice-Chancellor | Prof. (Dr.) A. K. Sharma | 3, 7 |
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
 | Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation), Arindam Hazarika (backlog) | 2B, 4, 8, 8A, 8B |
@@ -173,6 +173,23 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
+## Act 5A — Question paper: set, test without publishing, moderate, seal (4 min) · RFP §8.5 (question-paper management), §14.1
+
+*Run at any stage before* **Exam conducted** *(best at Fresh start).*
+
+1. **Switch → Faculty · Dr. Rituraj Gogoi → Question Papers**: only the three papers he was appointed to set. **BL9.3 → Edit**.
+   - The **Automatic checks** panel is red: *"Questions add up to 66, but the paper carries 70"*, *"Missing … Q4 (b)"*, and amber *"No question from Unit V"*. **Submit for moderation** is disabled.
+   - Fix live: write Q4 (b) (e.g. *"Explain the grounds on which recognition and enforcement of a foreign award may be refused under Section 48."*), set Q5 to **Unit V** and **14** marks → every check turns green as you type.
+2. **Test it without publishing**: **Show candidate's view** (exactly what is printed, with a DRAFT watermark) → **Save draft** → **Draft PDF (watermarked)**: every page carries "DRAFT v1 — NOT FOR DISTRIBUTION", the viewer's name, time and audit number. *"Nothing here is visible to students or evaluators."*
+3. **Submit for moderation**.
+4. **Switch → Dean · Prof. N. Goswami → Question Papers → BL9.3 → Moderate**: candidate's view, checks, **Marking-scheme dry run** (what evaluators will see). Add a comment → **Approve paper**. (Show **BL9.4**: returned earlier because Q2 (a) and Q4 (a) duplicate each other — the check flags it too.)
+5. **Switch → COE → Question Papers**: status board (12 not started, 1 drafting, 1 with moderator, 1 moderated, 1 sealed). **BL9.3 → Seal paper** → *"Sealed content verified"* with the fingerprint; **Release opens 27 Nov, 09:00** — one hour before the paper.
+6. **History** at the bottom: every save, view, preview, approval and seal, from the audit trail. Contents are encrypted in the database; the Examination Branch sees only status until release.
+
+> "The paper is tested exactly as candidates will see it — totals, syllabus coverage, choices, the marking screen — without a single copy leaving the system unwatermarked, and every look at it is on the record."
+
+---
+
 ## Act 6 — Exam conduct and anonymous on-screen evaluation (5 min) · RFP §8.5, §8.6, §14.1
 
 1. **COE → Examination → Scripts & evaluation → Conduct examination & scan scripts (simulate)**.
@@ -315,7 +332,9 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 1. **Switch → Vice-Chancellor → Dashboard**: action items, attendance distribution, results by batch with average SGPA.
 2. **Report Builder** → saved **"Average CGPA by social category (AISHE)"** → Open. Then build one live: *Course-wise results*, group by *Grade*, Count → **Save**. *"Your Registrar's office builds this, no vendor."*
-3. **Audit Trail** (as COE or VC): **"Chain verified — no tampering detected"**; filter `MFA_FAILED`, `ACCESS_DENIED`, `SEGREGATION_VIOLATION_BLOCKED`, `RULE_CHANGED`; expand a rule change to see before/after; **Export CSV**.
+3. **Audit Trail** (as COE or VC): **"Chain verified — no tampering detected"**; filter `MFA_FAILED`, `ACCESS_DENIED`, `SEGREGATION_VIOLATION_BLOCKED`, `RULE_CHANGED`; expand a rule change to see before/after; **Done by** a person, or search a student's name; **Export CSV** (exports what is filtered).
+   - How it works, in one sentence: *"Each entry's fingerprint includes the previous entry's fingerprint, so changing or deleting anything — even directly in the database — breaks the chain from that point, and the page recomputes the whole chain every time it opens."*
+4. **Student examination trail** (at *Results published* or later): **Students → Lalrinpuii Ralte → Examination trail**. Phase by phase: eligibility and registration → seat → **in the hall** (present with answer-booklet number and invigilator for three papers; **absent for BL9.4**, marked by the invigilator) → script custody → masked evaluation (dummy number only) → result and grade sheet. Each row says whether it is a hash-chained audit entry (number, actor, fingerprint) or an operational record. **CSV** / **Print** for an enquiry file. Point at the blue demo note: the exam was fast-forwarded, and audit times are never back-dated.
 
 ---
 
@@ -379,6 +398,8 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | What if two evaluators disagree? | Beyond 15% of max marks a third evaluator is auto-assigned; final = mean of the closest two. Threshold is configurable. |
 | Can the COE change a locked mark? | Only via a logged override with a reason; evaluator re-submits and re-signs. |
 | Where is data hosted? | MeitY-empanelled Indian cloud (Tier III+) or NLUJA campus; AES-256 at rest, TLS 1.2+ in transit; daily backups, RPO 24h / RTO 8h. |
+| How do you check a question paper without it leaking? | Setter → Dean moderation → COE seal. Automatic checks (total, coverage, choices, duplicates, setter identity, marking scheme), candidate's view and a watermarked PDF stamped with the viewer; content encrypted; release only one hour before the paper; every view logged. |
+| How does the audit trail work? | Every action writes an entry (who, role, what, before/after) in the same operation; each entry's SHA-256 fingerprint chains to the previous one, so any tampering is detected on the next verification. No screen can edit or delete entries. |
 | How do you prove results are correct? | The Excel verification workbook for every run, plus the hash-chained audit trail. |
 | Vendor lock-in? | Source code and data owned by NLUJA, escrow, documented export (RFP §31). |
 | Samarth data? | Migrated with reconciliation (legacy SGPA/CGPA history is already visible in student records). |
