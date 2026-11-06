@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { History } from "lucide-react";
 import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
-import { Badge, Card, CardBody, CardHeader, PageHeader, Table, TD, TH, THead, TR } from "@/components/ui";
+import { Badge, Card, CardBody, CardHeader, PageHeader, Table, TD, TH, THead, TR, buttonVariants } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import type { TranscriptPayload } from "@/lib/results/transcript";
 import { IssueOfficialForm } from "../../transcripts/transcript-buttons";
@@ -32,7 +34,16 @@ export default async function StudentDetail({ params }: PageProps<"/students/[id
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={`UID ${s.uid}`} title={s.name} description={`${s.batch.name} · ${s.batch.curriculumVersion.name}`} />
+      <PageHeader
+        eyebrow={`UID ${s.uid}`}
+        title={s.name}
+        description={`${s.batch.name} · ${s.batch.curriculumVersion.name}`}
+        actions={
+          <Link href={`/students/${s.id}/exam-trail`} className={buttonVariants({ variant: "outline" })}>
+            <History className="h-4 w-4" /> Examination trail
+          </Link>
+        }
+      />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <CardHeader title="Profile" />

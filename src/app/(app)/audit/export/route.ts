@@ -1,11 +1,12 @@
 import { db } from "@/lib/db";
+import { auditFilter } from "@/lib/audit";
 import { getCurrentUser } from "@/lib/session";
 import { canAccess } from "@/lib/roles";
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user || !canAccess(user.role, "/audit")) return new Response("Forbidden", { status: 403 });
-  const rows = await db.auditLog.findMany({ orderBy: { id: "asc" }, include: { actor: true } });
+  const rows = await db.auditLog.findMany({ where: auditFilter(Object.fromEntries(new URL(req.url).searchParams)), orderBy: { id: "asc" }, include: { actor: true } });
   const esc = (v: unknown) => `"${String(v ?? "").replaceAll('"', '""')}"`;
   const csv = [
     ["id", "timestamp", "actor", "role", "action", "entity", "entity_id", "summary", "before", "after", "prev_hash", "hash"].join(","),

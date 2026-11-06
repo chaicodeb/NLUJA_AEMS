@@ -954,6 +954,9 @@ model SeatAllocation {
   room        Room      @relation(fields: [roomId], references: [id])
   benchNo     String
   attended    Boolean?
+  bookletNo   String?
+  checkedInAt DateTime?
+  markedBy    String?
 
   @@unique([examPaperId, studentId])
 }

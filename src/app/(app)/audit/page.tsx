@@ -1,7 +1,7 @@
 import { ShieldCheck, ShieldX } from "lucide-react";
 import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
-import { verifyAuditChain } from "@/lib/audit";
+import { auditFilter, verifyAuditChain } from "@/lib/audit";
 import { ROLE_LABELS } from "@/lib/roles";
 import { Badge, Card, Callout, PageHeader, Table, TD, TH, THead, TR } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
@@ -10,16 +10,20 @@ import { JsonDiff } from "./json-diff";
 
 export default async function AuditPage({ searchParams }: PageProps<"/audit">) {
   await requirePage("/audit");
-  const { action, entity } = await searchParams;
-  const [logs, chain, actions] = await Promise.all([
+  const sp = await searchParams;
+  const { action, who } = sp;
+  const text = typeof sp.q === "string" ? sp.q.trim() : "";
+  const filters = new URLSearchParams(Object.entries(sp).filter((e): e is [string, string] => typeof e[1] === "string" && !!e[1])).toString();
+  const [logs, chain, actions, people] = await Promise.all([
     db.auditLog.findMany({
-      where: { ...(action ? { action: String(action) } : {}), ...(entity ? { entity: String(entity) } : {}) },
+      where: auditFilter(sp),
       orderBy: { id: "desc" },
       take: 200,
       include: { actor: true },
     }),
     verifyAuditChain(),
     db.auditLog.findMany({ distinct: ["action"], select: { action: true }, orderBy: { action: "asc" } }),
+    db.user.findMany({ where: { auditLogs: { some: {} } }, select: { id: true, name: true, role: true }, orderBy: { name: "asc" } }),
   ]);
 
   return (
@@ -50,8 +54,15 @@ export default async function AuditPage({ searchParams }: PageProps<"/audit">) {
               <option key={a.action} value={a.action}>{a.action}</option>
             ))}
           </select>
+          <select name="who" defaultValue={who ? String(who) : ""} className="h-9 max-w-full rounded-md border border-border px-3 text-sm" aria-label="Done by">
+            <option value="">Anyone</option>
+            {people.map((p) => (
+              <option key={p.id} value={p.id}>{p.name} — {ROLE_LABELS[p.role]}</option>
+            ))}
+          </select>
+          <input name="q" defaultValue={text} placeholder="Search: student name, roll no., code…" className="h-9 w-64 max-w-full rounded-md border border-border px-3 text-sm" aria-label="Search the audit trail" />
           <button className="h-9 rounded-md bg-brand-700 px-4 text-sm font-medium text-white">Filter</button>
-          <a href="/audit/export" className="ml-auto text-sm font-medium text-brand-700 hover:underline">Export CSV</a>
+          <a href={`/audit/export${filters ? `?${filters}` : ""}`} className="ml-auto text-sm font-medium text-brand-700 hover:underline">Export CSV{filters ? " (filtered)" : ""}</a>
         </form>
         <Table>
           <THead>

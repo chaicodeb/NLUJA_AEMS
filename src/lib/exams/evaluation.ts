@@ -71,11 +71,25 @@ export async function conductExam(examId: string, actor: { id: string; role: str
   let absent = 0;
   let scripts = 0;
 
+  const hall = new Map<string, { paper: string; present: number; absent: string[]; rooms: Set<string> }>();
+  let booklet = 0;
   for (const s of seats) {
     const seed = seedFor(s.student.name);
     const code = s.examPaper.course.code;
     const isAbsent = seed?.end?.[code] === "AB";
-    await db.seatAllocation.update({ where: { id: s.id }, data: { attended: !isAbsent } });
+    const invigilator = invigs.find((i) => i.roomId === s.roomId && i.session === s.examPaper.session)?.user.name ?? "Invigilator";
+    booklet++;
+    await db.seatAllocation.update({
+      where: { id: s.id },
+      data: isAbsent
+        ? { attended: false, markedBy: invigilator }
+        : { attended: true, bookletNo: `AB${String(260000 + booklet * 7).padStart(7, "0")}`, checkedInAt: new Date(s.examPaper.date.getTime() - (8 + (booklet % 12)) * 60000), markedBy: invigilator },
+    });
+    const h = hall.get(s.examPaperId) ?? { paper: code, present: 0, absent: [], rooms: new Set<string>() };
+    if (isAbsent) h.absent.push(`${s.student.name} (${s.student.rollNo})`);
+    else h.present++;
+    h.rooms.add(s.room.code);
+    hall.set(s.examPaperId, h);
     if (isAbsent) {
       absent++;
       const enrol = await db.enrolment.findFirst({ where: { studentId: s.studentId, courseId: s.examPaper.courseId } });
@@ -140,6 +154,13 @@ export async function conductExam(examId: string, actor: { id: string; role: str
   for (const s of all) if ((await tryFinalise(s.id)) === "FINALISED") finalised++;
 
   await db.exam.update({ where: { id: examId }, data: { status: "EVALUATION" } });
+  for (const [paperId, h] of hall) {
+    await audit({
+      actorId: actor.id, actorRole: actor.role, action: "HALL_ATTENDANCE_RECORDED", entity: "ExamPaper", entityId: paperId,
+      summary: `${h.paper}: ${h.present} present, ${h.absent.length} absent${h.absent.length ? ` (${h.absent.join(", ")})` : ""}; booklet numbers and check-in times recorded by invigilators in ${[...h.rooms].join(", ")}`,
+      after: { present: h.present, absent: h.absent.length },
+    });
+  }
   await audit({
     actorId: actor.id, actorRole: actor.role, action: "EXAM_CONDUCTED", entity: "Exam", entityId: examId,
     summary: `Examination conducted: ${scripts} scripts collected, barcoded, masked and scanned; ${absent} absent; custody recorded at 5 checkpoints per script`,
