@@ -47,6 +47,8 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-change-me-docker-demo-secret-0123456789}
       DOC_SIGNING_SECRET: ${DOC_SIGNING_SECRET:-change-me-docker-signing-secret-987654321}
       BACKUP_DIR: /app/backups
+      # address shown as a QR code on the sign-in page (defaults to the address the page was opened from)
+      PUBLIC_URL: ${PUBLIC_URL:-}
     volumes:
       - backups:/app/backups
     ports:

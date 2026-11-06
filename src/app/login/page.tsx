@@ -6,6 +6,7 @@ import { ROLE_LABELS } from "@/lib/roles";
 import { DEMO_OTP } from "@/lib/demo/constants";
 import { DEMO_PASSWORD } from "@/lib/demo/scenarios";
 import { LoginPanel } from "./login-panel";
+import { ShareQr } from "@/components/share-qr";
 
 export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/dashboard");
@@ -47,7 +48,12 @@ export default async function LoginPage() {
             ))}
           </ul>
         </div>
-        <div className="relative text-xs text-white/40">Demonstration build · RFP No. NLUJAA/ACAD-ADMIN/F/MISC/2024-25/510</div>
+        <div className="relative space-y-4">
+          <div className="max-w-sm">
+            <ShareQr dark compact />
+          </div>
+          <div className="text-xs text-white/40">Demonstration build · RFP No. NLUJAA/ACAD-ADMIN/F/MISC/2024-25/510</div>
+        </div>
       </div>
 
       <div className="flex items-center justify-center p-6 lg:p-10">

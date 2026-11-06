@@ -18,6 +18,7 @@ import { asParams, type AttendanceParams } from "@/lib/rules/engine";
 import { Badge, Callout, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat, Table, TD, TH, THead, TR, buttonVariants } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { DemoStageControl } from "./reset-demo-button";
+import { ShareQr } from "@/components/share-qr";
 import { AttendanceChart, EligibilityPie, EvaluationProgressChart, ResultsByBatchChart } from "./charts";
 
 export const maxDuration = 300;
@@ -247,6 +248,11 @@ async function StaffDashboard({ user }: { user: CurrentUser }) {
         description="Live status of the current examination cycle, drawn directly from the system database."
         actions={canPresent && <DemoStageControl stages={DEMO_STAGES.map((s) => ({ ...s }))} />}
       />
+      {canPresent && (
+        <div className="hidden max-w-md sm:block">
+          <ShareQr compact />
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Active students" value={students} hint={`${batches.length} batches · 3 programmes`} tone="brand" />
