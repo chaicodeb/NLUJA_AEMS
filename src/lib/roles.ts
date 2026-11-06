@@ -122,8 +122,13 @@ export const NAV: NavSection[] = [
   },
 ];
 
+/** Students, parents and applicants see their own portal right after Overview. */
+const PORTAL_SECTIONS = ["My Portal", "Admission"];
+
 export function navFor(role: Role): NavSection[] {
-  return NAV.map((s) => ({ ...s, items: s.items.filter((i) => i.roles.includes(role)) })).filter((s) => s.items.length);
+  const sections = NAV.map((s) => ({ ...s, items: s.items.filter((i) => i.roles.includes(role)) })).filter((s) => s.items.length);
+  const rank = (s: NavSection) => (s.title === "Overview" ? 0 : PORTAL_SECTIONS.includes(s.title) ? 1 : 2);
+  return sections.map((s, i) => ({ s, i })).sort((a, b) => rank(a.s) - rank(b.s) || a.i - b.i).map(({ s }) => s);
 }
 
 export function canAccess(role: Role, pathname: string): boolean {

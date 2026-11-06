@@ -55,7 +55,7 @@ export default async function FeedbackPage() {
                   <Badge tone={band.tone}>{band.label}</Badge>
                   {low.length > 0 && <Badge tone="amber">{low.length} course(s) below 3.6</Badge>}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {manager && <FormControls formId={form.id} status={form.status} released={form.releasedToFaculty} />}
                   <Link href={`/feedback/${form.id}`} className={buttonVariants({ size: "sm", variant: "outline" })}>{form.status === "DRAFT" ? "Edit" : "Analysis"}</Link>
                 </div>

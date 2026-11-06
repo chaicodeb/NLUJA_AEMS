@@ -16,7 +16,7 @@ export default async function StatutoryPage({ searchParams }: PageProps<"/report
         title="Statutory returns"
         description="AISHE, NIRF and NAAC figures in their own formats, computed from live records each time the page opens. Download any table as CSV to fill or attach on the portal."
       />
-      <nav className="flex gap-1 border-b border-border">
+      <nav className="flex gap-1 overflow-x-auto border-b border-border whitespace-nowrap">
         {returns.map((r) => (
           <Link key={r.body} href={`/reports/statutory?body=${r.body}`} className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${r.body === body.body ? "border-brand-600 text-brand-700" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
             {r.body}

@@ -19,7 +19,7 @@ export function DecisionButtons({ id, canDecide }: { id: string; canDecide: bool
   return (
     <div className="w-72 space-y-2">
       <Input placeholder="Decision note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="success" className="flex-1" disabled={pending} onClick={() => decide("APPROVED")}>
           <Check className="h-4 w-4" /> Approve
         </Button>

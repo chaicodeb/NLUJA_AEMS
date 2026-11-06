@@ -11,10 +11,10 @@ export function DemoStageControl({ stages }: { stages: { key: string; label: str
   const [pending, start] = useTransition();
   const hint = stages.find((s) => s.key === stage)?.hint;
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-2">
+    <div className="flex w-full flex-col items-start gap-1 sm:w-auto sm:items-end">
+      <div className="flex w-full items-center gap-2 sm:w-auto">
         <span className="text-xs font-medium text-muted-foreground">Presenter:</span>
-        <Select value={stage} onChange={(e) => setStage(e.target.value)} className="h-8 w-56 text-xs" disabled={pending}>
+        <Select value={stage} onChange={(e) => setStage(e.target.value)} className="h-8 min-w-0 flex-1 text-xs sm:w-56 sm:flex-none" disabled={pending}>
           {stages.map((s, i) => (
             <option key={s.key} value={s.key}>{i + 1}. {s.label}</option>
           ))}
@@ -33,7 +33,7 @@ export function DemoStageControl({ stages }: { stages: { key: string; label: str
           <FastForward className="h-3.5 w-3.5" /> {pending ? "Rebuilding…" : "Jump"}
         </Button>
       </div>
-      <span className="max-w-sm text-right text-[11px] text-muted-foreground">{hint}</span>
+      <span className="max-w-sm text-[11px] text-muted-foreground sm:text-right">{hint}</span>
     </div>
   );
 }

@@ -31,13 +31,13 @@ export function Button({ className, variant, size, ...props }: React.ButtonHTMLA
 }
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-xl border border-border bg-card shadow-sm", className)} {...props} />;
+  return <div className={cn("min-w-0 rounded-xl border border-border bg-card shadow-sm", className)} {...props} />;
 }
 
 export function CardHeader({ className, title, description, action }: { className?: string; title: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className={cn("flex items-start justify-between gap-4 border-b border-border px-5 py-4", className)}>
-      <div>
+    <div className={cn("flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-border px-4 py-4 sm:px-5", className)}>
+      <div className="min-w-0">
         <h3 className="font-semibold text-foreground">{title}</h3>
         {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </div>

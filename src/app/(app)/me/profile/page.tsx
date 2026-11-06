@@ -39,7 +39,7 @@ export default async function MyProfilePage() {
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4 px-5 py-2.5">
                 <dt className="text-muted-foreground">{k}</dt>
-                <dd className="text-right font-medium">{v}</dd>
+                <dd className="min-w-0 break-words text-right font-medium [overflow-wrap:anywhere]">{v}</dd>
               </div>
             ))}
           </dl>

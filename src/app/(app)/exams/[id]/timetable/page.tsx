@@ -21,7 +21,7 @@ export default async function TimetablePage({ params }: PageProps<"/exams/[id]/t
         title={`Timetable — ${exam.name}`}
         description={`Window ${formatDate(exam.startDate)} – ${formatDate(exam.endDate)}. Papers are derived from the curriculum of each running batch.`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Badge tone="brand">{exam.status.replace("_", " ")}</Badge>
             {exam.timetablePublishedAt ? <Badge tone="green">Published {formatDate(exam.timetablePublishedAt)}</Badge> : <Badge tone="amber">Not published</Badge>}
           </div>

@@ -46,7 +46,7 @@ export default async function ExamDetail({ params, searchParams }: PageProps<"/e
           </div>
         }
       />
-      <div className="flex gap-1 border-b border-border">
+      <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 whitespace-nowrap sm:mx-0 sm:px-0">
         {TABS.map((t) => (
           <Link
             key={t.key}
@@ -340,7 +340,7 @@ async function SeatingTab({ examId, role, published, session }: { examId: string
           Candidates are shuffled and laid out so that no two students writing the same paper sit next to each other. Invigilators are rotated, and a paper&apos;s setter is never assigned to invigilate that session.
         </p>
         {canOperate && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <GenerateSeatingButton examId={examId} disabled={published || regCount === 0} />
             {["ADMIN", "COE"].includes(role) && <PublishAdmitCardsButton examId={examId} disabled={published || totalSeats === 0} />}
           </div>
