@@ -30,6 +30,8 @@ services:
       <<: *db-env
       SESSION_SECRET: ${SESSION_SECRET:-change-me-docker-demo-secret-0123456789}
       FORCE_RESEED: ${FORCE_RESEED:-0}
+      # the app's own scheduler takes the first backup a minute after it starts
+      SEED_BACKUP: "0"
     command: sh -c "npx prisma db push --skip-generate --accept-data-loss && npx tsx prisma/setup.ts"
     depends_on:
       db:
@@ -44,6 +46,9 @@ services:
       <<: *db-env
       SESSION_SECRET: ${SESSION_SECRET:-change-me-docker-demo-secret-0123456789}
       DOC_SIGNING_SECRET: ${DOC_SIGNING_SECRET:-change-me-docker-signing-secret-987654321}
+      BACKUP_DIR: /app/backups
+    volumes:
+      - backups:/app/backups
     ports:
       - "${APP_PORT:-8080}:3000"
     depends_on:
@@ -53,3 +58,4 @@ services:
 
 volumes:
   pgdata:
+  backups:

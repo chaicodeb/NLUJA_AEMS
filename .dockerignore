@@ -9,3 +9,4 @@ next-env.d.ts
 .tools
 coverage
 npm-debug.log*
+backups

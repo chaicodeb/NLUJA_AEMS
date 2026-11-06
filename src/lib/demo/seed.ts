@@ -555,7 +555,7 @@ export async function seedDemo() {
   await audit({ actorId: users.admin, actorRole: "ADMIN", action: "DATA_MIGRATION", entity: "System", summary: "Legacy records migrated: student master, curricula, SGPA/CGPA history (reconciled)", after: { students: uidCounter, semesterResults: await db.semesterResult.count() } });
   await audit({ actorId: users.academic, actorRole: "ACADEMIC_STAFF", action: "CONFIGURE_RULES", entity: "RuleSet", summary: "Initial attendance, grading and grace rules configured" });
   await audit({ actorId: users.coe, actorRole: "COE", action: "CREATE_EXAM", entity: "Exam", entityId: exam.id, summary: "End Semester Examination (Odd Semester), 2026-27 created; registration opened", after: { code: exam.code, papers: paperCodes.length } });
-  await runBackup("SCHEDULED", null, "Nightly backup (02:00 IST)");
+  if (process.env.SEED_BACKUP !== "0") await runBackup("SCHEDULED", null, "Nightly backup (02:00 IST)");
 
   return { demoStudentId, students: uidCounter };
 }
