@@ -25,6 +25,7 @@ import { seedAdmissions } from "./admissions-seed";
 import { seedAcademics } from "./academics-seed";
 import { seedIntegrations } from "./integrations-seed";
 import { seedHelpdesk } from "./helpdesk-seed";
+import { seedQuestionPapers } from "./question-papers-seed";
 import { clearBackupFiles, runBackup } from "../admin/backup";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
@@ -46,7 +47,7 @@ const sheetStatusFor = (code: string, comp: string) =>
 const TABLES = [
   "TicketMessage", "Ticket", "BackupRun", "ImportRow", "ImportBatch", "IntegrationJob", "IntegrationConnector", "ApiCallLog", "ApiKey", "AcademicEvent", "ProfileChangeRequest", "ApplicationDocument", "Application", "AdmissionCycle", "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
-  "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
+  "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "QuestionPaper", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
   "EvaluationScheme", "Batch", "CurriculumVersion", "Programme",
 ];
@@ -555,6 +556,7 @@ export async function seedDemo() {
   await audit({ actorId: users.admin, actorRole: "ADMIN", action: "DATA_MIGRATION", entity: "System", summary: "Legacy records migrated: student master, curricula, SGPA/CGPA history (reconciled)", after: { students: uidCounter, semesterResults: await db.semesterResult.count() } });
   await audit({ actorId: users.academic, actorRole: "ACADEMIC_STAFF", action: "CONFIGURE_RULES", entity: "RuleSet", summary: "Initial attendance, grading and grace rules configured" });
   await audit({ actorId: users.coe, actorRole: "COE", action: "CREATE_EXAM", entity: "Exam", entityId: exam.id, summary: "End Semester Examination (Odd Semester), 2026-27 created; registration opened", after: { code: exam.code, papers: paperCodes.length } });
+  await seedQuestionPapers(users, exam.id);
   if (process.env.SEED_BACKUP !== "0") await runBackup("SCHEDULED", null, "Nightly backup (02:00 IST)");
 
   return { demoStudentId, students: uidCounter };

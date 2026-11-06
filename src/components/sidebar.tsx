@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import {
   Award, BarChart3, BookOpen, Calculator, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
   ListChecks, MessageSquareText, MessagesSquare, NotebookPen, PenLine, RefreshCcw, Repeat, Scale, ShieldCheck, SlidersHorizontal, Users, Stamp, DoorOpen, Contact,
-  UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap, Landmark, DatabaseBackup, ShieldHalf, LifeBuoy, MessageCircleQuestion, Headset, Menu, X, type LucideIcon,
+  UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap, Landmark, DatabaseBackup, ShieldHalf, LifeBuoy, MessageCircleQuestion, Headset, FileLock2, Menu, X, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavSection } from "@/lib/roles";
@@ -16,7 +16,7 @@ import type { NavSection } from "@/lib/roles";
 const ICONS: Record<string, LucideIcon> = {
   BarChart3, BookOpen, Calculator, CalendarCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
   ListChecks, NotebookPen, PenLine, ShieldCheck, SlidersHorizontal, Users, RefreshCcw, CalendarClock, ClipboardCheck, Repeat, Scale, MessageSquareText, MessagesSquare, Award,
-  Stamp, DoorOpen, Contact, UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap, Landmark, DatabaseBackup, ShieldHalf, LifeBuoy, MessageCircleQuestion, Headset,
+  Stamp, DoorOpen, Contact, UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap, Landmark, DatabaseBackup, ShieldHalf, LifeBuoy, MessageCircleQuestion, Headset, FileLock2,
 };
 
 function Brand({ onNavigate, className = "border-b border-white/10" }: { onNavigate?: () => void; className?: string }) {

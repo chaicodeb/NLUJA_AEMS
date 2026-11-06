@@ -154,6 +154,15 @@ export async function conductExam(examId: string, actor: { id: string; role: str
   for (const s of all) if ((await tryFinalise(s.id)) === "FINALISED") finalised++;
 
   await db.exam.update({ where: { id: examId }, data: { status: "EVALUATION" } });
+  const sealed = await db.questionPaper.findMany({ where: { status: "SEALED", examPaper: { examId } }, include: { examPaper: { include: { course: true } } } });
+  for (const qp of sealed) {
+    await db.questionPaper.update({ where: { id: qp.id }, data: { status: "RELEASED", releasedAt: new Date(qp.examPaper.date.getTime() - 60 * 60000) } });
+    await audit({
+      actorId: actor.id, actorRole: actor.role, action: "QP_RELEASED", entity: "QuestionPaper", entityId: qp.id,
+      summary: `${qp.examPaper.course.code} question paper released for printing at the examination centre; fingerprint ${qp.contentHash.slice(0, 16)} verified`,
+      before: { status: "SEALED" }, after: { status: "RELEASED" },
+    });
+  }
   for (const [paperId, h] of hall) {
     await audit({
       actorId: actor.id, actorRole: actor.role, action: "HALL_ATTENDANCE_RECORDED", entity: "ExamPaper", entityId: paperId,

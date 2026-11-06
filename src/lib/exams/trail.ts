@@ -33,7 +33,7 @@ const STAGE_OF: Record<string, TrailEvent["stage"]> = {
   ELIGIBILITY_RUN: "Eligibility", RUN_ELIGIBILITY: "Eligibility", CREATE_EXAM: "Registration", BULK_REGISTRATION: "Registration", RELAXATION_REQUESTED: "Eligibility", RELAXATION_APPROVED: "Eligibility", RELAXATION_REJECTED: "Eligibility",
   EXAM_REGISTERED: "Registration", REGISTRATION_BLOCKED: "Registration", SUPPLEMENTARY_REGISTERED: "Registration",
   SEATING_GENERATED: "Seating", ADMIT_CARDS_PUBLISHED: "Seating", ADMIT_CARD_DOWNLOADED: "Document",
-  HALL_ATTENDANCE_RECORDED: "Exam hall", EXAM_CONDUCTED: "Exam hall",
+  HALL_ATTENDANCE_RECORDED: "Exam hall", EXAM_CONDUCTED: "Exam hall", QP_RELEASED: "Exam hall",
   EVALUATIONS_SIMULATED: "Evaluation", EVALUATION_LOCKED: "Evaluation", EVALUATION_REOPENED: "Evaluation", EVALUATOR_REASSIGNED: "Evaluation", LOCKED_EDIT_REJECTED: "Evaluation", MODERATION_PROPOSED: "Result", MODERATION_APPROVED: "Result",
   RESULTS_PROCESSED: "Result", RESULTS_APPROVED: "Result", RESULTS_PUBLISHED: "Result",
   GRADE_SHEET_DOWNLOADED: "Document", REVALUATION_APPLIED: "Post-result", REVALUATOR_ASSIGNED: "Post-result", REVALUATION_DECIDED: "Post-result",
@@ -69,10 +69,11 @@ export async function studentExamTrail(studentId: string, examId: string, opts: 
   const paperIds = seats.map((s) => s.examPaperId);
   const ids = [studentId, registration?.id, ...docs.map((d) => d.id), ...relaxations.map((r) => r.id), ...revals.map((r) => r.id), ...scripts.flatMap((s) => s.evaluations.map((e) => e.id))].filter((x): x is string => !!x);
   const from = new Date(exam.startDate.getTime() - 120 * 86400000);
+  const qpIds = (await db.questionPaper.findMany({ where: { examPaperId: { in: paperIds } }, select: { id: true } })).map((q) => q.id);
   const [own, about, examWide] = await Promise.all([
     student.user ? db.auditLog.findMany({ where: { actorId: student.user.id, at: { gte: from } }, include: { actor: true } }) : [],
     db.auditLog.findMany({ where: { entityId: { in: ids } }, include: { actor: true } }),
-    db.auditLog.findMany({ where: { OR: [{ entity: "Exam", entityId: examId }, { entity: "ResultRun", entityId: { in: runs.map((r) => r.id) } }, { entity: "ExamPaper", entityId: { in: paperIds } }] }, include: { actor: true } }),
+    db.auditLog.findMany({ where: { OR: [{ entity: "Exam", entityId: examId }, { entity: "ResultRun", entityId: { in: runs.map((r) => r.id) } }, { entity: "ExamPaper", entityId: { in: paperIds } }, { entity: "QuestionPaper", entityId: { in: qpIds }, action: "QP_RELEASED" }] }, include: { actor: true } }),
   ]);
 
   const events: Omit<TrailEvent, "phase">[] = [];
@@ -82,7 +83,8 @@ export async function studentExamTrail(studentId: string, examId: string, opts: 
       if (seen.has(a.id)) continue;
       seen.add(a.id);
       events.push({
-        at: a.at, stage: STAGE_OF[a.action] ?? (scope === "exam" ? "Result" : "Access"), title: a.action.replaceAll("_", " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()),
+        at: a.at, stage: STAGE_OF[a.action] ?? (scope === "exam" ? "Result" : "Access"),
+        title: a.action === "QP_RELEASED" ? "Question paper released" : a.action.replaceAll("_", " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()),
         detail: a.summary ?? "", source: "audit", scope, audit: { id: a.id, action: a.action, hash: a.hash, actor: a.actor ? `${a.actor.name} (${a.actorRole ?? a.actor.role})` : "System" },
       });
     }

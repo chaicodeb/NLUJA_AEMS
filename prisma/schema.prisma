@@ -820,8 +820,29 @@ model ExamPaper {
   scripts        AnswerScript[]
   registrationPapers RegistrationPaper[]
   moderations    ModerationAction[]
+  questionPaper  QuestionPaper?
 
   @@unique([examId, courseId])
+}
+
+/// Confidential question paper. Content is AES-256-GCM encrypted at rest and never shown to students before the examination.
+model QuestionPaper {
+  id            String    @id @default(cuid())
+  examPaperId   String    @unique
+  examPaper     ExamPaper @relation(fields: [examPaperId], references: [id], onDelete: Cascade)
+  status        String    @default("DRAFT") // DRAFT | SUBMITTED | CHANGES_REQUESTED | APPROVED | SEALED | RELEASED
+  version       Int       @default(1)
+  body          String    // encrypted JSON { instructions, questions[] }
+  contentHash   String    // SHA-256 of the plain content of the current version
+  moderatorId   String?
+  moderatorName String?
+  moderatorNote String?
+  submittedAt   DateTime?
+  moderatedAt   DateTime?
+  sealedAt      DateTime?
+  releasedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Eligibility {

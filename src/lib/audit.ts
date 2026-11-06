@@ -55,7 +55,6 @@ export async function audit(entry: AuditInput, tx: Tx = db) {
   });
 }
 
-/** Recomputes the whole chain; returns the first broken entry id, if any. */
 /** Filters shared by the Audit Trail screen and its CSV export. */
 export function auditFilter(p: { action?: unknown; entity?: unknown; who?: unknown; q?: unknown }): Prisma.AuditLogWhereInput {
   const text = typeof p.q === "string" ? p.q.trim() : "";
@@ -67,6 +66,7 @@ export function auditFilter(p: { action?: unknown; entity?: unknown; who?: unkno
   };
 }
 
+/** Recomputes the whole chain; returns the first broken entry id, if any. */
 export async function verifyAuditChain() {
   const rows = await db.auditLog.findMany({ orderBy: { id: "asc" } });
   let prev = GENESIS;
