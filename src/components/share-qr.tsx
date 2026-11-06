@@ -1,5 +1,6 @@
 import { Smartphone } from "lucide-react";
 import { qrDataUrl, shareUrl } from "@/lib/share";
+import { QrZoom } from "./qr-zoom";
 
 const NOTE = {
   public: "Scan to open this demo on your phone.",
@@ -13,8 +14,7 @@ export async function ShareQr({ compact = false, dark = false }: { compact?: boo
   const src = await qrDataUrl(url);
   return (
     <div className={`flex items-center gap-3 rounded-lg border p-3 ${dark ? "border-white/15 bg-white/5" : "border-border bg-white"}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- data URL generated on the server */}
-      <img src={src} alt={`QR code for ${url}`} width={compact ? 72 : 96} height={compact ? 72 : 96} className="shrink-0 rounded bg-white p-1" />
+      <QrZoom src={src} url={url} note={NOTE[kind]} size={compact ? 72 : 96} />
       <div className="min-w-0 text-xs leading-snug">
         <div className={`flex items-center gap-1 font-medium ${dark ? "text-white" : "text-foreground"}`}>
           <Smartphone className="h-3.5 w-3.5" /> Open on your phone

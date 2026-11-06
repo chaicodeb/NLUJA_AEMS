@@ -19,5 +19,5 @@ export async function shareUrl() {
 }
 
 export async function qrDataUrl(text: string) {
-  return QRCode.toDataURL(text, { margin: 1, width: 240, errorCorrectionLevel: "M", color: { dark: "#2a1c15", light: "#ffffff" } });
+  return QRCode.toDataURL(text, { margin: 1, width: 720, errorCorrectionLevel: "M", color: { dark: "#2a1c15", light: "#ffffff" } });
 }
