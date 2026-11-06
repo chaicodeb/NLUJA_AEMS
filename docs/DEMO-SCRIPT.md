@@ -226,7 +226,7 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 3. **Switch → Registrar → Students → Rahul Kalita → Consolidated transcripts**: purpose *"Enrolment — Bar Council of Assam"* → **Issue official transcript** → open PDF / scan QR → *Authentic Consolidated Transcript* (classification withheld while a backlog is pending).
 4. **Switch → Parent** → same data, read-only, consent note (DPDP Act 2023).
 
-> "In production these documents are pushed to DigiLocker / NAD and credits to ABC via their APIs."
+> "Each of these documents is already queued for DigiLocker and the credits are in the ABC file — we'll show that in Act 8E."
 
 ---
 
@@ -293,6 +293,21 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 6. **Switch → Registrar → Alumni**: 53 alumni from 2014 onwards (migrated records plus self-updated profiles); progression by year for **NAAC 5.2.1 / 5.2.2** (placed, higher studies, competitive exams); sector chart; searchable directory honouring consent; **NAAC 5.2 export (CSV)**.
 
 > "Leaving the University is one workflow, not four counters: each department clears from its own desk, the deposit refund is computed, and the certificates are signed and verifiable — and every graduate becomes a record in the alumni registry."
+
+---
+
+## Act 8E — Integrations and legacy data migration (5 min) · NIQ 3.14 · RFP §13
+
+*Best after **Results published** (grade sheets are waiting for DigiLocker); the API and migration parts work at any stage.*
+
+1. **Switch → Registrar (or Admin) → Connectors & DigiLocker**: four connectors (DigiLocker/NAD, ABC, payment gateway, SMS — sandboxes). The delivery queue shows the grade sheets issued at publication *Queued* → **Run queue now** → delivered with DigiLocker URIs (`in.ac.nluja-GDSHT-…`); two **fail**: *Learner not found — no ABC (APAAR) ID* (Pranjal Nath, Simran Kaur). The ABC card lists the same two students as left out of the credit file. **ABC credit file (CSV)** downloads one row per passed course in the ABC upload layout.
+   - Admin only: tick **Simulate outage**, issue any certificate (or run again) → *HTTP 503*, rescheduled with back-off; untick to recover.
+2. **Switch → Admin (OTP) → API & Keys**: five read-only endpoints with permissions; the **OpenAPI** link. **Issue a key** for "Library (Koha)" with `students:read` → the secret is shown once (stored only as a hash). Paste it into **Try it** → *List students* → HTTP 200 JSON (no phone or family data). Try *Programmes* → **403** (permission not granted). **Revoke** the key → **401**. Every call appears under *Recent calls*, including the Samarth nightly sync.
+3. **Switch → Academic Section → Data Migration** → *Student master records* → **Demo legacy file** (download) → **Upload CSV**: 9 rows reconciled before anything is written — 4 valid, 2 warnings (no ABC ID, bad e-mail), 3 errors (roll number already used, unknown batch, impossible date). **Rows to fix (CSV)** → **Commit 6 clean rows**.
+4. Same page → *Historical course results* → demo file → **Upload**: 62 rows; warnings for a grade that does not match the marks under the grading regulation, a credit mismatch and a **source SGPA that differs from the recomputed SGPA**; errors for marks of 105, a course not in the curriculum and an unknown roll number — and the rest of those semesters is **held back** so no semester is migrated half-complete. **Commit** → BAL20-001's record now shows semesters 1–2 with recomputed SGPA/CGPA.
+5. (Optional) **Switch → Registrar** → the import → **Roll back** (results first; rolling back students first is refused because they now have results).
+
+> "Integration is not an afterthought: every certificate the University signs goes to DigiLocker automatically, partner systems read only what their key allows, and legacy data is reconciled — not just copied — before it becomes part of the record."
 
 ---
 

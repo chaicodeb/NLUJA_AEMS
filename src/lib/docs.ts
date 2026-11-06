@@ -23,7 +23,7 @@ export async function issueDocument(
   tx: Prisma.TransactionClient | typeof db = db,
 ) {
   const payloadHash = hashPayload(data.payload);
-  return tx.document.create({
+  const doc = await tx.document.create({
     data: {
       type: data.type,
       studentId: data.studentId,
@@ -35,7 +35,16 @@ export async function issueDocument(
       isDuplicate: data.isDuplicate ?? false,
     },
   });
+  if (DIGILOCKER_TYPES[doc.type]) {
+    await tx.integrationJob.create({ data: { connector: "DIGILOCKER", documentId: doc.id, studentId: doc.studentId, label: `${DIGILOCKER_TYPES[doc.type]} ${doc.verifyCode}` } });
+  }
+  return doc;
 }
+
+/** Documents published to the learner's DigiLocker account (issuer document types). */
+export const DIGILOCKER_TYPES: Record<string, string> = {
+  GRADE_SHEET: "Grade sheet", TRANSCRIPT: "Transcript", PROVISIONAL: "Provisional certificate", DEGREE: "Degree certificate", MIGRATION: "Migration certificate",
+};
 
 export function verifyDocument(doc: { payload: Prisma.JsonValue; payloadHash: string; revoked: boolean }) {
   const recomputed = hashPayload(doc.payload);

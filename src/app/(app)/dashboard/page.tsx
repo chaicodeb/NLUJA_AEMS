@@ -125,6 +125,14 @@ async function actionItems(role: Role, examId: string | undefined): Promise<Acti
   if (role === "COE" || role === "ADMIN") {
     for (const p of await db.exam.findMany({ where: { status: "PLANNED", timetablePublishedAt: null } })) items.push({ label: `${p.name}: date sheet not yet published`, href: `/exams/${p.id}/timetable`, tone: "blue" });
   }
+  if (["ADMIN", "REGISTRAR", "COE"].includes(role)) {
+    const [waiting, failed] = await Promise.all([
+      db.integrationJob.count({ where: { connector: "DIGILOCKER", status: "PENDING" } }),
+      db.integrationJob.count({ where: { connector: "DIGILOCKER", status: "FAILED" } }),
+    ]);
+    if (failed) items.push({ label: `${failed} DigiLocker deliver${failed === 1 ? "y" : "ies"} failed — check ABC IDs`, href: "/integrations", tone: "red" });
+    if (waiting && role === "ADMIN") items.push({ label: `${waiting} document(s) waiting to be pushed to DigiLocker`, href: "/integrations", tone: "blue" });
+  }
   if (!examId) return items;
   const [relax, processed, approved, pendingEvals, third, eligCount, regCount, seatCount, exam] = await Promise.all([
     db.relaxationRequest.count({ where: { status: "PENDING" } }),

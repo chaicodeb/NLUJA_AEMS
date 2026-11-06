@@ -73,6 +73,14 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    title: "Integrations",
+    items: [
+      { href: "/integrations", label: "Connectors & DigiLocker", icon: "Plug", roles: ["ADMIN", "REGISTRAR", "COE"] },
+      { href: "/integrations/api", label: "API & Keys", icon: "KeyRound", roles: ["ADMIN"] },
+      { href: "/integrations/migration", label: "Data Migration", icon: "DatabaseZap", roles: ["ADMIN", "ACADEMIC_STAFF", "REGISTRAR"] },
+    ],
+  },
+  {
     title: "Governance",
     items: [
       { href: "/feedback", label: "Feedback & Surveys", icon: "MessageSquareText", roles: ["IQAC", "VC", "HOD", "COE", "ACADEMIC_STAFF", "REGISTRAR", "ADMIN", "FACULTY"] },

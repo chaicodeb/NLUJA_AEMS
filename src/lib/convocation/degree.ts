@@ -72,7 +72,7 @@ export async function currentConvocation() {
 /** Students of batches that have reached the end of their programme. */
 export async function graduands(convocationId: string) {
   const batches = (await db.batch.findMany({ include: { programme: true } })).filter((b) => b.currentSemester >= b.programme.durationSemesters);
-  const students = await db.student.findMany({ where: { batchId: { in: batches.map((b) => b.id) } }, orderBy: { rollNo: "asc" } });
+  const students = await db.student.findMany({ where: { batchId: { in: batches.map((b) => b.id) }, status: { notIn: ["GRADUATED", "WITHDRAWN"] } }, orderBy: { rollNo: "asc" } });
   const apps = await db.degreeApplication.findMany({ where: { convocationId } });
   const rows = [];
   for (const s of students) rows.push({ ...(await degreeStatus(s.id)), application: apps.find((a) => a.studentId === s.id) ?? null });

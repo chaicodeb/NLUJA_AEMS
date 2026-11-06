@@ -93,6 +93,95 @@ model CurriculumVersion {
   batches          Batch[]
 }
 
+// ─── Integrations & data migration ────────────────────────────────────
+
+/// Credential for a partner system calling the REST API; only a SHA-256 hash of the secret is stored.
+model ApiKey {
+  id          String       @id @default(cuid())
+  name        String
+  prefix      String       @unique
+  keyHash     String       @unique
+  scopes      String[]
+  createdById String
+  createdAt   DateTime     @default(now())
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  calls       ApiCallLog[]
+}
+
+model ApiCallLog {
+  id     Int      @id @default(autoincrement())
+  keyId  String?
+  key    ApiKey?  @relation(fields: [keyId], references: [id], onDelete: SetNull)
+  method String
+  path   String
+  status Int
+  ms     Int
+  at     DateTime @default(now())
+
+  @@index([keyId, at])
+}
+
+model IntegrationConnector {
+  code        String   @id // DIGILOCKER | ABC | PAYMENT | SMS
+  name        String
+  endpoint    String
+  enabled     Boolean  @default(true)
+  simulateOutage Boolean @default(false)
+  lastRunAt   DateTime?
+  updatedAt   DateTime @updatedAt
+}
+
+/// Outbound delivery queue (e.g. issued certificates pushed to DigiLocker), retried with back-off.
+model IntegrationJob {
+  id            String    @id @default(cuid())
+  connector     String
+  documentId    String?
+  studentId     String?
+  label         String
+  status        String    @default("PENDING") // PENDING | DELIVERED | FAILED
+  attempts      Int       @default(0)
+  lastError     String?
+  externalRef   String?
+  nextAttemptAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  deliveredAt   DateTime?
+
+  @@index([connector, status])
+}
+
+/// One uploaded migration file: rows are staged and reconciled before anything is written.
+model ImportBatch {
+  id           String      @id @default(cuid())
+  kind         String      // STUDENTS | RESULTS
+  fileName     String
+  status       String      @default("STAGED") // STAGED | COMMITTED | ROLLED_BACK
+  rowCount     Int
+  validCount   Int
+  warningCount Int
+  errorCount   Int
+  columns      String[]
+  summary      Json?
+  createdById  String
+  createdAt    DateTime    @default(now())
+  committedAt  DateTime?
+  rolledBackAt DateTime?
+  rows         ImportRow[]
+}
+
+model ImportRow {
+  id        String      @id @default(cuid())
+  batchId   String
+  batch     ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  rowNo     Int
+  data      Json
+  status    String      // VALID | WARNING | ERROR
+  messages  String[]
+  created   Json?       // ids written on commit, used for rollback
+
+  @@index([batchId, rowNo])
+}
+
 /// Academic calendar entry (teaching terms, examinations, holidays, deadlines, events).
 model AcademicEvent {
   id           String   @id @default(cuid())
