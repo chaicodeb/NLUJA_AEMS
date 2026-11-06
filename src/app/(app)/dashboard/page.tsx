@@ -3,11 +3,13 @@ import { ArrowRight, Banknote, BellRing, CalendarClock, CheckCircle2, Circle, Ci
 import { studentFeedback } from "@/lib/feedback/feedback";
 import { DEPARTMENTS } from "@/lib/convocation/degree";
 import { departmentsFor, exitRegister } from "@/lib/exit/exit";
+import { cycleOverview } from "@/lib/admissions/admissions";
 import { dueClassCount } from "@/lib/attendance/daily";
 import { PUBLISHED_ORDER, firstPerSemester } from "@/lib/results/engine";
 import type { Role } from "@prisma/client";
 import { db } from "@/lib/db";
-import { requirePage, type CurrentUser } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { requirePage, requireUser, type CurrentUser } from "@/lib/session";
 import { ROLE_LABELS } from "@/lib/roles";
 import { DEMO_STAGES } from "@/lib/demo/stages";
 import { getActiveRule } from "@/lib/rules/store";
@@ -30,6 +32,7 @@ const STAGES = [
 type ActionItem = { label: string; href: string; tone: "amber" | "red" | "blue" | "green" };
 
 export default async function DashboardPage() {
+  if ((await requireUser()).role === "APPLICANT") redirect("/application");
   const user = await requirePage("/dashboard");
   if (user.role === "STUDENT" || user.role === "PARENT") return <StudentDashboard user={user} />;
   if (user.role === "FACULTY" || user.role === "EVALUATOR") return <TeachingDashboard user={user} />;
@@ -97,8 +100,28 @@ async function exitItems(role: Role): Promise<ActionItem[]> {
   return items;
 }
 
+async function admissionItems(role: Role): Promise<ActionItem[]> {
+  const items: ActionItem[] = [];
+  const cycle = await db.admissionCycle.findFirst({ where: { status: { in: ["EVALUATION", "MERIT_PUBLISHED"] } }, orderBy: { opensAt: "desc" } });
+  if (["ACADEMIC_STAFF", "REGISTRAR"].includes(role)) {
+    const pending = await db.profileChangeRequest.count({ where: { status: "PENDING" } });
+    if (pending) items.push({ label: `${pending} student profile correction(s) awaiting approval`, href: "/profile-requests", tone: "amber" });
+  }
+  if (!cycle) return items;
+  if (["ACADEMIC_STAFF", "REGISTRAR"].includes(role)) {
+    const n = await db.application.count({ where: { cycleId: cycle.id, status: "SUBMITTED" } });
+    if (n) items.push({ label: `${cycle.name}: ${n} application(s) awaiting document verification`, href: `/admissions/${cycle.id}?status=SUBMITTED`, tone: "amber" });
+  }
+  if (["HOD", "REGISTRAR"].includes(role) && cycle.status === "EVALUATION") {
+    const { pendingMarks } = await cycleOverview(cycle.id);
+    if (pendingMarks.length) items.push({ label: `${cycle.name}: marks pending for ${pendingMarks.length} candidate(s)`, href: `/admissions/${cycle.id}?tab=marks`, tone: "blue" });
+    else if (role === "REGISTRAR") items.push({ label: `${cycle.name}: all marks in — review and publish the merit list`, href: `/admissions/${cycle.id}?tab=merit`, tone: "red" });
+  }
+  return items;
+}
+
 async function actionItems(role: Role, examId: string | undefined): Promise<ActionItem[]> {
-  const items: ActionItem[] = await exitItems(role);
+  const items: ActionItem[] = [...(await exitItems(role)), ...(await admissionItems(role))];
   if (!examId) return items;
   const [relax, processed, approved, pendingEvals, third, eligCount, regCount, seatCount, exam] = await Promise.all([
     db.relaxationRequest.count({ where: { status: "PENDING" } }),
@@ -314,7 +337,7 @@ async function StaffDashboard({ user }: { user: CurrentUser }) {
               {batches.map((b) => (
                 <TR key={b.id}>
                   <TD className="font-medium">{b.name}</TD>
-                  <TD>{b.programme.code === "BALLB" ? "B.A. LL.B. (Hons.)" : "LL.M."}</TD>
+                  <TD>{b.programme.code === "BALLB" ? "B.A. LL.B. (Hons.)" : b.programme.code === "LLM" ? "LL.M." : "Ph.D."}</TD>
                   <TD>Semester {b.currentSemester}</TD>
                   <TD className="text-right">{b._count.students}</TD>
                 </TR>

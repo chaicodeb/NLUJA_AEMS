@@ -26,6 +26,7 @@ enum Role {
   ACCOUNTS
   STUDENT
   PARENT
+  APPLICANT
 }
 
 model User {
@@ -70,6 +71,7 @@ model Programme {
   curricula         CurriculumVersion[]
   batches           Batch[]
   ruleSets          RuleSet[]
+  admissionCycles   AdmissionCycle[]
 }
 
 model CurriculumVersion {
@@ -204,6 +206,8 @@ model Student {
   clearances          Clearance[]
   exitRequest         ExitRequest?
   alumniProfile       AlumniProfile?
+  application         Application?
+  profileRequests     ProfileChangeRequest[]
 }
 
 enum EnrolmentType {
@@ -324,6 +328,104 @@ model AlumniProfile {
   mentor           Boolean  @default(false)
   source           String   @default("SELF") // SELF | MIGRATED
   updatedAt        DateTime @updatedAt
+}
+
+// ─── Admissions ───────────────────────────────────────────────────────
+
+/// One admission round for a programme: seat matrix, required documents and merit rule are configured per cycle.
+model AdmissionCycle {
+  id                String        @id @default(cuid())
+  code              String        @unique
+  name              String
+  programmeId       String
+  programme         Programme     @relation(fields: [programmeId], references: [id])
+  academicYear      String
+  status            String        @default("APPLICATIONS") // APPLICATIONS | EVALUATION | MERIT_PUBLISHED | CLOSED
+  opensAt           DateTime
+  closesAt          DateTime
+  applicationFee    Int
+  admissionFee      Int
+  seatMatrix        Json          // { UR: 5, OBC: 2, SC: 1, ST: 1, EWS: 1 }
+  requiredDocs      Json          // [{ code, label, when?: "RESERVED" | "PWD" }]
+  meritRule         Json          // { components: [{ code, label, max, weight }], qualifying: {...}, eligibility: {...} }
+  meritPublishedAt  DateTime?
+  offerDeadline     DateTime?
+  applications      Application[]
+}
+
+model Application {
+  id                String                @id @default(cuid())
+  cycleId           String
+  cycle             AdmissionCycle        @relation(fields: [cycleId], references: [id])
+  appNo             String                @unique
+  userId            String?               @unique
+  name              String
+  gender            String
+  dob               DateTime
+  email             String
+  phone             String
+  category          String                // GEN | OBC | SC | ST | EWS
+  pwd               Boolean               @default(false)
+  domicile          String
+  address           String
+  parentName        String
+  qualifyingDegree  String
+  qualifyingUniv    String
+  qualifyingYear    Int
+  qualifyingPct     Float
+  netQualified      Boolean               @default(false)
+  researchArea      String?
+  proposalTitle     String?
+  status            String                @default("DRAFT") // DRAFT | SUBMITTED | RETURNED | VERIFIED | REJECTED
+  remarks           String?
+  feeRef            String?
+  submittedAt       DateTime?
+  verifiedAt        DateTime?
+  marks             Json?                 // { TEST: 64, INTERVIEW: 38 }
+  composite         Float?
+  meritRank         Int?
+  outcome           String?               // OFFERED | WAITLISTED | NOT_QUALIFIED | ADMITTED | DECLINED
+  seatCategory      String?
+  admissionFeeRef   String?
+  decidedAt         DateTime?
+  studentId         String?               @unique
+  student           Student?              @relation(fields: [studentId], references: [id])
+  documents         ApplicationDocument[]
+}
+
+model ApplicationDocument {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  code          String
+  fileName      String
+  mime          String
+  size          Int
+  data          Bytes?
+  status        String      @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  remark        String?
+  version       Int         @default(1)
+  verifiedById  String?
+  uploadedAt    DateTime    @default(now())
+  verifiedAt    DateTime?
+
+  @@unique([applicationId, code])
+}
+
+/// Student-initiated change to identity data; contact details change instantly, identity fields need approval.
+model ProfileChangeRequest {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  field       String
+  oldValue    String?
+  newValue    String
+  reason      String
+  status      String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  remark      String?
+  decidedById String?
+  createdAt   DateTime  @default(now())
+  decidedAt   DateTime?
 }
 
 /// Departmental no-dues clearance (library, hostel, accounts, examination) required before a degree or exit.

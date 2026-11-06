@@ -8,12 +8,13 @@ import type { GradeSheetPayload } from "@/lib/results/workflow";
 import type { TranscriptPayload } from "@/lib/results/transcript";
 import type { DegreePayload } from "@/lib/convocation/degree";
 import type { ExitCertificatePayload } from "@/lib/exit/exit";
+import type { IdCardPayload } from "@/lib/pdf/idcard";
 import { Card } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 
 const TYPE_LABEL: Record<string, string> = {
   ADMIT_CARD: "Admit Card", GRADE_SHEET: "Semester Grade Sheet", TRANSCRIPT: "Consolidated Transcript", DEGREE: "Degree Certificate", PROVISIONAL: "Provisional Certificate",
-  MIGRATION: "Migration Certificate", CHARACTER: "Character Certificate",
+  MIGRATION: "Migration Certificate", CHARACTER: "Character Certificate", ID_CARD: "Student Identity Card",
 };
 
 export default async function VerifyPage({ params }: PageProps<"/verify/[code]">) {
@@ -72,6 +73,7 @@ export default async function VerifyPage({ params }: PageProps<"/verify/[code]">
             {doc.type === "TRANSCRIPT" && <TranscriptDetails p={doc.payload as unknown as TranscriptPayload} />}
             {(doc.type === "DEGREE" || doc.type === "PROVISIONAL") && <DegreeDetails p={doc.payload as unknown as DegreePayload} />}
             {(doc.type === "MIGRATION" || doc.type === "CHARACTER") && <CertificateDetails p={doc.payload as unknown as ExitCertificatePayload} />}
+            {doc.type === "ID_CARD" && <IdCardDetails p={doc.payload as unknown as IdCardPayload} />}
           </>
         )}
         <p className="text-center text-xs text-muted-foreground">Verification is performed against the University&apos;s records in real time.</p>
@@ -97,6 +99,31 @@ function DegreeDetails({ p }: { p: DegreePayload }) {
           ["Conferred at", p.convocation ? `${p.convocation.title}, ${formatDate(p.convocation.date)}` : "Awaiting convocation"],
           ["Signed by", `${p.signatory.name}, ${p.signatory.designation}`],
           ...(p.medals.length ? [["Medals", p.medals.join(", ")]] : []),
+        ].map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-xs text-muted-foreground">{k}</dt>
+            <dd className="font-medium">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
+  );
+}
+
+function IdCardDetails({ p }: { p: IdCardPayload }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="border-b border-border px-5 py-4">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">Student identity card</div>
+        <div className="mt-1 text-lg font-semibold">{p.name}</div>
+        <div className="text-sm text-muted-foreground">Roll No. {p.rollNo} · UID {p.uid}</div>
+      </div>
+      <dl className="grid gap-3 px-5 py-4 text-sm sm:grid-cols-2">
+        {[
+          ["Programme", p.programme],
+          ["Batch", p.batch],
+          ["Valid until", formatDate(p.validUntil)],
+          ["Issued", formatDate(p.issuedOn)],
         ].map(([k, v]) => (
           <div key={k}>
             <dt className="text-xs text-muted-foreground">{k}</dt>

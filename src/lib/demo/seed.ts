@@ -21,6 +21,7 @@ import { seedDailyAttendance, type AttendancePlan } from "./attendance-seed";
 import { seedFeedback } from "./feedback-seed";
 import { seedGraduates } from "./graduates-seed";
 import { seedExitAndAlumni } from "./exit-seed";
+import { seedAdmissions } from "./admissions-seed";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
 function splitRubric(total: number, criteria: { code: string; max: number }[]) {
@@ -39,7 +40,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "ProfileChangeRequest", "ApplicationDocument", "Application", "AdmissionCycle", "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -289,7 +290,7 @@ export async function seedDemo() {
           parentName: `${s.gender === "F" ? "Mr." : "Mrs."} ${s.name.split(" ").slice(-1)[0]}`,
           parentPhone: `94350${String(20000 + uidCounter * 53).slice(-5)}`,
           batchId: cohort.batch.id,
-          dob: new Date(year - 18, uidCounter % 12, 1 + (uidCounter % 27)),
+          dob: new Date(year - (cohort.prefix.startsWith("LLM") ? 24 : 18), uidCounter % 12, 1 + (uidCounter % 27)),
         },
       });
       if (cohort.batch.code === "BALLB-2022" && i === 0) demoStudentId = student.id;
@@ -503,6 +504,7 @@ export async function seedDemo() {
     semesterCourses: { ...legacyCourses[cur2019.id], 9: ["BL9.1", "BL9.2", "BL9.3", "BL9.4", "BL9.5"].map((c) => courses[c]) },
   });
   await seedExitAndAlumni(users);
+  await seedAdmissions(users, passwordHash);
 
   // Pending VC relaxation request (Priyanka Saikia, ADR 67.3%)
   const priyanka = await db.student.findFirstOrThrow({ where: { name: "Priyanka Saikia" } });

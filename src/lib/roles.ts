@@ -16,6 +16,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   ACCOUNTS: "Finance & Accounts",
   STUDENT: "Student",
   PARENT: "Parent / Guardian",
+  APPLICANT: "Applicant",
 };
 
 export type NavItem = { href: string; label: string; icon: string; roles: Role[] };
@@ -31,6 +32,7 @@ export const NAV: NavSection[] = [
   {
     title: "Academics",
     items: [
+      { href: "/admissions", label: "Admissions", icon: "UserPlus", roles: ["ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC", "ADMIN"] },
       { href: "/academics/programmes", label: "Programmes & Curricula", icon: "BookOpen", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC"] },
       { href: "/academics/schemes", label: "Evaluation Schemes", icon: "ListChecks", roles: ["ADMIN", "COE", "ACADEMIC_STAFF"] },
       { href: "/students", label: "Students", icon: "Users", roles: ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC"] },
@@ -60,6 +62,7 @@ export const NAV: NavSection[] = [
   {
     title: "Student Services",
     items: [
+      { href: "/profile-requests", label: "Profile Corrections", icon: "UserPen", roles: ["ACADEMIC_STAFF", "REGISTRAR", "ADMIN"] },
       { href: "/clearance", label: "No-dues Desk", icon: "Stamp", roles: ["LIBRARIAN", "WARDEN", "ACCOUNTS", "EXAM_STAFF", "REGISTRAR", "ADMIN"] },
       { href: "/exit", label: "Exit & Certificates", icon: "DoorOpen", roles: ["REGISTRAR", "ACCOUNTS", "ADMIN"] },
       { href: "/alumni", label: "Alumni", icon: "Contact", roles: ["REGISTRAR", "VC", "IQAC", "HOD", "ACADEMIC_STAFF", "ADMIN"] },
@@ -82,7 +85,12 @@ export const NAV: NavSection[] = [
       { href: "/me/feedback", label: "Feedback", icon: "MessagesSquare", roles: ["STUDENT"] },
       { href: "/me/degree", label: "Degree & Convocation", icon: "Award", roles: ["STUDENT", "PARENT"] },
       { href: "/me/exit", label: "Exit & Alumni", icon: "DoorOpen", roles: ["STUDENT"] },
+      { href: "/me/profile", label: "Profile & ID Card", icon: "IdCard", roles: ["STUDENT"] },
     ],
+  },
+  {
+    title: "Admission",
+    items: [{ href: "/application", label: "My Application", icon: "FileUser", roles: ["APPLICANT"] }],
   },
 ];
 

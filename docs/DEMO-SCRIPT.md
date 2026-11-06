@@ -22,15 +22,16 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 |---|---|---|
 | Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 3, 5, 6, 7, 8A |
 | Examination Branch 🔑 | Mr. D. Kalita | 7 |
-| Academic Section | Ms. J. Bora | 2 (optional) |
+| Academic Section | Ms. J. Bora | 1A, 2 (optional) |
+| Applicant | Priya Bora (Ph.D. 2026-27, OBC-NCL) | 1A |
 | Faculty | Dr. Ananya Bora (BL3.5 marks sheet), Dr. Rituraj Gogoi (BL9.2 class) | 2A, 2B |
-| Head of Department (Dean) | Prof. N. Goswami | 2A, 2B |
+| Head of Department (Dean) | Prof. N. Goswami | 1A, 2A, 2B |
 | Vice-Chancellor | Prof. (Dr.) A. K. Sharma | 3, 7 |
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
 | Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation), Arindam Hazarika (backlog) | 2B, 4, 8, 8A, 8B |
 | Parent | Mr. Pranab Baruah | 8 |
 | Graduand | Rituparna Bhuyan (B.A. LL.B. 2021–26, gold medallist) | 8C, 8D |
-| Registrar | Dr. P. K. Medhi | 8C, 8D |
+| Registrar | Dr. P. K. Medhi | 1A, 8C, 8D |
 | Librarian / Chief Warden / Finance & Accounts | Dr. B. K. Choudhury / Mr. H. Rabha / Ms. R. Agarwal | 8D |
 
 **Stage jumps** (dashboard of COE/Admin → Presenter): Fresh start · Eligibility decided · Students registered · Admit cards published · Exam conducted · Evaluation complete · Results processed · Results published · Revaluation window · Supplementary exam.
@@ -50,6 +51,22 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 3. Header shows the **2FA** badge.
 
 > "Every examination-critical role — COE, Examination Branch, evaluators, IT — requires a second factor. Failed attempts land in the audit trail; we'll see them at the end."
+
+---
+
+## Act 1A — Admissions: application to student record (5 min) · NIQ 3.1.1–3.1.4 (admission, documents, merit, profile)
+
+*Works at any stage.* The **Ph.D. Admissions 2026-27** cycle is under evaluation: 32 applications, 10 seats (UR 5, OBC-NCL 2, SC 1, ST 1, EWS 1), merit under the UGC Ph.D. Regulations 2022 (70% entrance test, 30% interview).
+
+1. **Switch → Applicant (Priya Bora)**: the application tracker shows *Returned for correction* — her OBC-NCL certificate (dated Feb 2025) was rejected with a reason. **Upload corrected file** (any PDF) → *Awaiting verification*.
+2. **Switch → Academic Section (Ms. J. Bora)** → dashboard: *3 applications awaiting document verification* → **Priya Bora → Verify**: open the new certificate (v2), **Accept** → *all documents verified*. Optionally open **Mohammed Arif Hussain** and accept his five documents; show **Rakesh Kumar Singh** (rejected: LL.M. 52% below 55%) — eligibility is checked automatically.
+3. **Switch → Dean (Prof. N. Goswami) → Admissions → Test & interview marks**: two interview marks are highlighted as pending (Kaustav Sarma, Moumita Das) → enter **40** and **37** → **Save marks**. Candidates below the qualifying test mark are marked *Not called*.
+4. **Switch → Registrar → Admissions → Merit & allotment**: composite scores, ties broken by test score then LL.M. %, open-merit seats first (Jayanta Chakraborty, EWS, is in the top five and takes an *unreserved* seat), then reserved seats by category; Priya holds an **OBC-NCL** seat. **Publish merit list & send 10 offers**.
+5. **Switch → Priya → My Application**: *Congratulations — OBC-NCL seat*, merit rank, deadline → **Accept & pay ₹45,000** → roll number **PHD26-001** and University ID issued; the same login is now her **student portal** (Profile & ID card → **Download ID card** with QR).
+   - If a candidate **declines**, the seat is re-allotted automatically to the next eligible candidate on the merit list (logged in the audit trail).
+6. **Profile corrections**: **Switch → Sneha Iyer → Profile & ID card** — contact details change instantly; her name correction (*Sneha Ramachandran Iyer*, per Class X certificate) is *With the Academic Section*. **Switch → Academic Section → Profile Corrections → Approve** → the record and all future documents carry the corrected name.
+
+> "Every admission decision is rule-driven and reviewable: who rejected which document and why, which marks were entered by whom, and how each seat was allotted."
 
 ---
 
