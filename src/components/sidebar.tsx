@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Award, BarChart3, BookOpen, Calculator, CalendarCheck, CalendarClock, ClipboardCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
   ListChecks, MessageSquareText, MessagesSquare, NotebookPen, PenLine, RefreshCcw, Repeat, Scale, ShieldCheck, SlidersHorizontal, Users, Stamp, DoorOpen, Contact,
-  UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap, type LucideIcon,
+  UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap, Landmark, DatabaseBackup, ShieldHalf, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavSection } from "@/lib/roles";
@@ -14,7 +14,7 @@ import type { NavSection } from "@/lib/roles";
 const ICONS: Record<string, LucideIcon> = {
   BarChart3, BookOpen, Calculator, CalendarCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
   ListChecks, NotebookPen, PenLine, ShieldCheck, SlidersHorizontal, Users, RefreshCcw, CalendarClock, ClipboardCheck, Repeat, Scale, MessageSquareText, MessagesSquare, Award,
-  Stamp, DoorOpen, Contact, UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap,
+  Stamp, DoorOpen, Contact, UserPlus, UserPen, IdCard, FileUser, CalendarDays, UsersRound, Plug, KeyRound, DatabaseZap, Landmark, DatabaseBackup, ShieldHalf,
 };
 
 export function Sidebar({ sections }: { sections: NavSection[] }) {

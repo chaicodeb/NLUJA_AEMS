@@ -93,6 +93,28 @@ model CurriculumVersion {
   batches          Batch[]
 }
 
+// ─── Backup ───────────────────────────────────────────────────────────
+
+/// One database backup file (compressed logical dump of every table) and what was done with it.
+model BackupRun {
+  id          String    @id @default(cuid())
+  kind        String    // SCHEDULED | MANUAL | PRE_RESTORE
+  status      String    @default("RUNNING") // RUNNING | OK | FAILED | PRUNED
+  fileName    String?
+  sizeBytes   Int?
+  sha256      String?
+  tables      Int?
+  rows        Int?
+  durationMs  Int?
+  error       String?
+  note        String?
+  createdById String?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  verifiedAt  DateTime?
+  restoredAt  DateTime?
+}
+
 // ─── Integrations & data migration ────────────────────────────────────
 
 /// Credential for a partner system calling the REST API; only a SHA-256 hash of the secret is stored.

@@ -85,7 +85,15 @@ export const NAV: NavSection[] = [
     items: [
       { href: "/feedback", label: "Feedback & Surveys", icon: "MessageSquareText", roles: ["IQAC", "VC", "HOD", "COE", "ACADEMIC_STAFF", "REGISTRAR", "ADMIN", "FACULTY"] },
       { href: "/reports", label: "Report Builder", icon: "BarChart3", roles: ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "HOD", "IQAC"] },
+      { href: "/reports/statutory", label: "Statutory Returns", icon: "Landmark", roles: ["IQAC", "REGISTRAR", "VC", "COE", "ADMIN"] },
       { href: "/audit", label: "Audit Trail", icon: "History", roles: ["ADMIN", "COE", "VC", "REGISTRAR"] },
+    ],
+  },
+  {
+    title: "Administration",
+    items: [
+      { href: "/admin/backup", label: "Backup & Restore", icon: "DatabaseBackup", roles: ["ADMIN"] },
+      { href: "/admin/security", label: "Security Posture", icon: "ShieldHalf", roles: ["ADMIN", "VC"] },
     ],
   },
   {

@@ -333,6 +333,22 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
+## Act 9B — Statutory returns, backup and security posture (4 min) · NIQ 3.12.2–3.12.3, 4.1–4.3 · RFP §11, §14, §22
+
+*Works at any stage.*
+
+1. **Switch → IQAC → Statutory Returns**: three tabs computed live from the records.
+   - **AISHE**: enrolment by programme × social category × gender; out-turn of the 2021–26 batch (appeared, passed, passed with ≥ 60%); teaching staff by designation.
+   - **NIRF**: student strength by batch with women %, placement and higher studies for the last graduating batches (from the alumni registry), graduation in stipulated time (9 of 10), Ph.D. scholars.
+   - **NAAC**: AQAR metrics 1.4.1, 2.1.1, 2.1.2, 2.2.2, 2.5.1, 2.6.3 (90%), 2.7.1 (SSS index), 5.2.1–5.2.3, each with its source module. Every table has a **CSV** download.
+2. **Switch → Admin (OTP) → Backup & Restore**: last good backup (taken by the built-in nightly scheduler), next run 02:00 IST, RPO 24 h / RTO 8 h, retention 14. **Back up now** → a new compressed backup of ~60 tables with its SHA-256 fingerprint. **Verify** → *checksum matches, all rows read back*. **File** downloads it for off-site storage.
+   - Optional (rehearsed beforehand): change something visible (e.g. delete a calendar entry), then **Restore** the earlier backup (type RESTORE) → a safety backup of the current state is taken first, the database is restored in about a second, and the entry is back. The audit chain still verifies.
+3. **Security Posture** (Admin or VC): live checks grouped by area — TLS and security headers, bcrypt passwords, OTP for every examination role, session settings, role-based access and blocked attempts, segregation of duties, audit-chain verification, signed documents, API keys, DPDP data minimisation, upload controls, backup age and verification. On the local laptop TLS shows *Attention*; on the hosted HTTPS link it passes.
+
+> "Statutory returns stop being a fortnight of spreadsheets: they are queries over the same records the University runs on, and the system shows its own security and recovery posture rather than asserting it."
+
+---
+
 ## Close (1 minute)
 
 > "What you saw is your own regulation running end-to-end: BCI attendance with VC relaxation, component-wise LL.M. minimums, moot-court weighting, grace within limits, anonymous double evaluation, maker–checker results and verifiable documents — all configurable by NLUJA staff, all audited.

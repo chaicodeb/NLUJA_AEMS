@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# database backups taken by the app
+/backups
+
 # downloaded helper binaries
 .tools
 
