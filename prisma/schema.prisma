@@ -85,8 +85,28 @@ model CurriculumVersion {
   creditsPerCourse Int
   totalCredits     Int?
   notes            String?
+  status           String    @default("APPROVED") // DRAFT | APPROVED
+  approvalRef      String?
+  approvedAt       DateTime?
+  basedOnCode      String?
   courses          Course[]
   batches          Batch[]
+}
+
+/// Academic calendar entry (teaching terms, examinations, holidays, deadlines, events).
+model AcademicEvent {
+  id           String   @id @default(cuid())
+  academicYear String
+  title        String
+  type         String   // TEACHING | EXAM | HOLIDAY | VACATION | DEADLINE | ADMISSION | EVENT
+  startDate    DateTime @db.Date
+  endDate      DateTime @db.Date
+  audience     String   @default("ALL") // ALL | STUDENTS | STAFF
+  description  String?
+  createdById  String?
+  createdAt    DateTime @default(now())
+
+  @@index([startDate, endDate])
 }
 
 model Batch {
@@ -622,6 +642,8 @@ model Exam {
   registrationOpen Boolean      @default(false)
   admitCardsPublished Boolean   @default(false)
   feeAmount        Int          @default(0)
+  timetablePublishedAt DateTime?
+  timetableGapDays Int          @default(1)
   papers           ExamPaper[]
   invigilations    Invigilation[]
   registrations    ExamRegistration[]

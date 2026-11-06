@@ -82,7 +82,7 @@ async function DeskDashboard({ user }: { user: CurrentUser }) {
 }
 
 async function currentExam() {
-  return db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
+  return db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR", status: { not: "PLANNED" } }, orderBy: { startDate: "desc" } });
 }
 
 async function exitItems(role: Role): Promise<ActionItem[]> {
@@ -122,6 +122,9 @@ async function admissionItems(role: Role): Promise<ActionItem[]> {
 
 async function actionItems(role: Role, examId: string | undefined): Promise<ActionItem[]> {
   const items: ActionItem[] = [...(await exitItems(role)), ...(await admissionItems(role))];
+  if (role === "COE" || role === "ADMIN") {
+    for (const p of await db.exam.findMany({ where: { status: "PLANNED", timetablePublishedAt: null } })) items.push({ label: `${p.name}: date sheet not yet published`, href: `/exams/${p.id}/timetable`, tone: "blue" });
+  }
   if (!examId) return items;
   const [relax, processed, approved, pendingEvals, third, eligCount, regCount, seatCount, exam] = await Promise.all([
     db.relaxationRequest.count({ where: { status: "PENDING" } }),

@@ -3,9 +3,10 @@ import { db } from "@/lib/db";
 import { requirePage } from "@/lib/session";
 import { Badge, Card, PageHeader, Table, TD, TH, THead, TR } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { PlanExamForm } from "./plan-form";
 
 export default async function ExamsPage() {
-  await requirePage("/exams");
+  const user = await requirePage("/exams");
   const exams = await db.exam.findMany({
     where: { code: { not: "LEGACY-MIGRATION" } },
     orderBy: { startDate: "desc" },
@@ -17,6 +18,7 @@ export default async function ExamsPage() {
         eyebrow="Examination Management"
         title="Examinations"
         description="Regular, repeat, re-registered, special and improvement examinations are configured independently, each with its own eligibility, fee and result rules."
+        actions={["COE", "ADMIN"].includes(user.role) ? <PlanExamForm /> : undefined}
       />
       <Card>
         <Table>
@@ -36,7 +38,14 @@ export default async function ExamsPage() {
               <TR key={e.id}>
                 <TD className="font-mono text-xs">{e.code}</TD>
                 <TD>
-                  <Link href={e.type === "REGULAR" ? `/exams/${e.id}` : "/supplementary"} className="font-medium text-brand-700 hover:underline">{e.name}</Link>
+                  <Link href={e.type !== "REGULAR" ? "/supplementary" : e.status === "PLANNED" ? `/exams/${e.id}/timetable` : `/exams/${e.id}`} className="font-medium text-brand-700 hover:underline">{e.name}</Link>
+                  <div className="text-xs text-muted-foreground">
+                    {e.type === "REGULAR" && (
+                      <Link href={`/exams/${e.id}/timetable`} className="hover:underline">
+                        Timetable {e.timetablePublishedAt ? "· published" : "· not published"}
+                      </Link>
+                    )}
+                  </div>
                 </TD>
                 <TD><Badge>{e.type === "REPEAT" ? "SUPPLEMENTARY" : e.type}</Badge></TD>
                 <TD className="text-sm">{formatDate(e.startDate)} – {formatDate(e.endDate)}</TD>

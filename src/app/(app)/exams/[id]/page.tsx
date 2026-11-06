@@ -39,7 +39,12 @@ export default async function ExamDetail({ params, searchParams }: PageProps<"/e
         eyebrow={`${exam.code} · ${exam.type} examination`}
         title={exam.name}
         description={`${formatDate(exam.startDate)} – ${formatDate(exam.endDate)} · ${exam.papers.length} papers · Examination fee ₹${exam.feeAmount}`}
-        actions={<Badge tone="brand">{exam.status.replace("_", " ")}</Badge>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Link href={`/exams/${id}/timetable`} className="text-sm font-medium text-brand-700 hover:underline">Timetable</Link>
+            <Badge tone="brand">{exam.status.replace("_", " ")}</Badge>
+          </div>
+        }
       />
       <div className="flex gap-1 border-b border-border">
         {TABS.map((t) => (

@@ -13,7 +13,7 @@ const RUN_TONE = { PROCESSED: "amber", APPROVED: "blue", PUBLISHED: "green", WIT
 
 export default async function ResultsPage() {
   const user = await requirePage("/results");
-  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
+  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR", status: { not: "PLANNED" } }, orderBy: { startDate: "desc" } });
   if (!exam) return <PageHeader title="Result processing" description="No examination found." />;
 
   const [eligCount, scripts, finalised, pendingEvals, thirdEvals, runs, grading, grace] = await Promise.all([

@@ -22,7 +22,7 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 |---|---|---|
 | Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 3, 5, 6, 7, 8A |
 | Examination Branch 🔑 | Mr. D. Kalita | 7 |
-| Academic Section | Ms. J. Bora | 1A, 2 (optional) |
+| Academic Section | Ms. J. Bora | 1A, 2 (optional), 2C |
 | Applicant | Priya Bora (Ph.D. 2026-27, OBC-NCL) | 1A |
 | Faculty | Dr. Ananya Bora (BL3.5 marks sheet), Dr. Rituraj Gogoi (BL9.2 class) | 2A, 2B |
 | Head of Department (Dean) | Prof. N. Goswami | 1A, 2A, 2B |
@@ -117,6 +117,20 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 6. **Attendance Register**: shortage watch — below floor / below minimum / close / alerts sent; **Send shortage notices** issues formal notices to every student below the minimum.
 
 > "Teachers can change a class on the day they mark it; any later correction needs a reason and is logged. Another teacher cannot open the register at all."
+
+---
+
+## Act 2C — Calendar, curriculum revision and examination timetable (5 min) · NIQ 3.2.1, 3.2.3, 3.2.4, 3.4.1
+
+*Works at any stage.*
+
+1. **Switch → Academic Section → Academic Calendar**: November 2026 — Ph.D. entrance and interviews, Diwali, the attendance cut-off, the end-semester examinations with the number of papers per day. **Add to calendar** → *Guru Nanak Jayanti*, Holiday, 24 Nov → warning: *1 examination paper (BL3.2) falls on this holiday — reschedule it*. Students see the same calendar with their own papers.
+2. **Programmes & Curricula → LL.M. → Open**: the approved 2024 curriculum is frozen (only teachers can be reassigned). **Start a revision** → draft *LLM-CUR-2027* with all ten courses copied → edit a course (e.g. rename ML1.6) or remove and add one. Switch to **Registrar** → same page → **Record approval** with an Academic Council resolution → the draft becomes the curriculum for 2027 admissions and LLM-CUR-2024 closes for later batches. Approval is refused if a semester is empty or credits do not add up to 24.
+3. **Faculty & Workload**: courses running this semester, teaching load per teacher, reassignment from a drop-down (audited).
+4. **Switch → Controller of Examinations → Examinations → End Semester Examination (Odd Semester) → Timetable**: the checks now show *BL3.2 falls on Guru Nanak Jayanti* → move BL3.2 to Mon 30 Nov → *No clashes* → **Save timetable**.
+5. **Examinations → End Semester Examination (Even Semester) 2026-27** (planned, no papers yet) → **Generate timetable**: 14 papers for three batches derived from their next-semester curricula, skipping Sundays and the Bohag Bihu holidays, one paper a day per batch with a rest day, forenoon/afternoon alternated, within the 80 seats per session. Try moving a paper onto another paper of the same batch → the clash is flagged at once and saving is refused. **Save timetable** (papers created) → **Publish date sheet**.
+
+> "The calendar, the curriculum and the timetable are one data set: a holiday entered by the Academic Section is respected by the examination timetable, and a revised curriculum never touches batches admitted under the old one."
 
 ---
 

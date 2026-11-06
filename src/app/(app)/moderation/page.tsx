@@ -10,7 +10,7 @@ export const maxDuration = 120;
 
 export default async function ModerationPage() {
   const user = await requirePage("/moderation");
-  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
+  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR", status: { not: "PLANNED" } }, orderBy: { startDate: "desc" } });
   if (!exam) return <PageHeader title="Moderation" description="No examination found." />;
   const [{ cfg, rows }, locked] = await Promise.all([moderationOverview(exam.id), resultsStarted(exam.id)]);
   const people = await db.user.findMany({ where: { id: { in: rows.flatMap((r) => r.actions.flatMap((a) => [a.proposedById, a.decidedById ?? ""])) } } });

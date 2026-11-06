@@ -22,6 +22,7 @@ import { seedFeedback } from "./feedback-seed";
 import { seedGraduates } from "./graduates-seed";
 import { seedExitAndAlumni } from "./exit-seed";
 import { seedAdmissions } from "./admissions-seed";
+import { seedAcademics } from "./academics-seed";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
 function splitRubric(total: number, criteria: { code: string; max: number }[]) {
@@ -40,7 +41,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "ProfileChangeRequest", "ApplicationDocument", "Application", "AdmissionCycle", "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "AcademicEvent", "ProfileChangeRequest", "ApplicationDocument", "Application", "AdmissionCycle", "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -200,6 +201,12 @@ export async function seedDemo() {
         { code: "BL3.4", title: "Economics of Finance, Development & Environment (Economics-II)", semester: 3, credits: 4, category: "HSS", scheme: "BALLB-S18", faculty: "fac3" },
         { code: "BL3.5", title: "Jurisprudence & Legal Theory", semester: 3, credits: 4, category: "CORE", scheme: "BALLB-S18", faculty: "fac1" },
         { code: "BL3.6", title: "Special Contracts", semester: 3, credits: 4, category: "CORE", scheme: "BALLB-S18", faculty: "fac2" },
+        { code: "BL4.1", title: "Indian National Movement (History-IV)", semester: 4, credits: 4, category: "HSS", scheme: "BALLB-S18", faculty: "fac3" },
+        { code: "BL4.2", title: "International Relations (Political Science-IV)", semester: 4, credits: 4, category: "HSS", scheme: "BALLB-S18", faculty: "fac3" },
+        { code: "BL4.3", title: "Law, Gender and Society (Sociology-IV)", semester: 4, credits: 4, category: "HSS", scheme: "BALLB-S18", faculty: "fac3" },
+        { code: "BL4.4", title: "Constitutional Law-I", semester: 4, credits: 4, category: "CORE", scheme: "BALLB-S18", faculty: "fac1" },
+        { code: "BL4.5", title: "Family Law-I", semester: 4, credits: 4, category: "CORE", scheme: "BALLB-S18", faculty: "fac2" },
+        { code: "BL4.6", title: "Law of Torts and Consumer Protection", semester: 4, credits: 4, category: "CORE", scheme: "BALLB-S18", faculty: "fac2" },
       ],
     },
     {
@@ -211,6 +218,9 @@ export async function seedDemo() {
         { code: "ML1.4", title: "Constitutional Law of India and Expanding Horizons", semester: 1, credits: 2, category: "SPECIALIZATION", scheme: "LLM-COURSE", faculty: "fac1" },
         { code: "ML1.5", title: "Limited Government and Security Legislations in India", semester: 1, credits: 2, category: "SPECIALIZATION", scheme: "LLM-COURSE", faculty: "fac1" },
         { code: "ML1.6", title: "Constitutional Governance and Centre-State Relations", semester: 1, credits: 2, category: "SPECIALIZATION", scheme: "LLM-COURSE", faculty: "fac2" },
+        { code: "ML2.1", title: "Judicial Process and Constitutional Interpretation", semester: 2, credits: 2, category: "SPECIALIZATION", scheme: "LLM-COURSE", faculty: "fac1" },
+        { code: "ML2.2", title: "Federalism and Local Self-Government", semester: 2, credits: 2, category: "SPECIALIZATION", scheme: "LLM-COURSE", faculty: "fac2" },
+        { code: "ML2.3", title: "Constitutional Remedies and Human Rights", semester: 2, credits: 2, category: "SPECIALIZATION", scheme: "LLM-COURSE", faculty: "fac1" },
         { code: "ML2.4", title: "Dissertation", semester: 2, credits: 3, category: "DISSERTATION", scheme: "LLM-DISS", faculty: "fac1" },
       ],
     },
@@ -455,13 +465,14 @@ export async function seedDemo() {
     data: {
       code: "ESE-ODD-2026", name: "End Semester Examination (Odd Semester), 2026-27", type: "REGULAR", academicYear: "2026-27", parity: "ODD",
       status: "REGISTRATION", registrationOpen: true, startDate: new Date("2026-11-23T04:30:00Z"), endDate: new Date("2026-12-05T11:30:00Z"), feeAmount: 1500,
+      timetableGapDays: 0, timetablePublishedAt: new Date("2026-10-26T06:00:00Z"),
     },
   });
   const paperCodes = [
     { code: "BL9.1", day: 0, session: "FN", mode: "DOUBLE", setter: "fac1" },
     { code: "BL9.2", day: 2, session: "FN" },
     { code: "BL9.3", day: 4, session: "FN" },
-    { code: "BL9.4", day: 6, session: "FN" },
+    { code: "BL9.4", day: 5, session: "FN" },
     { code: "BL3.1", day: 0, session: "AN" },
     { code: "BL3.2", day: 1, session: "AN" },
     { code: "BL3.3", day: 2, session: "AN" },
@@ -471,7 +482,7 @@ export async function seedDemo() {
     { code: "ML1.1", day: 0, session: "FN" },
     { code: "ML1.2", day: 2, session: "FN" },
     { code: "ML1.3", day: 4, session: "FN" },
-    { code: "ML1.4", day: 6, session: "FN" },
+    { code: "ML1.4", day: 5, session: "FN" },
     { code: "ML1.5", day: 7, session: "FN" },
     { code: "ML1.6", day: 8, session: "FN" },
   ];
@@ -505,6 +516,7 @@ export async function seedDemo() {
   });
   await seedExitAndAlumni(users);
   await seedAdmissions(users, passwordHash);
+  await seedAcademics(users);
 
   // Pending VC relaxation request (Priyanka Saikia, ADR 67.3%)
   const priyanka = await db.student.findFirstOrThrow({ where: { name: "Priyanka Saikia" } });

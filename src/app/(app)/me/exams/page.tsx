@@ -11,7 +11,7 @@ import { SupplementaryRegistration } from "../../supplementary/client";
 export default async function MyExamsPage() {
   const user = await requirePage("/me/exams");
   if (!user.studentId) return <EmptyState title="No student record linked" />;
-  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR" }, orderBy: { startDate: "desc" } });
+  const exam = await db.exam.findFirst({ where: { code: { not: "LEGACY-MIGRATION" }, type: "REGULAR", status: { not: "PLANNED" } }, orderBy: { startDate: "desc" } });
   if (!exam) return <EmptyState title="No examinations scheduled" />;
   const view = await getStudentExamView(user.studentId, exam.id);
   const sup = await currentSupplementary();

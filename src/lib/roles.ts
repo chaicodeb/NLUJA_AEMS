@@ -27,13 +27,17 @@ const ALL_STAFF: Role[] = ["ADMIN", "VC", "REGISTRAR", "COE", "EXAM_STAFF", "ACA
 export const NAV: NavSection[] = [
   {
     title: "Overview",
-    items: [{ href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: [...ALL_STAFF, "LIBRARIAN", "WARDEN", "ACCOUNTS", "FACULTY", "EVALUATOR", "STUDENT", "PARENT"] }],
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard", roles: [...ALL_STAFF, "LIBRARIAN", "WARDEN", "ACCOUNTS", "FACULTY", "EVALUATOR", "STUDENT", "PARENT"] },
+      { href: "/calendar", label: "Academic Calendar", icon: "CalendarDays", roles: [...ALL_STAFF, "LIBRARIAN", "WARDEN", "ACCOUNTS", "FACULTY", "EVALUATOR", "STUDENT", "PARENT"] },
+    ],
   },
   {
     title: "Academics",
     items: [
       { href: "/admissions", label: "Admissions", icon: "UserPlus", roles: ["ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC", "ADMIN"] },
       { href: "/academics/programmes", label: "Programmes & Curricula", icon: "BookOpen", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC"] },
+      { href: "/academics/faculty", label: "Faculty & Workload", icon: "UsersRound", roles: ["ACADEMIC_STAFF", "HOD", "REGISTRAR", "VC", "ADMIN"] },
       { href: "/academics/schemes", label: "Evaluation Schemes", icon: "ListChecks", roles: ["ADMIN", "COE", "ACADEMIC_STAFF"] },
       { href: "/students", label: "Students", icon: "Users", roles: ["ADMIN", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "REGISTRAR", "HOD", "VC"] },
       { href: "/attendance/classes", label: "Daily Attendance", icon: "CalendarClock", roles: ["FACULTY", "HOD", "ACADEMIC_STAFF", "COE", "ADMIN"] },
