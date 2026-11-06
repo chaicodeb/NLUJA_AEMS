@@ -90,6 +90,14 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    title: "Help & Support",
+    items: [
+      { href: "/help", label: "Help & Training", icon: "LifeBuoy", roles: [...ALL_STAFF, "LIBRARIAN", "WARDEN", "ACCOUNTS", "FACULTY", "EVALUATOR", "STUDENT", "PARENT", "APPLICANT"] },
+      { href: "/support", label: "Support Tickets", icon: "MessageCircleQuestion", roles: [...ALL_STAFF, "LIBRARIAN", "WARDEN", "ACCOUNTS", "FACULTY", "EVALUATOR", "STUDENT", "PARENT", "APPLICANT"] },
+      { href: "/helpdesk", label: "Helpdesk Queue", icon: "Headset", roles: ["ADMIN", "EXAM_STAFF", "ACADEMIC_STAFF", "ACCOUNTS"] },
+    ],
+  },
+  {
     title: "Administration",
     items: [
       { href: "/admin/backup", label: "Backup & Restore", icon: "DatabaseBackup", roles: ["ADMIN"] },

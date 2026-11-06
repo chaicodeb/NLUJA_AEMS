@@ -4,6 +4,7 @@ import { studentFeedback } from "@/lib/feedback/feedback";
 import { DEPARTMENTS } from "@/lib/convocation/degree";
 import { departmentsFor, exitRegister } from "@/lib/exit/exit";
 import { cycleOverview } from "@/lib/admissions/admissions";
+import { AGENT_ROLES, CATEGORIES, slaState } from "@/lib/helpdesk/shared";
 import { dueClassCount } from "@/lib/attendance/daily";
 import { PUBLISHED_ORDER, firstPerSemester } from "@/lib/results/engine";
 import type { Role } from "@prisma/client";
@@ -87,6 +88,13 @@ async function currentExam() {
 
 async function exitItems(role: Role): Promise<ActionItem[]> {
   const items: ActionItem[] = [];
+  if (AGENT_ROLES.includes(role)) {
+    const cats = Object.entries(CATEGORIES).filter(([, c]) => role === "ADMIN" || c.team === role).map(([k]) => k);
+    const open = await db.ticket.findMany({ where: { category: { in: cats }, status: { notIn: ["RESOLVED", "CLOSED"] } } });
+    const now = new Date();
+    const breached = open.filter((t) => slaState(t, now).level === "breached").length;
+    if (open.length) items.push({ label: `${open.length} open support ticket(s)${breached ? `, ${breached} past the SLA` : ""}`, href: "/helpdesk", tone: breached ? "red" : "blue" });
+  }
   const desk = departmentsFor(role);
   if (desk.length === 1) {
     const n = await db.clearance.count({ where: { department: desk[0], status: "PENDING" } });

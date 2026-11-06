@@ -1,5 +1,6 @@
 import { LogOut, KeyRound } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { HelpButton } from "@/components/help-button";
 import { Badge } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 import { navFor, ROLE_LABELS } from "@/lib/roles";
@@ -27,6 +28,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
                 <KeyRound className="h-3 w-3" /> 2FA
               </Badge>
             )}
+            <HelpButton />
             <form action={logoutAction}>
               <button className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted" title="Sign out / switch role">
                 <LogOut className="h-3.5 w-3.5" /> Switch role

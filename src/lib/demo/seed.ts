@@ -24,6 +24,7 @@ import { seedExitAndAlumni } from "./exit-seed";
 import { seedAdmissions } from "./admissions-seed";
 import { seedAcademics } from "./academics-seed";
 import { seedIntegrations } from "./integrations-seed";
+import { seedHelpdesk } from "./helpdesk-seed";
 import { clearBackupFiles, runBackup } from "../admin/backup";
 
 /** Splits a rubric total across sub-criteria in half-mark steps (seeded external-judge scores). */
@@ -43,7 +44,7 @@ const sheetStatusFor = (code: string, comp: string) =>
   code === DEMO_MARKS_SHEET.course && comp === DEMO_MARKS_SHEET.component ? "DRAFT" : code === DEMO_VERIFY_SHEET.course && comp === DEMO_VERIFY_SHEET.component ? "SUBMITTED" : "VERIFIED";
 
 const TABLES = [
-  "BackupRun", "ImportRow", "ImportBatch", "IntegrationJob", "IntegrationConnector", "ApiCallLog", "ApiKey", "AcademicEvent", "ProfileChangeRequest", "ApplicationDocument", "Application", "AdmissionCycle", "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
+  "TicketMessage", "Ticket", "BackupRun", "ImportRow", "ImportBatch", "IntegrationJob", "IntegrationConnector", "ApiCallLog", "ApiKey", "AcademicEvent", "ProfileChangeRequest", "ApplicationDocument", "Application", "AdmissionCycle", "AlumniProfile", "ExitRequest", "DegreeApplication", "Convocation", "Clearance", "FeedbackAction", "FeedbackResponse", "FeedbackSubmission", "FeedbackForm", "ModerationAction", "SupplementaryMark", "AttendanceAlert", "LeaveRequest", "AttendanceRecord", "ClassSession", "InternalMarksSheet", "RevaluationRequest", "SavedReport", "AuditLog", "Document", "SemesterResult", "CourseResult", "ResultRun", "MarkEntry",
   "Evaluation", "CustodyEvent", "AnswerScript", "MalpracticeCase", "SeatAllocation", "Invigilation", "Room",
   "RegistrationPaper", "ExamRegistration", "RelaxationRequest", "Eligibility", "ExamPaper", "Exam",
   "RuleSet", "AttendanceSummary", "Enrolment", "User", "Student", "Course", "AssessmentComponent",
@@ -520,6 +521,7 @@ export async function seedDemo() {
   await seedAdmissions(users, passwordHash);
   await seedAcademics(users);
   await seedIntegrations(users);
+  await seedHelpdesk();
   await clearBackupFiles();
 
   // Pending VC relaxation request (Priyanka Saikia, ADR 67.3%)

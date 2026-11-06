@@ -93,6 +93,43 @@ model CurriculumVersion {
   batches          Batch[]
 }
 
+// ─── Helpdesk ─────────────────────────────────────────────────────────
+
+/// Support request; response and resolution targets come from its priority (SLA).
+model Ticket {
+  id              String          @id @default(cuid())
+  number          Int             @unique @default(autoincrement())
+  subject         String
+  category        String          // ACCESS | EXAMS | RESULTS | ATTENDANCE | FEES | DOCUMENTS | ADMISSIONS | OTHER
+  priority        String          // LOW | MEDIUM | HIGH | CRITICAL
+  status          String          @default("OPEN") // OPEN | IN_PROGRESS | WAITING_USER | RESOLVED | CLOSED
+  page            String?
+  raisedById      String
+  assignedToId    String?
+  responseDueAt   DateTime
+  resolveDueAt    DateTime
+  firstResponseAt DateTime?
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  rating          Int?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  messages        TicketMessage[]
+
+  @@index([status, assignedToId])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String?
+  body      String
+  internal  Boolean  @default(false)
+  kind      String   @default("COMMENT") // COMMENT | EVENT
+  createdAt DateTime @default(now())
+}
+
 // ─── Backup ───────────────────────────────────────────────────────────
 
 /// One database backup file (compressed logical dump of every table) and what was done with it.

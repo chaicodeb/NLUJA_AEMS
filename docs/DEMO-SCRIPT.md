@@ -349,6 +349,21 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
+## Act 9C — Help, training and the helpdesk (3 min) · NIQ 3.15 · RFP §17 (training), §24 (support & SLA)
+
+*Works at any stage; ticket ages are set relative to the moment of reset, so SLA states look the same whenever you present.*
+
+1. **Switch → Aditi → Exam Registration → the ? button** in the header: Help & Training opens with *Register for the end-semester examination* first (the guide for the screen she was on), then her other guides by topic, and a search box. Every role sees only its own guides.
+2. **Still stuck? Raise a ticket** → the form remembers the screen (*/me/exams*) and pre-selects *Examination registration* → routed to the **Examination Branch** with a response target (students cannot choose *Critical*). The ticket page shows the conversation and the SLA clock.
+3. **Switch → Examination Branch (OTP) → Helpdesk Queue**: open tickets for the Branch, most urgent first — **HD-1009** (Rahul, BL9.3 blocked) *response due in under an hour* (amber). Open it → reply → status moves to *In progress*, the clock switches to the resolution target. Add an **internal note** (not shown to the student); change priority (targets recalculate) or reassign.
+4. **Switch → Admin → Helpdesk Queue**: all offices — **HD-1005** (Arindam, fee debited twice) is past its SLA (red), with the Accounts team's internal note about the bank dispute. Statistics: average first response, % resolved within SLA, satisfaction 4.5/5.
+5. **Switch → Applicant (Priya) → Support Tickets → HD-1003** (resolved): rate the help → *Yes, close it* — or *Reopen* if not solved.
+6. **Help & Training** (any staff role): the training programme — train-the-trainer, Examination Branch, Deans completed; faculty, desks and student orientation scheduled; six-monthly refresher.
+
+> "Support is part of the system, not an e-mail address: every request reaches the office that can solve it, with a clock the University can hold us — and its own staff — to."
+
+---
+
 ## Close (1 minute)
 
 > "What you saw is your own regulation running end-to-end: BCI attendance with VC relaxation, component-wise LL.M. minimums, moot-court weighting, grace within limits, anonymous double evaluation, maker–checker results and verifiable documents — all configurable by NLUJA staff, all audited.
