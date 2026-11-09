@@ -31,6 +31,7 @@ export const MESSAGES = {
   "Attendance Register": ["উপস্থিতি পঞ্জী", "उपस्थिति रजिस्टर"],
   "Leave Applications": ["ছুটীৰ আবেদন", "अवकाश आवेदन"],
   "Internal Marks": ["আভ্যন্তৰীণ নম্বৰ", "आंतरिक अंक"],
+  "Moot Court": ["মুট কোৰ্ট", "मूट कोर्ट"],
   "Rule Configuration": ["নিয়ম বিন্যাস", "नियम विन्यास"],
   "Workflow Designer": ["কাৰ্যপ্ৰবাহ ডিজাইনাৰ", "वर्कफ़्लो डिज़ाइनर"],
   "Question Papers": ["প্ৰশ্নকাকত", "प्रश्नपत्र"],

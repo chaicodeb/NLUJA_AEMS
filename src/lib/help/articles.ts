@@ -40,6 +40,15 @@ export const ARTICLES: Article[] = [
   { id: "internal-marks", title: "Enter and submit internal marks", roles: ["FACULTY", "HOD"], topic: "Marks", path: "/marks",
     summary: "Mark sheets per component with maximums from the evaluation scheme.",
     steps: ["Open Internal Marks and choose the course component.", "Type marks or upload the Excel template; values above the maximum are refused.", "Save as draft, then Submit — the sheet locks.", "The Dean verifies it (or returns it with a remark); marks then flow into results."] },
+  { id: "moot-court", title: "Run a moot court competition", roles: ["FACULTY", "HOD", "ACADEMIC_STAFF", "COE", "ADMIN"], topic: "Moot court", path: "/moot",
+    summary: "Teams, memorials, court-hall booking, judges' score sheets, automatic rankings and awards, and moot marks for the course.",
+    steps: [
+      "Moot Court → open the competition. Teams of two speakers and a researcher are listed with their memorial scores (Score memorial records the four memorial criteria).",
+      "Schedule a round: stage, name, hall, date and time, petitioner and respondent, and the bench. A hall or a team that is already booked at that time is refused.",
+      "Enter scores: choose a judge and enter the sheet — five oral criteria for each speaker, two for each researcher. When every judge's sheet is in, the round result is computed.",
+      "Team rankings update at once: rounds won, then the weighted score (memorial, oral, researcher), then memorial. Best Speaker, Best Researcher and Best Memorial are decided automatically.",
+      "Post to internal marks writes Moot Memorial and Oral Argumentation into the course teacher's marks sheets as drafts — never into a sheet that is already verified.",
+    ] },
   { id: "workflow-designer", title: "Change an approval chain (Workflow Designer)", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "VC", "REGISTRAR"], topic: "Rules", path: "/workflows",
     summary: "Add, remove or reorder approval steps, choose who approves each, and make a step apply only to some requests — without the vendor.",
     steps: [

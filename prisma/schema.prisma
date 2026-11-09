@@ -376,6 +376,7 @@ model Student {
   alumniProfile       AlumniProfile?
   application         Application?
   profileRequests     ProfileChangeRequest[]
+  mootMemberships     MootMember[]
 }
 
 enum EnrolmentType {
@@ -765,6 +766,70 @@ model RuleSet {
   changeNote   String?
 
   @@unique([key, version])
+}
+
+// ─── Moot court ──────────────────────────────────────────────────────
+
+model MootCompetition {
+  id        String      @id @default(cuid())
+  name      String
+  courseId  String?
+  problem   String
+  status    String      @default("ORALS") // MEMORIALS | ORALS | COMPLETED
+  weights   Json        // { memorial, oral, researcher } — percentages adding up to 100
+  createdAt DateTime    @default(now())
+  teams     MootTeam[]
+  rounds    MootRound[]
+}
+
+model MootTeam {
+  id             String          @id @default(cuid())
+  competitionId  String
+  competition    MootCompetition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  code           String
+  memorial       Float?          // out of 100
+  memorialDetail Json?
+  memorialBy     String?
+  members        MootMember[]
+
+  @@unique([competitionId, code])
+}
+
+model MootMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      MootTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  role      String   // SPEAKER_1 | SPEAKER_2 | RESEARCHER
+}
+
+model MootRound {
+  id            String          @id @default(cuid())
+  competitionId String
+  competition   MootCompetition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  stage         String          // PRELIMINARY | SEMI_FINAL | FINAL
+  name          String
+  courtroom     String
+  startsAt      DateTime
+  durationMins  Int             @default(60)
+  petitionerId  String
+  respondentId  String
+  judges        String[]
+  status        String          @default("SCHEDULED") // SCHEDULED | SCORED
+  scores        MootScore[]
+}
+
+model MootScore {
+  id       String    @id @default(cuid())
+  roundId  String
+  round    MootRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  judge    String
+  memberId String
+  criteria Json
+  total    Float
+
+  @@unique([roundId, judge, memberId])
 }
 
 // ─── Configurable approval workflows ─────────────────────────────────

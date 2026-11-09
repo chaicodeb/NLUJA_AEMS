@@ -44,6 +44,7 @@ export const NAV: NavSection[] = [
       { href: "/attendance", label: "Attendance Register", icon: "CalendarCheck", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "HOD", "FACULTY"] },
       { href: "/attendance/leave", label: "Leave Applications", icon: "ClipboardCheck", roles: ["HOD", "ACADEMIC_STAFF", "COE", "ADMIN"] },
       { href: "/marks", label: "Internal Marks", icon: "NotebookPen", roles: ["FACULTY", "HOD", "COE", "EXAM_STAFF", "ACADEMIC_STAFF", "ADMIN"] },
+      { href: "/moot", label: "Moot Court", icon: "Gavel", roles: ["FACULTY", "HOD", "ACADEMIC_STAFF", "COE", "ADMIN"] },
     ],
   },
   {
