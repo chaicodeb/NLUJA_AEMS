@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 /** /api/v1 authenticates with API keys, not the session cookie. */
-const PUBLIC = [/^\/login/, /^\/verify(\/|$)/, /^\/api\/verify/, /^\/api\/v1(\/|$)/];
+const PUBLIC = [/^\/login/, /^\/verify(\/|$)/, /^\/api\/verify/, /^\/api\/v1(\/|$)/, /^\/(manifest\.webmanifest|sw\.js|offline\.html)$/];
 const key = new TextEncoder().encode(process.env.SESSION_SECRET);
 
 export async function proxy(request: NextRequest) {

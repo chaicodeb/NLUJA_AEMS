@@ -110,6 +110,9 @@ export const MESSAGES = {
   "Could not copy — select the address and copy it manually": ["কপি কৰিব পৰা নগ'ল — ঠিকনাটো বাছি নিজে কপি কৰক", "कॉपी नहीं हो सका — पता चुनकर स्वयं कॉपी करें"],
   "Share": ["শ্বেয়াৰ কৰক", "साझा करें"],
   "Close": ["বন্ধ কৰক", "बंद करें"],
+  "Install app": ["এপ ইনষ্টল কৰক", "ऐप इंस्टॉल करें"],
+  "App installed — open it from your home screen": ["এপ ইনষ্টল হ'ল — হ'ম স্ক্ৰীনৰ পৰা খোলক", "ऐप इंस्टॉल हो गया — होम स्क्रीन से खोलें"],
+  "On iPhone or iPad: tap Share, then Add to Home Screen.": ["iPhone বা iPad-ত: Share টিপক, তাৰ পিছত Add to Home Screen বাছক।", "iPhone या iPad पर: Share दबाएँ, फिर Add to Home Screen चुनें।"],
 
   // ── Sign-in ──────────────────────────────────────────────────────────
   "National Law University and Judicial Academy, Assam": ["ৰাষ্ট্ৰীয় আইন বিশ্ববিদ্যালয় আৰু ন্যায়িক একাডেমী, অসম", "राष्ट्रीय विधि विश्वविद्यालय एवं न्यायिक अकादमी, असम"],

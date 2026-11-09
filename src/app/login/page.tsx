@@ -7,6 +7,7 @@ import { DEMO_OTP } from "@/lib/demo/constants";
 import { DEMO_PASSWORD } from "@/lib/demo/scenarios";
 import { getT } from "@/lib/i18n/server";
 import { LanguageSwitcher } from "@/components/i18n";
+import { InstallAppButton } from "@/components/pwa";
 import { LoginPanel } from "./login-panel";
 import { ShareQr } from "@/components/share-qr";
 
@@ -60,7 +61,10 @@ export default async function LoginPage() {
       </div>
 
       <div className="relative flex items-center justify-center p-6 pt-16 lg:p-10">
-        <LanguageSwitcher className="absolute top-4 right-4" />
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <InstallAppButton />
+          <LanguageSwitcher />
+        </div>
         <LoginPanel demoAccounts={demo} demoPassword={DEMO_PASSWORD} demoOtp={DEMO_OTP} />
       </div>
     </div>

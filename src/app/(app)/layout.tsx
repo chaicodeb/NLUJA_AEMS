@@ -2,6 +2,7 @@ import { LogOut, KeyRound } from "lucide-react";
 import { MobileNav, Sidebar } from "@/components/sidebar";
 import { HelpButton } from "@/components/help-button";
 import { LanguageSwitcher } from "@/components/i18n";
+import { InstallAppButton } from "@/components/pwa";
 import { Badge } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 import { navFor, ROLE_LABELS } from "@/lib/roles";
@@ -28,7 +29,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
                     <div className="font-medium text-white">{user.name}</div>
                     <div>{user.designation ?? roleLabel}</div>
                   </div>
-                  <LanguageSwitcher dark />
+                  <div className="flex flex-wrap gap-2">
+                    <LanguageSwitcher dark />
+                    <InstallAppButton dark />
+                  </div>
                 </div>
               }
             />
@@ -39,6 +43,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <InstallAppButton className="hidden md:inline-flex" />
             <LanguageSwitcher className="hidden md:inline-flex" />
             <div className="hidden text-right leading-tight xl:block">
               <div className="text-sm font-medium">{user.name}</div>
