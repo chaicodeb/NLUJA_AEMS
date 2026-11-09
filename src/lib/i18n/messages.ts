@@ -148,6 +148,17 @@ export const MESSAGES = {
   "Demo account not found. Reset demo data from the admin dashboard.": ["ডেমো একাউণ্ট পোৱা নগ'ল। প্ৰশাসক ডেশ্বব'ৰ্ডৰ পৰা ডেমো তথ্য পুনৰ ছেট কৰক।", "डेमो खाता नहीं मिला। व्यवस्थापक डैशबोर्ड से डेमो डेटा रीसेट करें।"],
   "Your verification session expired. Please sign in again.": ["আপোনাৰ সত্যাপনৰ সময় উকলিল। অনুগ্ৰহ কৰি পুনৰ প্ৰৱেশ কৰক।", "आपका सत्यापन सत्र समाप्त हो गया। कृपया फिर से साइन इन करें।"],
   "Incorrect one-time password.": ["এবাৰ-ব্যৱহাৰ্য পাছৱৰ্ড ভুল।", "वन-टाइम पासवर्ड गलत है।"],
+  "Sign-in {version}": ["প্ৰৱেশ {version}", "साइन-इन {version}"],
+  "Preview of sign-in {version}. The version in use is {live}.": ["প্ৰৱেশ {version}-ৰ পূৰ্বদৰ্শন। ব্যৱহাৰত থকা সংস্কৰণ {live}।", "साइन-इन {version} का पूर्वावलोकन। उपयोग में संस्करण {live} है।"],
+  "You are already signed in as {name}; this is a preview of the sign-in page.": ["আপুনি ইতিমধ্যে {name} হিচাপে প্ৰৱেশ কৰিছে; এইটো প্ৰৱেশ পৃষ্ঠাৰ পূৰ্বদৰ্শন।", "आप पहले से {name} के रूप में साइन इन हैं; यह साइन-इन पृष्ठ का पूर्वावलोकन है।"],
+  "Back to dashboard": ["ডেশ্বব'ৰ্ডলৈ উভতি যাওক", "डैशबोर्ड पर लौटें"],
+  "Continue": ["আগবাঢ়ক", "आगे बढ़ें"],
+  "Remember my email on this device": ["এই ডিভাইচত মোৰ ই-মেইল মনত ৰাখক", "इस डिवाइस पर मेरा ईमेल याद रखें"],
+  "Show password": ["পাছৱৰ্ড দেখুৱাওক", "पासवर्ड दिखाएँ"],
+  "Hide password": ["পাছৱৰ্ড লুকুৱাওক", "पासवर्ड छिपाएँ"],
+  "your registered mobile number": ["আপোনাৰ পঞ্জীভুক্ত মোবাইল নম্বৰ", "आपका पंजीकृत मोबाइल नंबर"],
+  "The code is valid for {minutes} minutes.": ["ক'ডটো {minutes} মিনিটলৈ বৈধ।", "कोड {minutes} मिनट तक मान्य है।"],
+  "Could not reach the server. Please try again.": ["ছাৰ্ভাৰৰ সৈতে সংযোগ হোৱা নাই। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।", "सर्वर से संपर्क नहीं हो सका। कृपया फिर से प्रयास करें।"],
 
   // ── Common words ─────────────────────────────────────────────────────
   "Student portal": ["ছাত্ৰ প'ৰ্টেল", "छात्र पोर्टल"],

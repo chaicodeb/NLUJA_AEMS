@@ -10,9 +10,15 @@ import { LanguageSwitcher } from "@/components/i18n";
 import { InstallAppButton } from "@/components/pwa";
 import { LoginPanel } from "./login-panel";
 import { ShareQr } from "@/components/share-qr";
+import { activeSignInVersion } from "@/lib/auth/settings";
+import { isSignInVersion } from "@/lib/auth/versions";
 
-export default async function LoginPage() {
-  if (await getCurrentUser()) redirect("/dashboard");
+export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  const requested = (await searchParams).version;
+  const preview = isSignInVersion(requested) ? requested : null;
+  const current = await getCurrentUser();
+  if (current && !preview) redirect("/dashboard");
+  const live = await activeSignInVersion();
   const t = await getT();
   const users = await db.user.findMany({ orderBy: { createdAt: "asc" }, select: { email: true, name: true, role: true, designation: true, mfaEnabled: true } });
   const order = ["COE", "EXAM_STAFF", "ACADEMIC_STAFF", "VC", "REGISTRAR", "FACULTY", "EVALUATOR", "STUDENT", "PARENT", "ADMIN", "HOD", "IQAC", "LIBRARIAN", "WARDEN", "ACCOUNTS", "APPLICANT"];
@@ -65,7 +71,7 @@ export default async function LoginPage() {
           <InstallAppButton />
           <LanguageSwitcher />
         </div>
-        <LoginPanel demoAccounts={demo} demoPassword={DEMO_PASSWORD} demoOtp={DEMO_OTP} />
+        <LoginPanel demoAccounts={demo} demoPassword={DEMO_PASSWORD} demoOtp={DEMO_OTP} version={preview ?? live} live={live} signedInAs={current?.name ?? null} />
       </div>
     </div>
   );

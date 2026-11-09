@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Ban, Check, Copy, KeyRound, Play, RefreshCw, RotateCcw, Send, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Label, Select } from "@/components/ui";
-import { commitImportAction, createKeyAction, retryJobAction, revokeKeyAction, rollbackImportAction, runQueueAction, setOutageAction, stageImportAction } from "./actions";
+import { commitImportAction, createKeyAction, retryJobAction, revokeKeyAction, rollbackImportAction, runQueueAction, setOutageAction, setSignInVersionAction, stageImportAction } from "./actions";
 
 type QueueResult = { error?: string; processed?: number; delivered?: number; retrying?: number; failed?: number };
 const queueToast = (r: QueueResult) => {
@@ -121,6 +121,28 @@ export function RevokeKeyButton({ id, name }: { id: string; name: string }) {
       }}
     >
       <Ban className="h-3.5 w-3.5" /> Revoke
+    </Button>
+  );
+}
+
+export function SignInVersionSwitch({ version, live }: { version: string; live: boolean }) {
+  const [pending, start] = useTransition();
+  if (live) return <span className="inline-flex items-center gap-1 text-xs font-medium text-leaf-700"><Check className="h-3.5 w-3.5" /> In use</span>;
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      disabled={pending}
+      onClick={() => {
+        if (!window.confirm(`Make sign-in ${version} the version everyone sees? The other version keeps working for systems that still call it.`)) return;
+        start(async () => {
+          const r = await setSignInVersionAction(version);
+          if ("error" in r && r.error) toast.error(r.error);
+          else toast.success(`Sign-in ${version} is now in use`);
+        });
+      }}
+    >
+      <RefreshCw className="h-3.5 w-3.5" /> Switch to {version}
     </Button>
   );
 }

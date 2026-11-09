@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/session";
 import { retryJob, runDigiLockerQueue, setOutage } from "@/lib/integrations/connectors";
 import { createApiKey, revokeApiKey } from "@/lib/integrations/api";
 import { commitImport, rollbackImport, stageImport } from "@/lib/integrations/migration";
+import { setSignInVersion } from "@/lib/auth/settings";
 
 const actorOf = (u: { id: string; role: string }) => ({ id: u.id, role: u.role });
 const refresh = () => ["/integrations", "/dashboard", "/students"].forEach((p) => revalidatePath(p, "layout"));
@@ -41,6 +42,14 @@ export async function revokeKeyAction(id: string) {
   const user = await requireUser(["ADMIN"]);
   const res = await revokeApiKey(id, actorOf(user));
   refresh();
+  return res;
+}
+
+export async function setSignInVersionAction(version: string) {
+  const user = await requireUser(["ADMIN"]);
+  const res = await setSignInVersion(version, actorOf(user));
+  refresh();
+  revalidatePath("/login");
   return res;
 }
 

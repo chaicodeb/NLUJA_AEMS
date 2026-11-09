@@ -155,6 +155,14 @@ model BackupRun {
 // ─── Integrations & data migration ────────────────────────────────────
 
 /// Credential for a partner system calling the REST API; only a SHA-256 hash of the secret is stored.
+/// University-wide switches changed from the admin screens (e.g. the sign-in version in use).
+model SystemSetting {
+  key         String   @id
+  value       String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
 model ApiKey {
   id          String       @id @default(cuid())
   name        String
