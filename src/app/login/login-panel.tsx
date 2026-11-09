@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useActionState, useState, type ChangeEvent, type FormEvent } from "react";
-import { ArrowLeft, Eye, EyeOff, KeyRound, ShieldCheck, UserRound } from "lucide-react";
+import { useActionState, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { KeyRound, RefreshCw, ShieldCheck, UserRound } from "lucide-react";
 import { Button, Input, Label, Callout } from "@/components/ui";
 import { useT } from "@/components/i18n";
 import type { SignInVersion } from "@/lib/auth/versions";
@@ -11,8 +11,6 @@ import { quickLoginAction, verifyOtpAction, type LoginState } from "./actions";
 
 type DemoAccount = { email: string; name: string; role: string; roleLabel: string; designation: string | null; mfaEnabled: boolean };
 type Mfa = { name: string; maskedPhone: string; minutes?: number };
-
-const REMEMBER_KEY = "nluja_signin_email";
 
 /** Calls the sign-in API of the given version and returns the parsed reply. */
 async function callApi(version: SignInVersion, step: "login" | "otp", body: Record<string, string>) {
@@ -23,10 +21,11 @@ async function callApi(version: SignInVersion, step: "login" | "otp", body: Reco
   };
 }
 
-export function LoginPanel({ demoAccounts, demoPassword, demoOtp, version, live, signedInAs }: {
+export function LoginPanel({ demoAccounts, demoPassword, demoOtp, version: initialVersion, live, signedInAs }: {
   demoAccounts: DemoAccount[]; demoPassword: string; demoOtp: string; version: SignInVersion; live: SignInVersion; signedInAs: string | null;
 }) {
   const t = useT();
+  const [version, setVersion] = useState(initialVersion);
   const [quickState, quick, quickPending] = useActionState<LoginState, FormData>(quickLoginAction, undefined);
   const [otpState, verify, verifying] = useActionState<LoginState, FormData>(verifyOtpAction, undefined);
   const [tab, setTab] = useState<"demo" | "password">("demo");
@@ -104,10 +103,24 @@ export function LoginPanel({ demoAccounts, demoPassword, demoOtp, version, live,
             </button>
           ))}
         </form>
-      ) : version === "v1" ? (
-        <PasswordFormV1 demoPassword={demoPassword} onMfa={setApiMfa} onError={setApiError} />
       ) : (
-        <PasswordFormV2 demoPassword={demoPassword} onMfa={setApiMfa} onError={setApiError} />
+        <>
+          <div className="mt-5 flex items-center gap-2 text-xs" role="group" aria-label={t("Sign-in version")}>
+            <span className="text-muted-foreground">{t("Sign-in version")}:</span>
+            {(["v1", "v2"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={version === v}
+                onClick={() => { setVersion(v); setApiError(null); }}
+                className={`rounded-md border px-3 py-1 font-semibold ${version === v ? "border-brand-600 bg-brand-600 text-white" : "border-border bg-white text-muted-foreground hover:border-brand-300"}`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          <PasswordForm key={version} version={version} demoPassword={demoPassword} onMfa={setApiMfa} onError={setApiError} />
+        </>
       )}
       <p className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground">
         <KeyRound className="h-3.5 w-3.5" /> {t("Roles marked with a key require a second factor (OTP).")}
@@ -116,7 +129,7 @@ export function LoginPanel({ demoAccounts, demoPassword, demoOtp, version, live,
   );
 }
 
-type FormProps = { demoPassword: string; onMfa: (m: Mfa) => void; onError: (e: string | null) => void };
+type FormProps = { version: SignInVersion; demoPassword: string; onMfa: (m: Mfa) => void; onError: (e: string | null) => void };
 
 function useSubmit(onError: FormProps["onError"]) {
   const t = useT();
@@ -136,20 +149,48 @@ function useSubmit(onError: FormProps["onError"]) {
   return { busy, run };
 }
 
-/** v1: one form, calls POST /api/v1/auth/login. */
-function PasswordFormV1({ demoPassword, onMfa, onError }: FormProps) {
+/** The same email-and-password form for both versions; v2 adds the CAPTCHA and calls /api/v2/auth/login. */
+function PasswordForm({ version, demoPassword, onMfa, onError }: FormProps) {
   const t = useT();
   const [email, setEmail] = useState("coe@nluassam.ac.in");
   const [password, setPassword] = useState(demoPassword);
+  const [captcha, setCaptcha] = useState<{ id: string; image: string } | null>(null);
+  const [answer, setAnswer] = useState("");
+  const [round, setRound] = useState(0);
   const { busy, run } = useSubmit(onError);
+
+  useEffect(() => {
+    if (version !== "v2") return;
+    let current = true;
+    fetch("/api/v2/auth/captcha", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((c: { captchaId: string; image: string }) => {
+        if (!current) return;
+        setCaptcha({ id: c.captchaId, image: c.image });
+        setAnswer("");
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [version, round]);
+
   const submit = run(async () => {
-    const r = await callApi("v1", "login", { email, password });
-    if (r.status === "ok" && r.next) return window.location.assign(r.next);
-    if (r.status === "otp_required") return onMfa({ name: email, maskedPhone: t("your registered mobile number") });
-    onError(r.message ?? "Invalid email or password.");
+    if (version === "v1") {
+      const r = await callApi("v1", "login", { email, password });
+      if (r.status === "ok" && r.next) return window.location.assign(r.next);
+      if (r.status === "otp_required") return onMfa({ name: email, maskedPhone: t("your registered mobile number") });
+      return onError(r.message ?? "Invalid email or password.");
+    }
+    const r = await callApi("v2", "login", { email, password, captchaId: captcha?.id ?? "", captchaAnswer: answer });
+    if (r.result === "SIGNED_IN" && r.next) return window.location.assign(r.next);
+    if (r.result === "OTP_REQUIRED" && r.user && r.otp) return onMfa({ name: r.user.name, maskedPhone: r.otp.sentTo, minutes: Math.round(r.otp.expiresInSeconds / 60) });
+    setRound((n) => n + 1);
+    onError(r.error?.message ?? "Invalid email or password.");
   });
+
   return (
-    <form onSubmit={submit} className="mt-5 space-y-4" data-signin-form="v1">
+    <form onSubmit={submit} className="mt-4 space-y-4" data-signin-form={version}>
       <div className="space-y-1.5">
         <Label htmlFor="email">{t("University email")}</Label>
         <Input id="email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -158,74 +199,22 @@ function PasswordFormV1({ demoPassword, onMfa, onError }: FormProps) {
         <Label htmlFor="password">{t("Password")}</Label>
         <Input id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
       </div>
-      <Button type="submit" size="lg" className="w-full" disabled={busy}>
-        {busy ? t("Signing in…") : t("Sign in")}
-      </Button>
-      <p className="text-xs text-muted-foreground">{t("All demo accounts use the password {password}.", { password: demoPassword })}</p>
-    </form>
-  );
-}
-
-/** v2: email first, then password with show/hide; calls POST /api/v2/auth/login. */
-function PasswordFormV2({ demoPassword, onMfa, onError }: FormProps) {
-  const t = useT();
-  const [remembered] = useState(() => window.localStorage.getItem(REMEMBER_KEY));
-  const [email, setEmail] = useState(remembered ?? "coe@nluassam.ac.in");
-  const [remember, setRemember] = useState(!!remembered);
-  const [step, setStep] = useState<"email" | "password">("email");
-  const [password, setPassword] = useState(demoPassword);
-  const [show, setShow] = useState(false);
-  const { busy, run } = useSubmit(onError);
-
-  const toPassword = (e: FormEvent) => {
-    e.preventDefault();
-    if (remember) window.localStorage.setItem(REMEMBER_KEY, email.trim());
-    else window.localStorage.removeItem(REMEMBER_KEY);
-    onError(null);
-    setStep("password");
-  };
-  const submit = run(async () => {
-    const r = await callApi("v2", "login", { email, password });
-    if (r.result === "SIGNED_IN" && r.next) return window.location.assign(r.next);
-    if (r.result === "OTP_REQUIRED" && r.user && r.otp) return onMfa({ name: r.user.name, maskedPhone: r.otp.sentTo, minutes: Math.round(r.otp.expiresInSeconds / 60) });
-    onError(r.error?.message ?? "Invalid email or password.");
-  });
-
-  if (step === "email")
-    return (
-      <form onSubmit={toPassword} className="mt-5 space-y-4" data-signin-form="v2-email">
-        <div className="space-y-1.5">
-          <Label htmlFor="email">{t("University email")}</Label>
-          <Input id="email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" required autoFocus />
+      {version === "v2" && (
+        <div className="space-y-1.5" data-captcha>
+          <Label htmlFor="captcha">{t("Security check")}</Label>
+          <div className="flex flex-wrap items-center gap-2">
+            {captcha ? (
+              <Image src={captcha.image} alt={t("Security code image")} width={240} height={80} unoptimized className="rounded-md border border-border" />
+            ) : (
+              <div className="h-20 w-60 animate-pulse rounded-md bg-muted" />
+            )}
+            <Button type="button" variant="outline" size="sm" onClick={() => setRound((n) => n + 1)}>
+              <RefreshCw className="h-3.5 w-3.5" /> {t("New code")}
+            </Button>
+          </div>
+          <Input id="captcha" name="captcha" inputMode="numeric" autoComplete="off" maxLength={5} placeholder={t("Type the 5 digits shown")} value={answer} onChange={(e) => setAnswer(e.target.value.replace(/\D/g, ""))} required />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          {t("Remember my email on this device")}
-        </label>
-        <Button type="submit" size="lg" className="w-full">{t("Continue")}</Button>
-      </form>
-    );
-
-  return (
-    <form onSubmit={submit} className="mt-5 space-y-4" data-signin-form="v2-password">
-      <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm">
-        <span className="flex min-w-0 items-center gap-2">
-          <UserRound className="h-4 w-4 shrink-0 text-brand-700" />
-          <span className="truncate font-medium">{email}</span>
-        </span>
-        <button type="button" onClick={() => setStep("email")} className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline">
-          <ArrowLeft className="h-3 w-3" /> {t("Change")}
-        </button>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="password">{t("Password")}</Label>
-        <div className="relative">
-          <Input id="password" name="password" type={show ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required autoFocus className="pr-10" />
-          <button type="button" onClick={() => setShow((s) => !s)} className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground" aria-label={show ? t("Hide password") : t("Show password")}>
-            {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
+      )}
       <Button type="submit" size="lg" className="w-full" disabled={busy}>
         {busy ? t("Signing in…") : t("Sign in")}
       </Button>

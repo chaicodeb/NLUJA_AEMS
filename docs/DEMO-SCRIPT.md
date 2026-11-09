@@ -391,18 +391,18 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
-## Act 8F — API versioning: switch the sign-in from v1 to v2 and back (3 min) · RFP §13 (open APIs, integration)
+## Act 8F — API versioning: v1 and v2 of the sign-in (2–3 min) · RFP §13 (open APIs, integration)
 
-*Works at any stage. Start on v1 (any Presenter jump resets to v1).*
+*Works at any stage. v1 is in use by default (any Presenter jump resets to v1).*
 
-1. **Sign-in page → Email & password**: today's form (**Sign-in v1** badge) — one form, calls `POST /api/v1/auth/login`.
-2. **Switch → Admin → Integrations → API & Keys → Versions**: v1 *In use*, v2 *Available*, API 1.0.0 / 2.0.0, endpoints, calls per version, and what each version returns side by side (v1 `{"status":"otp_required"}`; v2 adds the user, OTP channel and expiry). **Switch to v2** → confirm.
-3. Sign out → the sign-in page now shows **Sign-in v2**: email first → **Continue** → password with the eye button (show/hide) and *Remember my email on this device* → OTP screen names the user and says the code is valid for 5 minutes (all from the v2 reply). Works in Assamese and Hindi too.
-4. Back on **API & Keys**: v1 is now *Deprecated · sunset 30 Nov 2027* but still answers — its replies carry `Deprecation: true`, a `Sunset` date and a link to v2; every reply carries `API-Version`. **OpenAPI v1 / v2** links show both contracts.
-5. **Switch to v1** → instant rollback. **Switch history** (and the Audit Trail, action `SIGNIN_VERSION_CHANGED`) shows both changes with who and when.
-6. Optional: open `/login?version=v1` and `/login?version=v2` in two tabs to show both versions running at the same time.
+1. **Sign-in page → Email & password** → buttons **v1 | v2** (*Sign-in version*). **v1**: today's form — email, password, Sign in — calls `POST /api/v1/auth/login`.
+2. Click **v2**: the same form plus a **Security check** — a 5-digit code image, **New code**, and a box to type it. It calls `POST /api/v2/auth/login`, which refuses a sign-in without the right code.
+   - Type a wrong code → *"The code did not match. A new one has been shown"* (each code works once and expires after 2 minutes; the attempt is in the audit trail as `CAPTCHA_FAILED`).
+   - Type the right code → signed in (COE: the OTP screen names the user and says the code is valid for 5 minutes — details only the v2 API returns).
+3. *"Why a new version? Because v2 requires two new fields. An old client sending only email and password gets* `CAPTCHA_REQUIRED` *from v2 — so v1 keeps running for it."* The buttons only change this browser.
+4. Optional, to make it official for everyone: **Admin → Integrations → API & Keys → Versions** → **Switch to v2**. v1 shows *Deprecated · sunset 30 Nov 2027* but still answers, with `Deprecation`, `Sunset` and a link to v2 in its replies; every reply carries `API-Version`. **Switch to v1** = rollback; both are in **Switch history** and the Audit Trail (`SIGNIN_VERSION_CHANGED`). **OpenAPI v1 / v2** show both contracts.
 
-> "A new version never breaks anyone: the old one keeps running with a published sunset date, the University decides when the new one goes live, and rolling back is one click — all on the audit trail."
+> "Same screen, new API version: v2 adds a CAPTCHA without breaking anyone still on v1, and the University decides when v2 goes live — and can roll back in one click."
 
 ---
 

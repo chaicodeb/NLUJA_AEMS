@@ -52,12 +52,25 @@ function signInPaths(v: SignInVersion) {
         error: { apiVersion: "2.0.0", error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password." } },
       };
   const headers = { "API-Version": { schema: { type: "string" }, description: `Always ${SIGNIN_VERSIONS[v].api}` } };
+  const login = v === "v1" ? { email: "registrar@nluassam.ac.in", password: "Demo@123" } : { email: "registrar@nluassam.ac.in", password: "Demo@123", captchaId: "<captchaId from GET /api/v2/auth/captcha>", captchaAnswer: "48273" };
   return {
+    ...(v === "v2" && {
+      "/api/v2/auth/captcha": {
+        get: {
+          summary: "Get a CAPTCHA for the sign-in form (v2)",
+          responses: { "200": { description: "A 5-digit code as an image, valid for 2 minutes and one attempt", headers, content: json({ apiVersion: "2.0.0", captchaId: "eyJhbGciOi…", image: "data:image/svg+xml;base64,…", expiresInSeconds: 120 }) } },
+        },
+      },
+    }),
     [`/api/${v}/auth/login`]: {
       post: {
         summary: `Sign in with email and password (${v})`,
-        requestBody: { content: json({ email: "registrar@nluassam.ac.in", password: "Demo@123" }) },
-        responses: { "200": { description: "Signed in, or a one-time password is needed", headers, content: json(reply.otp) }, "401": { description: "Wrong email or password", headers, content: json(reply.error) } },
+        requestBody: { content: json(login) },
+        responses: {
+          "200": { description: "Signed in, or a one-time password is needed", headers, content: json(reply.otp) },
+          ...(v === "v2" && { "400": { description: "CAPTCHA_REQUIRED — the request has no CAPTCHA (e.g. a v1-style request)", headers } }),
+          "401": { description: v === "v2" ? "Wrong email or password, or CAPTCHA_INCORRECT / CAPTCHA_EXPIRED" : "Wrong email or password", headers, content: json(reply.error) },
+        },
       },
     },
     [`/api/${v}/auth/otp`]: {

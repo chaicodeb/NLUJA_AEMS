@@ -12,13 +12,13 @@ export const SIGNIN_VERSIONS = {
     api: "2.0.0",
     released: "2026-11-09",
     title: "Sign-in v2",
-    summary: "Email first, then password, with show/hide password and “remember my email on this device”. The API returns the user, the second-factor details and the session expiry.",
-    endpoints: ["POST /api/v2/auth/login", "POST /api/v2/auth/otp"],
+    summary: "The same email-and-password form with a CAPTCHA box. The API refuses a sign-in without the right code, and also returns the user, the second-factor details and the session expiry.",
+    endpoints: ["GET /api/v2/auth/captcha", "POST /api/v2/auth/login", "POST /api/v2/auth/otp"],
     changes: [
-      "Two-step form: email, then password; show/hide password; remember email on this device",
+      "Same form as v1 plus a CAPTCHA (5-digit code, new image after every attempt, valid 2 minutes, usable once)",
+      "Breaking: captchaId and captchaAnswer are required — a v1-style request is refused with CAPTCHA_REQUIRED",
       "Response adds user (name, role), OTP channel and expiry, session expiry",
-      "Errors as { error: { code, message } } with stable codes (INVALID_CREDENTIALS, OTP_INCORRECT, OTP_EXPIRED)",
-      "Breaking: v1's { status } field is replaced by result (SIGNED_IN | OTP_REQUIRED)",
+      "Errors as { error: { code, message } } with stable codes (CAPTCHA_INCORRECT, CAPTCHA_EXPIRED, INVALID_CREDENTIALS, OTP_INCORRECT, OTP_EXPIRED)",
     ],
   },
 } as const;

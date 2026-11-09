@@ -7,9 +7,9 @@ import { SIGNIN_VERSIONS, V1_SUNSET, type SignInVersion } from "@/lib/auth/versi
 import { signInVersionOverview } from "@/lib/auth/api";
 import { CreateKeyForm, RevokeKeyButton, SignInVersionSwitch, TryIt } from "../client";
 
-const SAMPLE_REPLIES: Record<SignInVersion, string> = {
-  v1: JSON.stringify({ status: "otp_required" }, null, 2),
-  v2: JSON.stringify({ apiVersion: "2.0.0", result: "OTP_REQUIRED", user: { name: "Dr. R. Baishya", role: "COE", roleLabel: "Controller of Examinations" }, otp: { channel: "SMS", sentTo: "+91 ••••• ••4821", length: 6, expiresInSeconds: 300 } }, null, 2),
+const SAMPLE_REQUESTS: Record<SignInVersion, string> = {
+  v1: JSON.stringify({ email: "coe@nluassam.ac.in", password: "••••••" }, null, 2),
+  v2: JSON.stringify({ email: "coe@nluassam.ac.in", password: "••••••", captchaId: "eyJhbGciOi…", captchaAnswer: "48273" }, null, 2),
 };
 
 export default async function ApiPage() {
@@ -69,8 +69,8 @@ export default async function ApiPage() {
         <CardBody className="grid gap-5 border-t border-border lg:grid-cols-2">
           {(Object.keys(SIGNIN_VERSIONS) as SignInVersion[]).map((v) => (
             <div key={v} className="space-y-2">
-              <div className="text-sm font-semibold">What {v} returns when a second factor is needed</div>
-              <pre className="overflow-auto rounded-lg bg-ink-900 p-3 text-xs text-white/90">{SAMPLE_REPLIES[v]}</pre>
+              <div className="text-sm font-semibold">What a {v} sign-in request sends</div>
+              <pre className="overflow-auto rounded-lg bg-ink-900 p-3 text-xs text-white/90">{SAMPLE_REQUESTS[v]}</pre>
               <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">{SIGNIN_VERSIONS[v].changes.map((c) => <li key={c}>{c}</li>)}</ul>
             </div>
           ))}
