@@ -1095,15 +1095,28 @@ model SeatAllocation {
   @@unique([examPaperId, studentId])
 }
 
+/// Unfair-means case: report in the hall → show-cause notice and hearing → committee decision, applied by the result engine.
 model MalpracticeCase {
-  id          String   @id @default(cuid())
-  examPaperId String
-  studentId   String
-  description String
-  evidenceUrl String?
-  reportedBy  String
-  status      String   @default("REPORTED")
-  createdAt   DateTime @default(now())
+  id           String    @id @default(cuid())
+  examPaperId  String
+  studentId    String
+  description  String
+  evidenceUrl  String?
+  reportedBy   String
+  reportedById String?
+  status       String    @default("REPORTED") // REPORTED | HEARING | DECIDED
+  category     String    @default("OTHER")
+  material     String?
+  room         String?
+  hearingAt    DateTime?
+  committee    String?
+  explanation  String?
+  explainedAt  DateTime?
+  penalty      String?   // EXONERATED | WARNING | CANCEL_PAPER | CANCEL_ALL | DEBAR
+  decisionNote String?
+  decidedById  String?
+  decidedAt    DateTime?
+  createdAt    DateTime  @default(now())
 }
 
 // ─── Answer scripts & on-screen evaluation ────────────────────────────

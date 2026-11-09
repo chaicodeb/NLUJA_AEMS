@@ -8,6 +8,9 @@ import { formatDate } from "@/lib/utils";
 import { RegistrationForm } from "./registration-form";
 import { currentSupplementary, supplementaryOptions } from "@/lib/results/supplementary";
 import { SupplementaryRegistration } from "../../supplementary/client";
+import { studentCases } from "@/lib/exams/ufm";
+import { UFM_CATEGORIES, UFM_PENALTIES } from "@/lib/exams/ufm-shared";
+import { ExplanationForm } from "./ufm-notice";
 
 export default async function MyExamsPage() {
   const user = await requirePage("/me/exams");
@@ -19,6 +22,7 @@ export default async function MyExamsPage() {
   const sup = await currentSupplementary();
   const supView = sup ? await supplementaryOptions(user.studentId, sup.id) : null;
   const supEligible = supView?.options.filter((o) => o.kind) ?? [];
+  const cases = await studentCases(user.studentId);
 
   return (
     <div className="space-y-6">
@@ -34,6 +38,21 @@ export default async function MyExamsPage() {
           ) : null
         }
       />
+      {cases.map((c) => (
+        <Callout key={c.id} tone={c.status === "DECIDED" && UFM_PENALTIES[c.penalty!]?.result === "NONE" ? "green" : "red"} title={t("Unfair-means case: {paper}", { paper: `${c.paper.course.code} ${c.paper.course.title}` })}>
+          <div className="space-y-2">
+            <p>{t("Reported by the invigilator on {date}: {category}. The result of this paper is withheld until the Unfair Means Committee decides.", { date: formatDate(c.createdAt), category: t.loose(UFM_CATEGORIES[c.category] ?? c.category) })}</p>
+            {c.hearingAt && <p className="font-medium">{t("Show-cause notice: you are required to appear before {committee} on {date}.", { committee: c.committee ?? "", date: formatDate(c.hearingAt, true) })}</p>}
+            {c.status === "DECIDED" ? (
+              <p className="font-medium">{t("Decision: {penalty}", { penalty: t.loose(UFM_PENALTIES[c.penalty!]?.label ?? "") })} — {t.loose(UFM_PENALTIES[c.penalty!]?.effect ?? "")}</p>
+            ) : c.explanation ? (
+              <p className="text-xs">{t("Explanation submitted on {date}.", { date: formatDate(c.explainedAt!, true) })}</p>
+            ) : c.status === "HEARING" ? (
+              <ExplanationForm caseId={c.id} />
+            ) : null}
+          </div>
+        </Callout>
+      ))}
       {sup && supView && (supView.registration || (sup.registrationOpen && supEligible.length > 0)) && (
         <Card>
           <CardHeader

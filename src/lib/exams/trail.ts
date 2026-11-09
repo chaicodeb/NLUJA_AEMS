@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { verifyAuditChain } from "../audit";
+import { UFM_CATEGORIES, UFM_PENALTIES } from "./ufm-shared";
 
 export type TrailEvent = {
   at: Date;
@@ -34,9 +35,18 @@ const STAGE_OF: Record<string, TrailEvent["stage"]> = {
   EXAM_REGISTERED: "Registration", REGISTRATION_BLOCKED: "Registration", SUPPLEMENTARY_REGISTERED: "Registration",
   SEATING_GENERATED: "Seating", ADMIT_CARDS_PUBLISHED: "Seating", ADMIT_CARD_DOWNLOADED: "Document",
   HALL_ATTENDANCE_RECORDED: "Exam hall", EXAM_CONDUCTED: "Exam hall", QP_RELEASED: "Exam hall",
+  UFM_REPORTED: "Exam hall", UFM_NOTICE_ISSUED: "Post-result", UFM_EXPLANATION_SUBMITTED: "Post-result", UFM_DECIDED: "Post-result",
   EVALUATIONS_SIMULATED: "Evaluation", EVALUATION_LOCKED: "Evaluation", EVALUATION_REOPENED: "Evaluation", EVALUATOR_REASSIGNED: "Evaluation", LOCKED_EDIT_REJECTED: "Evaluation", MODERATION_PROPOSED: "Result", MODERATION_APPROVED: "Result",
   RESULTS_PROCESSED: "Result", RESULTS_APPROVED: "Result", RESULTS_PUBLISHED: "Result",
   GRADE_SHEET_DOWNLOADED: "Document", REVALUATION_APPLIED: "Post-result", REVALUATOR_ASSIGNED: "Post-result", REVALUATION_DECIDED: "Post-result",
+};
+
+const TITLES: Record<string, string> = {
+  QP_RELEASED: "Question paper released",
+  UFM_REPORTED: "Unfair-means report recorded",
+  UFM_NOTICE_ISSUED: "Show-cause notice issued",
+  UFM_EXPLANATION_SUBMITTED: "Student's explanation received",
+  UFM_DECIDED: "Unfair Means Committee decision",
 };
 
 /** Exams a student registered for (newest first). */
@@ -63,11 +73,12 @@ export async function studentExamTrail(studentId: string, examId: string, opts: 
     db.revaluationRequest.findMany({ where: { studentId, examId } }),
     db.document.findMany({ where: { studentId }, orderBy: { issuedAt: "asc" } }),
     db.resultRun.findMany({ where: { examId }, include: { courseResults: { where: { studentId }, include: { enrolment: { include: { course: true } } } } } }),
-    db.examPaper.findMany({ where: { examId }, select: { id: true } }),
+    db.examPaper.findMany({ where: { examId }, select: { id: true, course: { select: { code: true } } } }),
   ]);
+  const examPaperCodes = new Map(examPapers.map((p) => [p.id, p.course.code]));
   const malpractice = await db.malpracticeCase.findMany({ where: { studentId, examPaperId: { in: examPapers.map((p) => p.id) } } });
   const paperIds = seats.map((s) => s.examPaperId);
-  const ids = [studentId, registration?.id, ...docs.map((d) => d.id), ...relaxations.map((r) => r.id), ...revals.map((r) => r.id), ...scripts.flatMap((s) => s.evaluations.map((e) => e.id))].filter((x): x is string => !!x);
+  const ids = [studentId, registration?.id, ...malpractice.map((m) => m.id), ...docs.map((d) => d.id), ...relaxations.map((r) => r.id), ...revals.map((r) => r.id), ...scripts.flatMap((s) => s.evaluations.map((e) => e.id))].filter((x): x is string => !!x);
   const from = new Date(exam.startDate.getTime() - 120 * 86400000);
   const qpIds = (await db.questionPaper.findMany({ where: { examPaperId: { in: paperIds } }, select: { id: true } })).map((q) => q.id);
   const [own, about, examWide] = await Promise.all([
@@ -84,7 +95,7 @@ export async function studentExamTrail(studentId: string, examId: string, opts: 
       seen.add(a.id);
       events.push({
         at: a.at, stage: STAGE_OF[a.action] ?? (scope === "exam" ? "Result" : "Access"),
-        title: a.action === "QP_RELEASED" ? "Question paper released" : a.action.replaceAll("_", " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()),
+        title: TITLES[a.action] ?? a.action.replaceAll("_", " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()),
         detail: a.summary ?? "", source: "audit", scope, audit: { id: a.id, action: a.action, hash: a.hash, actor: a.actor ? `${a.actor.name} (${a.actorRole ?? a.actor.role})` : "System" },
       });
     }
@@ -109,7 +120,10 @@ export async function studentExamTrail(studentId: string, examId: string, opts: 
     if (s.attended === false) events.push({ at: start, stage: "Exam hall", source: "record", title: `${s.examPaper.course.code}: absent`, detail: `Marked absent by ${s.markedBy ?? "invigilator"}` });
   }
   for (const m of malpractice) {
-    events.push({ at: m.createdAt, stage: "Exam hall", source: "record", title: "Unfair-means report", detail: `${m.description} — ${m.status.toLowerCase()}` });
+    const code = examPaperCodes.get(m.examPaperId) ?? "";
+    events.push({ at: m.createdAt, stage: "Exam hall", source: "record", title: `${code}: unfair-means report`, detail: `${UFM_CATEGORIES[m.category] ?? m.category} — ${m.description} · reported by ${m.reportedBy}${m.material ? ` · seized: ${m.material}` : ""}` });
+    if (m.hearingAt) events.push({ at: m.hearingAt, stage: "Post-result", source: "record", title: `${code}: hearing before the Unfair Means Committee`, detail: `${m.committee ?? ""}${m.explanation ? ` · student's explanation on record` : ""}` });
+    if (m.decidedAt && m.penalty) events.push({ at: m.decidedAt, stage: "Post-result", source: "record", title: `${code}: committee decision — ${UFM_PENALTIES[m.penalty]?.label ?? m.penalty}`, detail: `${UFM_PENALTIES[m.penalty]?.effect ?? ""} · ${m.decisionNote ?? ""}` });
   }
   for (const sc of scripts) {
     const code = sc.examPaper.course.code;

@@ -9,6 +9,7 @@ import { BulkRegisterButton, GenerateSeatingButton, PublishAdmitCardsButton } fr
 import { sessionKey } from "@/lib/exams/seating";
 import { REVALUATION_ROUND, THIRD_EVAL_THRESHOLD } from "@/lib/exams/evaluation";
 import { ConductExamButton, EvaluatorSelect, ReopenButton } from "./scripts-client";
+import { UfmTab } from "./ufm-tab";
 
 export const maxDuration = 300;
 
@@ -18,6 +19,7 @@ const TABS = [
   { key: "registrations", label: "Registrations" },
   { key: "seating", label: "Seating & admit cards" },
   { key: "scripts", label: "Scripts & evaluation" },
+  { key: "ufm", label: "Unfair means" },
 ] as const;
 
 const STATUS_TONE = { ELIGIBLE: "green", RELAXED: "blue", PENDING_RELAXATION: "amber", INELIGIBLE: "red" } as const;
@@ -95,6 +97,7 @@ export default async function ExamDetail({ params, searchParams }: PageProps<"/e
       {tab === "registrations" && <RegistrationsTab examId={id} role={user.role} registrationOpen={exam.registrationOpen} feeAmount={exam.feeAmount} />}
       {tab === "seating" && <SeatingTab examId={id} role={user.role} published={exam.admitCardsPublished} session={String(sp.session ?? "")} />}
       {tab === "scripts" && <ScriptsTab examId={id} role={user.role} published={exam.admitCardsPublished} paperFilter={String(sp.paper ?? "")} />}
+      {tab === "ufm" && <UfmTab examId={id} role={user.role} />}
     </div>
   );
 }

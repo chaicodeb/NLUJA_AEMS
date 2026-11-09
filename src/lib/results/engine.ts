@@ -2,6 +2,7 @@ import type { Prisma, RuleSet } from "@prisma/client";
 import { db } from "../db";
 import { audit } from "../audit";
 import { asParams, divisionFor, gradeFor, round, type GraceParams, type GradingParams } from "../rules/engine";
+import { UFM_PENALTIES } from "../exams/ufm-shared";
 import { getActiveRule } from "../rules/store";
 import { INTERNAL_SOURCES } from "../marks/internal";
 
@@ -26,6 +27,7 @@ type Ctx = {
   grace: GraceParams | null;
   regs: Prisma.RegistrationPaperGetPayload<{ include: { registration: true } }>[];
   scripts: Prisma.AnswerScriptGetPayload<object>[];
+  ufm: Prisma.MalpracticeCaseGetPayload<object>[];
 };
 
 const enrolmentInclude = (examId: string) =>
@@ -47,12 +49,13 @@ async function loadCtx(examId: string, rules?: RulesUsed): Promise<Ctx | null> {
   const graceRule = rules
     ? rules.grace ? await db.ruleSet.findUnique({ where: { key_version: { key: rules.grace.key, version: rules.grace.version } } }) : null
     : await getActiveRule("GRACE");
-  const [regs, scripts] = await Promise.all([
+  const [regs, scripts, ufm] = await Promise.all([
     db.registrationPaper.findMany({ where: { registration: { examId } }, include: { registration: true } }),
     db.answerScript.findMany({ where: { examPaper: { examId } } }),
+    db.malpracticeCase.findMany({ where: { examPaperId: { in: exam.papers.map((p) => p.id) } } }),
   ]);
   return {
-    exam, gradingRule, grading: asParams<GradingParams>(gradingRule), graceRule, grace: graceRule ? asParams<GraceParams>(graceRule) : null, regs, scripts,
+    exam, gradingRule, grading: asParams<GradingParams>(gradingRule), graceRule, grace: graceRule ? asParams<GraceParams>(graceRule) : null, regs, scripts, ufm,
   };
 }
 
@@ -123,6 +126,19 @@ function draftFor(e: EnrolmentRow, ctx: Ctx): Draft {
     } else if (!endEntry || endEntry.marks == null) {
       status = "W";
       flags.push({ code: "MARKS_MISSING", detail: "End-semester marks not received" });
+    }
+    // Unfair means: a pending case withholds the paper; a cancellation (this paper or the whole examination) fails it.
+    if (status === "PASS" || status === "W") {
+      const own = ctx.ufm.filter((c) => c.studentId === e.studentId);
+      const here = own.find((c) => c.examPaperId === paper.id);
+      const examWide = own.find((c) => c.status === "DECIDED" && UFM_PENALTIES[c.penalty ?? ""]?.result === "EXAM");
+      if (here && here.status !== "DECIDED") {
+        status = "W";
+        flags.push({ code: "UFM_PENDING", detail: "Result withheld — unfair-means case before the committee" });
+      } else if (examWide || (here && UFM_PENALTIES[here.penalty ?? ""]?.result === "PAPER")) {
+        status = "FAIL";
+        flags.push({ code: "UFM_PENALTY", detail: UFM_PENALTIES[(examWide ?? here)!.penalty!].effect });
+      }
     }
   }
   if (status === "PASS" && unsubmitted.length) {
