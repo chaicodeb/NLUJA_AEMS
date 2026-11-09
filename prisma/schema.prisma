@@ -767,6 +767,54 @@ model RuleSet {
   @@unique([key, version])
 }
 
+// ─── Configurable approval workflows ─────────────────────────────────
+
+/// Approval chain for a process, edited by University staff. Every save is a new version; requests keep the version they started on.
+model WorkflowDefinition {
+  id          String   @id @default(cuid())
+  process     String   // LEAVE | PROFILE_CORRECTION
+  version     Int
+  isActive    Boolean  @default(true)
+  steps       Json     // [{ name, roles[], when?: { fact, op, value }, slaDays }]
+  changeNote  String
+  createdById String?
+  createdAt   DateTime @default(now())
+  instances   WorkflowInstance[]
+
+  @@unique([process, version])
+}
+
+/// One request moving through its approval chain (a snapshot of the steps that apply to it).
+model WorkflowInstance {
+  id           String             @id @default(cuid())
+  process      String
+  subjectId    String
+  definitionId String
+  definition   WorkflowDefinition @relation(fields: [definitionId], references: [id])
+  steps        Json
+  current      Int                @default(0)
+  status       String             @default("PENDING") // PENDING | APPROVED | REJECTED
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  actions      WorkflowAction[]
+
+  @@unique([process, subjectId])
+}
+
+model WorkflowAction {
+  id         String           @id @default(cuid())
+  instanceId String
+  instance   WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  step       Int
+  stepName   String
+  actorId    String
+  actorName  String
+  actorRole  String
+  decision   String           // APPROVED | REJECTED
+  note       String?
+  at         DateTime         @default(now())
+}
+
 // ─── Examinations ─────────────────────────────────────────────────────
 
 enum ExamType {

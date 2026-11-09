@@ -4,12 +4,15 @@ import { PROFILE_FIELDS, displayValue } from "@/lib/students/profile";
 import { Badge, Card, CardHeader, EmptyState, PageHeader, Table, TD, TH, THead, TR } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { DecideRequest } from "../me/profile/client";
+import { workflowViews } from "@/lib/workflow/engine";
+import { WorkflowProgress, canActOn } from "@/components/workflow-progress";
 
 export default async function ProfileRequestsPage() {
-  await requirePage("/profile-requests");
+  const user = await requirePage("/profile-requests");
   const rows = await db.profileChangeRequest.findMany({ include: { student: { include: { batch: true } } }, orderBy: [{ status: "desc" }, { createdAt: "desc" }], take: 100 });
   const pending = rows.filter((r) => r.status === "PENDING");
   const decided = rows.filter((r) => r.status !== "PENDING");
+  const views = await workflowViews("PROFILE_CORRECTION", pending.map((r) => ({ id: r.id, facts: { field: r.field } })));
 
   return (
     <div className="space-y-6">
@@ -42,8 +45,13 @@ export default async function ProfileRequestsPage() {
                   </TD>
                   <TD className="text-sm">{PROFILE_FIELDS[r.field]?.label}<div className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</div></TD>
                   <TD className="text-sm">{displayValue(r.field, r.oldValue)} → <strong>{displayValue(r.field, r.newValue)}</strong></TD>
-                  <TD className="max-w-xs text-xs text-muted-foreground">{r.reason}</TD>
-                  <TD className="text-right"><DecideRequest id={r.id} name={r.student.name} /></TD>
+                  <TD className="max-w-xs text-xs text-muted-foreground">
+                    {r.reason}
+                    <div className="mt-2"><WorkflowProgress view={views.get(r.id)!} /></div>
+                  </TD>
+                  <TD className="text-right">
+                    {canActOn(views.get(r.id)!, user) ? <DecideRequest id={r.id} name={r.student.name} /> : <span className="text-xs text-muted-foreground">Awaiting another approver</span>}
+                  </TD>
                 </TR>
               ))}
             </tbody>

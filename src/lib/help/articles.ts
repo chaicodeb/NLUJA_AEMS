@@ -40,6 +40,16 @@ export const ARTICLES: Article[] = [
   { id: "internal-marks", title: "Enter and submit internal marks", roles: ["FACULTY", "HOD"], topic: "Marks", path: "/marks",
     summary: "Mark sheets per component with maximums from the evaluation scheme.",
     steps: ["Open Internal Marks and choose the course component.", "Type marks or upload the Excel template; values above the maximum are refused.", "Save as draft, then Submit — the sheet locks.", "The Dean verifies it (or returns it with a remark); marks then flow into results."] },
+  { id: "workflow-designer", title: "Change an approval chain (Workflow Designer)", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "VC", "REGISTRAR"], topic: "Rules", path: "/workflows",
+    summary: "Add, remove or reorder approval steps, choose who approves each, and make a step apply only to some requests — without the vendor.",
+    steps: [
+      "Open Workflow Designer and choose the process (for example Student leave application) → Edit.",
+      "Each step has a name, the roles that may approve it and a target in days. Tick Only for some requests to add a condition, e.g. Number of days is more than 3.",
+      "Use Try it before saving to see the steps a particular request would go through.",
+      "Write the reason (e.g. the Academic Council resolution) and Save version. New requests follow it at once; requests already waiting finish on the version they started with.",
+      "The decision screens show each request's chain and who decided each step. The person who approved one step cannot approve the next.",
+    ],
+    tip: "Every version stays in the history and in the audit trail with the old and new chain." },
   { id: "question-paper", title: "Set, moderate and seal a question paper", roles: ["FACULTY", "HOD", "COE", "EXAM_STAFF"], topic: "Examinations", path: "/question-papers",
     summary: "Draft the paper, test it without publishing it, and pass it through moderation and sealing.",
     steps: [

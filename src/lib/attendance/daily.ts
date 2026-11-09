@@ -7,6 +7,9 @@ import { getActiveRule } from "../rules/store";
 import { attendanceMarks } from "../demo/scenarios";
 import { DEMO_LIVE_CLASS } from "../demo/constants";
 import { countsAsPresent, istDate, istDay, istTime, levelFor, type AlertLevel } from "./shared";
+import type { Role } from "@prisma/client";
+import { decideStep, ensureInstance } from "../workflow/engine";
+import { PROCESSES } from "../workflow/shared";
 
 type Actor = { id: string; role: string };
 export type MarkInput = { enrolmentId: string; status: string };
@@ -220,14 +223,21 @@ export async function applyLeave(studentId: string, input: { type: string; from:
   if ((to.getTime() - from.getTime()) / 86400000 > 30) return { error: "A single application can cover at most 30 days." };
   if (input.reason.trim().length < 10) return { error: "Describe the reason for leave." };
   const leave = await db.leaveRequest.create({ data: { studentId, type: input.type, fromDate: from, toDate: to, reason: input.reason.trim(), document: input.document || null } });
+  await ensureInstance("LEAVE", leave.id, leaveFacts(leave));
   await audit({ actorId: actor.id, actorRole: actor.role, action: "LEAVE_APPLIED", entity: "LeaveRequest", entityId: leave.id, summary: `${input.type === "MEDICAL" ? "Medical" : "Duty"} leave applied for ${input.from} to ${input.to}` });
   return { ok: true };
 }
 
+/** Facts the leave workflow's conditions can test. */
+export const leaveFacts = (l: { type: string; fromDate: Date; toDate: Date }) => ({ type: l.type, days: Math.max(1, Math.ceil((l.toDate.getTime() - l.fromDate.getTime()) / 86400000)) });
+
 export async function decideLeave(leaveId: string, approve: boolean, note: string, actor: Actor) {
-  if (!["HOD", "ACADEMIC_STAFF", "COE"].includes(actor.role)) return { error: "Only the Dean or the Academic Section can decide leave." };
+  if (!PROCESSES.LEAVE.roles.includes(actor.role as Role)) return { error: "Only the Dean or the Academic Section can decide leave." };
   const leave = await db.leaveRequest.findUniqueOrThrow({ where: { id: leaveId }, include: { student: { include: { batch: true } } } });
   if (leave.status !== "PENDING") return { error: "This application has already been decided." };
+  const step = await decideStep("LEAVE", leaveId, leaveFacts(leave), approve, note, actor);
+  if ("error" in step) return { error: step.error };
+  if (!step.final) return { ok: true, sessions: 0, courses: [] as string[], next: step.next };
   let sessions = 0;
   const raisedTo: string[] = [];
   if (approve) {

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
+import { PROCESSES } from "@/lib/workflow/shared";
 import { applyLeave, biometricPunches, decideLeave, markSession, sendShortageNotices, type MarkInput } from "@/lib/attendance/daily";
 
 const actorOf = (u: { id: string; role: string }) => ({ id: u.id, role: u.role });
@@ -28,7 +29,7 @@ export async function applyLeaveAction(input: { type: string; from: string; to: 
 }
 
 export async function decideLeaveAction(leaveId: string, approve: boolean, note: string) {
-  const user = await requireUser(["HOD", "ACADEMIC_STAFF", "COE"]);
+  const user = await requireUser(PROCESSES.LEAVE.roles);
   const res = await decideLeave(leaveId, approve, note, actorOf(user));
   refresh();
   return res;

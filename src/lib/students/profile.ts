@@ -1,6 +1,7 @@
 import { db } from "../db";
 import { audit } from "../audit";
 import { CATEGORY_LABELS } from "../admissions/shared";
+import { decideStep, ensureInstance } from "../workflow/engine";
 
 type Actor = { id: string; role: string };
 
@@ -49,6 +50,7 @@ export async function requestChange(studentId: string, field: string, value: str
   const req = await db.profileChangeRequest.create({
     data: { studentId, field, oldValue: current == null ? null : field === "dob" ? (current as Date).toISOString() : String(current), newValue: field === "dob" ? (next as Date).toISOString() : (next as string), reason: reason.trim() },
   });
+  await ensureInstance("PROFILE_CORRECTION", req.id, { field });
   await audit({ actorId: actor.id, actorRole: actor.role, action: "PROFILE_CHANGE_REQUESTED", entity: "ProfileChangeRequest", entityId: req.id, summary: `${student.name} asked to change ${spec.label.toLowerCase()} from ${show(field, current)} to ${show(field, next)}` });
   return { ok: true, applied: false };
 }
@@ -57,6 +59,9 @@ export async function decideChange(requestId: string, approve: boolean, remark: 
   const req = await db.profileChangeRequest.findUnique({ where: { id: requestId }, include: { student: { include: { user: true } } } });
   if (!req || req.status !== "PENDING") return { error: "This request has already been decided." };
   if (!approve && remark.trim().length < 5) return { error: "Give the student a reason." };
+  const step = await decideStep("PROFILE_CORRECTION", requestId, { field: req.field }, approve, remark, actor);
+  if ("error" in step) return { error: step.error };
+  if (!step.final) return { ok: true, next: step.next };
   const spec = PROFILE_FIELDS[req.field];
   const value = req.field === "dob" ? new Date(req.newValue) : req.newValue;
   await db.$transaction([

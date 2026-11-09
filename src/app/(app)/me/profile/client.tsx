@@ -72,6 +72,7 @@ export function DecideRequest({ id, name }: { id: string; name: string }) {
     start(async () => {
       const r = await decideChangeAction(id, approve, remark);
       if (r.error) toast.error(r.error);
+      else if ("next" in r && r.next) toast.success(`Approved — passed to “${r.next}”`);
       else toast.success(approve ? `Approved — ${name}'s record updated` : "Request rejected; the student will see your reason");
     });
   if (rejecting)

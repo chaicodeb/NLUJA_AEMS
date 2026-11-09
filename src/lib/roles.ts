@@ -48,7 +48,10 @@ export const NAV: NavSection[] = [
   },
   {
     title: "Rules",
-    items: [{ href: "/rules", label: "Rule Configuration", icon: "SlidersHorizontal", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "VC", "REGISTRAR"] }],
+    items: [
+      { href: "/rules", label: "Rule Configuration", icon: "SlidersHorizontal", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "VC", "REGISTRAR"] },
+      { href: "/workflows", label: "Workflow Designer", icon: "Workflow", roles: ["ADMIN", "COE", "ACADEMIC_STAFF", "VC", "REGISTRAR"] },
+    ],
   },
   {
     title: "Examinations",
