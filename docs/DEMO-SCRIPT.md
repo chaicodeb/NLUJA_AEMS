@@ -391,6 +391,21 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
+## Act 8F — API versioning: switch the sign-in from v1 to v2 and back (3 min) · RFP §13 (open APIs, integration)
+
+*Works at any stage. Start on v1 (any Presenter jump resets to v1).*
+
+1. **Sign-in page → Email & password**: today's form (**Sign-in v1** badge) — one form, calls `POST /api/v1/auth/login`.
+2. **Switch → Admin → Integrations → API & Keys → Versions**: v1 *In use*, v2 *Available*, API 1.0.0 / 2.0.0, endpoints, calls per version, and what each version returns side by side (v1 `{"status":"otp_required"}`; v2 adds the user, OTP channel and expiry). **Switch to v2** → confirm.
+3. Sign out → the sign-in page now shows **Sign-in v2**: email first → **Continue** → password with the eye button (show/hide) and *Remember my email on this device* → OTP screen names the user and says the code is valid for 5 minutes (all from the v2 reply). Works in Assamese and Hindi too.
+4. Back on **API & Keys**: v1 is now *Deprecated · sunset 30 Nov 2027* but still answers — its replies carry `Deprecation: true`, a `Sunset` date and a link to v2; every reply carries `API-Version`. **OpenAPI v1 / v2** links show both contracts.
+5. **Switch to v1** → instant rollback. **Switch history** (and the Audit Trail, action `SIGNIN_VERSION_CHANGED`) shows both changes with who and when.
+6. Optional: open `/login?version=v1` and `/login?version=v2` in two tabs to show both versions running at the same time.
+
+> "A new version never breaks anyone: the old one keeps running with a published sunset date, the University decides when the new one goes live, and rolling back is one click — all on the audit trail."
+
+---
+
 ## Act 9 — Reports, dashboards and the audit trail (3 min) · RFP §6.3(b), §8.15, §10.2, §11, §22
 
 1. **Switch → Vice-Chancellor → Dashboard**: action items, attendance distribution, results by batch with average SGPA.
@@ -470,6 +485,7 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | Android and iOS apps? | Installable today from the link (home-screen icon, full screen, offline page); store-listed native apps are in the implementation plan and use the same APIs. |
 | Can we change who approves what? | Yes — Workflow Designer: add, remove or reorder steps, choose roles, add conditions, test, save as a new version with a reason. Leave and identity corrections run on it in the PoC; other approvals move onto it in implementation. |
 | What happens in a malpractice case? | Invigilator's report → result withheld → show-cause notice and hearing → student's explanation → committee decision recorded by the COE → applied by the result engine. All on the examination trail. |
+| How do you version APIs? | Major version in the URL (`/api/v1`, `/api/v2`); additions stay within a version, breaking changes get a new one running side by side. Every reply carries `API-Version`; a superseded version adds `Deprecation`, `Sunset` and a link to its successor. Calls are logged per version so we know who to notify; switching and rollback are an Admin setting on the audit trail. |
 | Concurrent load at result day? | Stateless app tier scales horizontally; results are pre-computed, publication is a status change. |
 
 ---
