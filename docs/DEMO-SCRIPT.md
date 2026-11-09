@@ -13,24 +13,25 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 2. Open the app in Chrome, full screen (F11), browser zoom 90%.
 3. Sign in as **Controller of Examinations** (OTP `246810`).
 4. On the dashboard, use **Presenter → 1. Fresh start → Jump**. Everyone is signed out and the data is rebuilt.
-5. Keep a phone ready to scan QR codes (works only on the hosted URL or the same Wi-Fi network). The sign-in page shows a QR code of the address in use — panel members can scan it to follow along on their phones (the menu folds into ☰ on a phone).
-6. Keep this script open on a second screen.
+5. Keep a phone ready to scan QR codes (works only on the hosted URL or the same Wi-Fi network). The sign-in page shows a QR code of the address in use — panel members can scan it to follow along on their phones (the menu folds into ☰ on a phone) and install it as an app (Act 1B; needs the hosted https link).
+6. Make sure the language is **English** before starting (the choice is remembered per browser).
+7. Keep this script open on a second screen.
 
 **Demo accounts** (click on the login page; all passwords `Demo@123`; key icon = OTP `246810`):
 
 | Role | Name | Used in act |
 |---|---|---|
-| Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 3, 5, 6, 7, 8A |
-| Examination Branch 🔑 | Mr. D. Kalita | 7 |
-| Academic Section | Ms. J. Bora | 1A, 2 (optional), 2C |
+| Controller of Examinations 🔑 | Dr. R. Baishya | 1, 2, 2D, 2E, 3, 5, 6, 6B, 7, 8A |
+| Examination Branch 🔑 | Mr. D. Kalita | 6B, 7 |
+| Academic Section | Ms. J. Bora | 1A, 2 (optional), 2C, 2D |
 | Applicant | Priya Bora (Ph.D. 2026-27, OBC-NCL) | 1A |
 | Faculty | Dr. Ananya Bora (BL3.5 marks sheet), Dr. Rituraj Gogoi (BL9.2 class; sets BL9.2–9.4 papers) | 2A, 2B, 5A |
-| Head of Department (Dean) | Prof. N. Goswami (also question-paper moderator) | 1A, 2A, 2B, 5A |
+| Head of Department (Dean) | Prof. N. Goswami (also question-paper moderator) | 1A, 2A, 2B, 2D, 2E, 5A |
 | Vice-Chancellor | Prof. (Dr.) A. K. Sharma | 3, 7 |
 | Evaluator 🔑 | Prof. S. Hazarika / Dr. M. Lalremruati | 6, 8A |
-| Student | Aditi Baruah (registers live), Rahul Kalita (attendance alert, blocked paper), Sneha Iyer (LL.M., revaluation), Arindam Hazarika (backlog) | 2B, 4, 8, 8A, 8B |
+| Student | Aditi Baruah (registers live; Assamese portal), Rahul Kalita (attendance alert, blocked paper, leave under the new chain, unfair-means case), Sneha Iyer (LL.M., revaluation), Arindam Hazarika (backlog) | 1B, 2B, 2D, 4, 6B, 8, 8A, 8B |
 | Parent | Mr. Pranab Baruah | 8 |
-| Graduand | Rituparna Bhuyan (B.A. LL.B. 2021–26, gold medallist) | 8C, 8D |
+| Graduand | Rituparna Bhuyan (B.A. LL.B. 2021–26, gold medallist) | 1B, 8C, 8D |
 | Registrar | Dr. P. K. Medhi | 1A, 8C, 8D |
 | Librarian / Chief Warden / Finance & Accounts | Dr. B. K. Choudhury / Mr. H. Rabha / Ms. R. Agarwal | 8D |
 
@@ -51,6 +52,20 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 3. Header shows the **2FA** badge.
 
 > "Every examination-critical role — COE, Examination Branch, evaluators, IT — requires a second factor. Failed attempts land in the audit trail; we'll see them at the end."
+
+---
+
+## Act 1B — Your language, on your phone (3 min) · RFP multi-lingual interface, mobile access
+
+*Works at any stage.*
+
+1. On the sign-in page click **অসমীয়া** (top right): the page, the demo-account list and the buttons switch to Assamese at once. Click **हिन्दी**, then back to **English**.
+2. Sign in as **Aditi Baruah**, switch to **অসমীয়া**: menu, dashboard figures, attendance, alerts — the whole student portal is in Assamese. Open **My Attendance** and **Results** to show it is not just the menu. The choice is remembered on that device.
+3. *"Officers' working screens stay in English, the administrative language; names, codes and marks never change."*
+4. **Bilingual certificates**: **Switch → Graduand (Rituparna Bhuyan) → Degree & Convocation → Provisional certificate**: English and Hindi on one certificate (the degree certificate conferred by the VC in Act 8C is printed the same way).
+5. **Phone app**: a panel member scans the QR on the sign-in page (hosted link). On Android tap **Install app** in the top bar (on iPhone: Share → Add to Home Screen) → the NLUJA icon on the home screen opens full-screen, with shortcuts to attendance, exam registration and results. Turn on airplane mode → a branded offline page in all three languages, never a browser error.
+
+> "The same system, the same login and the same data — in the student's language and on the student's phone. Nothing personal is stored on the phone."
 
 ---
 
@@ -134,6 +149,37 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ---
 
+## Act 2D — Workflow Designer: change an approval chain yourselves (4 min) · RFP §6.3 (configurable workflows)
+
+*Works at any stage. Run after Act 2B (the Dean's leave approval there uses version 1).*
+
+1. **Switch → Controller of Examinations → Workflow Designer**: two configurable processes — *Student leave application* and *Correction of a student's identity details* — each with its active version, steps, requests in progress and history.
+2. **Student leave application**: version 1 is one step, *Leave decision* (Dean, Academic Section or COE, 3 days).
+3. Scenario: *"The Academic Council has resolved that leave of more than three days also needs the Dean."* Rename step 1 to *Academic Section check*, choose only **Academic Section**. **Add a step** → *Dean's approval*, roles **Head of Department**, 2 days → tick **Only for some requests** → *Number of days* · *is more than* · `3`.
+4. **Try it before saving**: Medical leave, 2 days → one step; 5 days → both steps. Reason *"Academic Council resolution AC/2026/14"* → **Save as a new version** → version 2; the history keeps version 1.
+5. Live: **Switch → Rahul Kalita → My Attendance → Apply for leave**, medical, 5–9 Oct (5 days), a reason → **Switch → Academic Section → Leave Applications**: the request shows its chain → **Approve** → *"Academic Section check approved — passed to “Dean's approval”"* (no classes marked yet) → **Switch → Dean → Approve** → *"Approved — n class record(s) updated"*.
+6. Segregation of duties: the person who approved one step cannot approve the next. To show it, give step 2 to the Academic Section as well, approve both steps as Ms. J. Bora → the second approval is refused.
+
+> "Adding a step, changing who approves, or making a step apply only to some requests is a form your staff fill in — with a reason, a version and a test before saving. Requests already in progress finish on the version they started with."
+
+**Reset:** any Presenter jump restores version 1.
+
+---
+
+## Act 2E — Moot court (3 min) · RFP (moot court and clinical courses) · BCI Rules on moot court training
+
+*Works at any stage.*
+
+1. **Switch → Dean (or COE) → Moot Court → NLUJA Intra-University Moot Court Competition 2026** (course BL9.5): the moot problem, weights **memorial 30% · oral 60% · researcher 10%**, four teams of Semester IX.
+2. **Team rankings** (rounds won → weighted score → memorial) and **Best Speaker / Best Researcher / Best Memorial**, decided automatically from the judges' sheets.
+3. **Schedule a round**: try **Moot Court Hall 2**, 7 Nov, 11:30 → refused: the hall is booked for Preliminary 4. Any free slot → **Book hall and schedule**.
+4. **Preliminary 4 → Open** → choose a judge, enter the five oral criteria for each speaker and two for the researcher (out of 5 each; values above the maximum are refused) → **Save**. When all three judges' sheets are in, the round is decided and the rankings and awards update.
+5. **Post to internal marks** → the memorial and oral marks go into the BL9.5 teacher's internal-marks sheets as drafts; a sheet already verified is never overwritten.
+
+> "Moot court is part of the academic record here, not a spreadsheet on the side: scheduling, judging, rankings and the marks that count towards the course."
+
+---
+
 ## Act 3 — Eligibility and the Vice-Chancellor's relaxation (4 min) · RFP §8.2 (BCI acceptance criteria a–f), §14
 
 1. **Examinations → End Semester Examination (Odd Semester), 2026-27 → Eligibility → Run eligibility check**.
@@ -203,6 +249,23 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 4. (Optional) **Switch → Dr. M. Lalremruati** → the BL9.1 round-2 script: *"Blind double evaluation — other evaluators' marks are not visible."* A >15% disagreement auto-assigns a third evaluator.
 
 **Fallback:** Jump → *Exam conducted* (3 evaluations pending) or *Evaluation complete*.
+
+---
+
+## Act 6B — Unfair means: report, hearing, decision (4 min) · RFP §8.5 (malpractice / unfair-means handling), §14
+
+*Run at* **Exam conducted** *or later, before Act 7. The demo data has no cases.*
+
+1. **Switch → Examination Branch** (OTP) → **Examinations → End Semester Examination (Odd Semester) → Unfair means** → *Record an invigilator's report*: paper **BL9.3**, roll number **BAL22-002** (Rahul Kalita), *Possession of chits / notes*, what the invigilator saw, material seized (*"two chits, envelope UFM/26/01"*), invigilator *Dr. Rituraj Gogoi* → **Record unfair-means report**. Room and bench come from the seating plan. Try roll number **BAL22-002** with **BL9.2** → refused: he is not registered for that paper.
+2. **Switch → Rahul Kalita → Exam Registration**: *"Reported by the invigilator … The result of this paper is withheld until the Unfair Means Committee decides."* — in Assamese or Hindi too.
+3. **Switch → COE → same tab**: hearing date and time, committee *Prof. N. Goswami (Chair), Dr. Ananya Bora, Mr. D. Kalita* → **Issue notice**. The decision form appears only now — no decision without a hearing.
+4. **Switch → Rahul**: *"Show-cause notice: you are required to appear before … on …"* → write an explanation → **Submit explanation**.
+5. **Switch → COE**: his explanation is on the case → decision **Written warning**, reasons → **Record decision**. (Choosing *Paper cancelled* would make BL9.3 an F; *Whole examination cancelled* fails every paper of the examination — the result engine applies it.)
+6. **Students → Rahul Kalita → Examination trail**: the report, the notice and the decision, with audit fingerprints.
+
+> "Malpractice is decided by your committee after a hearing — never by a clerk — and the result follows the decision automatically, with the reasons on record."
+
+*If the case is left undecided, Act 7 shows Rahul's BL9.3 as* **W** *with an unfair-means flag.*
 
 ---
 
@@ -385,8 +448,8 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 ## Close (1 minute)
 
-> "What you saw is your own regulation running end-to-end: BCI attendance with VC relaxation, component-wise LL.M. minimums, moot-court weighting, grace within limits, anonymous double evaluation, maker–checker results and verifiable documents — all configurable by NLUJA staff, all audited.
-> In production we add Keycloak SSO with your Google/Microsoft identity, DSC/eSign-based signatures, DigiLocker–NAD–ABC, payment-gateway and biometric integrations, 300 DPI scanning stations, Assamese/Hindi screens and Android/iOS apps, hosted on a MeitY-empanelled cloud in India or on your campus."
+> "What you saw is your own regulation running end-to-end: BCI attendance with VC relaxation, component-wise LL.M. minimums, moot-court weighting, grace within limits, anonymous double evaluation, unfair-means cases decided after a hearing, maker–checker results and verifiable documents — in English, Assamese and Hindi, on a laptop or a phone, with approval chains your own staff can change — all audited.
+> In production we add Keycloak SSO with your Google/Microsoft identity, DSC/eSign-based signatures, DigiLocker–NAD–ABC, payment-gateway and biometric integrations, 300 DPI scanning stations and store-listed Android/iOS apps, hosted on a MeitY-empanelled cloud in India or on your campus."
 
 ---
 
@@ -403,6 +466,10 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 | How do you prove results are correct? | The Excel verification workbook for every run, plus the hash-chained audit trail. |
 | Vendor lock-in? | Source code and data owned by NLUJA, escrow, documented export (RFP §31). |
 | Samarth data? | Migrated with reconciliation (legacy SGPA/CGPA history is already visible in student records). |
+| Assamese and Hindi? | The sign-in, menus, dashboards and the whole student/parent portal switch instantly; degree and provisional certificates print in English and Hindi. Officers' working screens stay in English. Translations would be reviewed by the University before go-live; more languages are a dictionary file, not code. |
+| Android and iOS apps? | Installable today from the link (home-screen icon, full screen, offline page); store-listed native apps are in the implementation plan and use the same APIs. |
+| Can we change who approves what? | Yes — Workflow Designer: add, remove or reorder steps, choose roles, add conditions, test, save as a new version with a reason. Leave and identity corrections run on it in the PoC; other approvals move onto it in implementation. |
+| What happens in a malpractice case? | Invigilator's report → result withheld → show-cause notice and hearing → student's explanation → committee decision recorded by the COE → applied by the result engine. All on the examination trail. |
 | Concurrent load at result day? | Stateless app tier scales horizontally; results are pre-computed, publication is a status change. |
 
 ---
@@ -411,6 +478,8 @@ Target length: **25–30 minutes** plus Q&A. Every act lists the RFP sections it
 
 - SSO, DSC/eSign, DigiLocker/NAD/ABC, payment gateway, SMS and biometric devices are **simulated** (UI and data flow are real; external calls are stubbed).
 - Answer booklets are rendered stand-ins for scanned images; production uses 300 DPI PDF/A scans.
+- Assamese and Hindi cover the sign-in, menus and the student/parent portal; staff working screens are English. Certificates are bilingual in English and Hindi (Assamese script on certificates needs a font-shaping engine planned for implementation).
+- The phone app is an installable web app, not a store-listed native app.
 - Non-scenario marks are generated, so exact numbers for "ordinary" students can vary between runs; the scenario students above always behave as described.
 
 ---
