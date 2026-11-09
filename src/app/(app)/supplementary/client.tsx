@@ -6,6 +6,7 @@ import { Calculator, CalendarPlus, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Select } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n";
 import { createSupplementaryAction, processSupplementaryAction, registerSupplementaryAction, saveAwardListAction } from "./actions";
 
 export function CreateSupplementaryButton() {
@@ -120,6 +121,7 @@ export function AwardListForm({ paperId, max, rows, locked }: { paperId: string;
 type Option = { paperId: string; code: string; title: string; status: string; grade: string; total: number; max: number; kind: "BACKLOG" | "IMPROVEMENT" | null; reason: string };
 
 export function SupplementaryRegistration({ examId, options, fee, maxImprovement }: { examId: string; options: Option[]; fee: number; maxImprovement: number }) {
+  const t = useT();
   const [chosen, setChosen] = useState<string[]>(options.filter((o) => o.kind === "BACKLOG").map((o) => o.paperId));
   const [method, setMethod] = useState("UPI");
   const [pending, start] = useTransition();
@@ -139,21 +141,21 @@ export function SupplementaryRegistration({ examId, options, fee, maxImprovement
             />
             <div className="flex-1">
               <div><span className="font-mono text-xs text-muted-foreground">{o.code}</span> {o.title}</div>
-              <div className="text-xs text-muted-foreground">Regular result: {o.total}/{o.max} · {o.grade} — {o.reason}</div>
+              <div className="text-xs text-muted-foreground">{t("Regular result: {total}/{max} · {grade} — {reason}", { total: o.total, max: o.max, grade: o.grade, reason: o.reason })}</div>
             </div>
-            {o.kind && <span className={cn("rounded px-2 py-0.5 text-xs font-medium", o.kind === "BACKLOG" ? "bg-amber-100 text-amber-900" : "bg-sky-100 text-sky-900")}>{o.kind === "BACKLOG" ? "Backlog" : "Improvement"}</span>}
+            {o.kind && <span className={cn("rounded px-2 py-0.5 text-xs font-medium", o.kind === "BACKLOG" ? "bg-amber-100 text-amber-900" : "bg-sky-100 text-sky-900")}>{o.kind === "BACKLOG" ? t("Backlog") : t("Improvement")}</span>}
           </li>
         ))}
       </ul>
       <div className="flex flex-wrap items-center gap-3">
         <Select className="w-44" value={method} onChange={(e) => setMethod(e.target.value)}>
-          <option value="UPI">Pay by UPI</option>
-          <option value="NETBANKING">Net banking</option>
-          <option value="CARD">Debit / credit card</option>
+          <option value="UPI">{t("Pay by UPI")}</option>
+          <option value="NETBANKING">{t("Net banking")}</option>
+          <option value="CARD">{t("Debit / credit card")}</option>
         </Select>
         <span className="text-sm text-muted-foreground">
-          {chosen.length} paper(s) · fee ₹{chosen.length * fee}
-          {improvements > maxImprovement && <span className="text-red-700"> · at most {maxImprovement} improvement papers</span>}
+          {t("{n} paper(s) · fee ₹{fee}", { n: chosen.length, fee: chosen.length * fee })}
+          {improvements > maxImprovement && <span className="text-red-700">{t(" · at most {n} improvement papers", { n: maxImprovement })}</span>}
         </span>
         <Button
           className="ml-auto"
@@ -161,12 +163,12 @@ export function SupplementaryRegistration({ examId, options, fee, maxImprovement
           onClick={() =>
             start(async () => {
               const r = await registerSupplementaryAction(examId, chosen, method);
-              if ("error" in r && r.error) toast.error(r.error);
-              else toast.success(`Registered — ₹${"fee" in r ? r.fee : 0} paid. Hall ticket will be issued before the examination.`);
+              if ("error" in r && r.error) toast.error(t.loose(r.error));
+              else toast.success(t("Registered — ₹{fee} paid. Hall ticket will be issued before the examination.", { fee: "fee" in r ? (r.fee ?? 0) : 0 }));
             })
           }
         >
-          <Send className="h-4 w-4" /> Pay & register
+          <Send className="h-4 w-4" /> {t("Pay & register")}
         </Button>
       </div>
     </div>

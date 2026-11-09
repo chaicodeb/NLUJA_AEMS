@@ -4,11 +4,13 @@ import { useState, useTransition } from "react";
 import { Check, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Label, Select, Textarea } from "@/components/ui";
+import { useT } from "@/components/i18n";
 import { decideChangeAction, requestChangeAction } from "../../profile-requests/actions";
 
 type Field = { key: string; label: string; approval: boolean; kind?: string };
 
 export function ChangeRequestForm({ fields, categories }: { fields: Field[]; categories: [string, string][] }) {
+  const t = useT();
   const [field, setField] = useState(fields[0].key);
   const [value, setValue] = useState("");
   const [reason, setReason] = useState("");
@@ -18,16 +20,16 @@ export function ChangeRequestForm({ fields, categories }: { fields: Field[]; cat
     <div className="grid gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor="pf-field">Field</Label>
+          <Label htmlFor="pf-field">{t("Field")}</Label>
           <Select id="pf-field" value={field} onChange={(e) => { setField(e.target.value); setValue(""); }}>
-            {fields.map((f) => <option key={f.key} value={f.key}>{f.label}{f.approval ? " — needs approval" : ""}</option>)}
+            {fields.map((f) => <option key={f.key} value={f.key}>{f.label}{f.approval ? t(" — needs approval") : ""}</option>)}
           </Select>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="pf-value">New value</Label>
+          <Label htmlFor="pf-value">{t("New value")}</Label>
           {spec.kind === "category" ? (
             <Select id="pf-value" value={value} onChange={(e) => setValue(e.target.value)}>
-              <option value="">Choose…</option>
+              <option value="">{t("Choose…")}</option>
               {categories.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </Select>
           ) : (
@@ -37,25 +39,25 @@ export function ChangeRequestForm({ fields, categories }: { fields: Field[]; cat
       </div>
       {spec.approval && (
         <div className="space-y-1">
-          <Label htmlFor="pf-reason">Reason and supporting document</Label>
-          <Textarea id="pf-reason" rows={2} placeholder="e.g. Name as per Class X certificate; attested copy submitted to the Academic Section" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <Label htmlFor="pf-reason">{t("Reason and supporting document")}</Label>
+          <Textarea id="pf-reason" rows={2} placeholder={t("e.g. Name as per Class X certificate; attested copy submitted to the Academic Section")} value={reason} onChange={(e) => setReason(e.target.value)} />
         </div>
       )}
       <div className="flex items-center justify-end gap-3">
-        <span className="text-xs text-muted-foreground">{spec.approval ? "Changes to identity details appear on certificates, so the Academic Section approves them." : "Contact details update immediately."}</span>
+        <span className="text-xs text-muted-foreground">{spec.approval ? t("Changes to identity details appear on certificates, so the Academic Section approves them.") : t("Contact details update immediately.")}</span>
         <Button
           disabled={pending}
           onClick={() =>
             start(async () => {
               const r = await requestChangeAction(field, value, reason);
-              if (r.error) return void toast.error(r.error);
-              toast.success("applied" in r && r.applied ? `${spec.label} updated` : "Request sent to the Academic Section for approval");
+              if (r.error) return void toast.error(t.loose(r.error));
+              toast.success("applied" in r && r.applied ? t("{field} updated", { field: spec.label }) : t("Request sent to the Academic Section for approval"));
               setValue("");
               setReason("");
             })
           }
         >
-          <Send className="h-4 w-4" /> {spec.approval ? "Request change" : "Update"}
+          <Send className="h-4 w-4" /> {spec.approval ? t("Request change") : t("Update")}
         </Button>
       </div>
     </div>

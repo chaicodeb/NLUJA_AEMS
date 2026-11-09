@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { FileBadge, Lock, Send, Signature } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Select } from "@/components/ui";
+import { useT } from "@/components/i18n";
 import { applyForDegreeAction, clearDuesAction, conferDegreesAction, freezeListAction, provisionalAction } from "./actions";
 
 export function ClearDuesButton({ studentId, department, label }: { studentId: string; department: string; label: string }) {
@@ -78,6 +79,7 @@ export function ConferButton({ convocationId, count }: { convocationId: string; 
 }
 
 export function DegreeApplicationForm({ feeInPerson, feeInAbsentia }: { feeInPerson: number; feeInAbsentia: number }) {
+  const t = useT();
   const [mode, setMode] = useState("IN_PERSON");
   const [guests, setGuests] = useState(2);
   const [method, setMethod] = useState("UPI");
@@ -85,31 +87,31 @@ export function DegreeApplicationForm({ feeInPerson, feeInAbsentia }: { feeInPer
   const fee = mode === "IN_PERSON" ? feeInPerson : feeInAbsentia;
   return (
     <div className="grid gap-3 sm:grid-cols-3">
-      <Select value={mode} onChange={(e) => setMode(e.target.value)} aria-label="Attendance">
-        <option value="IN_PERSON">Receive in person</option>
-        <option value="IN_ABSENTIA">In absentia (by post / DigiLocker)</option>
+      <Select value={mode} onChange={(e) => setMode(e.target.value)} aria-label={t("Attendance")}>
+        <option value="IN_PERSON">{t("Receive in person")}</option>
+        <option value="IN_ABSENTIA">{t("In absentia (by post / DigiLocker)")}</option>
       </Select>
-      <Select value={guests} disabled={mode !== "IN_PERSON"} onChange={(e) => setGuests(Number(e.target.value))} aria-label="Guest passes">
-        {[0, 1, 2].map((g) => <option key={g} value={g}>{g} guest pass{g === 1 ? "" : "es"}</option>)}
+      <Select value={guests} disabled={mode !== "IN_PERSON"} onChange={(e) => setGuests(Number(e.target.value))} aria-label={t("Guest passes")}>
+        {[0, 1, 2].map((g) => <option key={g} value={g}>{t("{n} guest pass(es)", { n: g })}</option>)}
       </Select>
-      <Select value={method} onChange={(e) => setMethod(e.target.value)} aria-label="Payment method">
-        <option value="UPI">Pay by UPI</option>
-        <option value="NETBANKING">Net banking</option>
-        <option value="CARD">Debit / credit card</option>
+      <Select value={method} onChange={(e) => setMethod(e.target.value)} aria-label={t("Payment method")}>
+        <option value="UPI">{t("Pay by UPI")}</option>
+        <option value="NETBANKING">{t("Net banking")}</option>
+        <option value="CARD">{t("Debit / credit card")}</option>
       </Select>
       <div className="flex items-center justify-end gap-3 sm:col-span-3">
-        <span className="text-sm text-muted-foreground">Convocation fee ₹{fee}</span>
+        <span className="text-sm text-muted-foreground">{t("Convocation fee ₹{fee}", { fee })}</span>
         <Button
           disabled={pending}
           onClick={() =>
             start(async () => {
               const r = await applyForDegreeAction(mode, guests, method);
-              if ("error" in r && r.error) toast.error(r.error);
-              else toast.success("Application received — you will be notified when the graduand list is approved");
+              if ("error" in r && r.error) toast.error(t.loose(r.error));
+              else toast.success(t("Application received — you will be notified when the graduand list is approved"));
             })
           }
         >
-          <Send className="h-4 w-4" /> Pay & apply
+          <Send className="h-4 w-4" /> {t("Pay & apply")}
         </Button>
       </div>
     </div>
@@ -117,6 +119,7 @@ export function DegreeApplicationForm({ feeInPerson, feeInAbsentia }: { feeInPer
 }
 
 export function ProvisionalButton() {
+  const t = useT();
   const [pending, start] = useTransition();
   return (
     <Button
@@ -135,7 +138,7 @@ export function ProvisionalButton() {
         })
       }
     >
-      <FileBadge className="h-4 w-4" /> Provisional certificate
+      <FileBadge className="h-4 w-4" /> {t("Provisional certificate")}
     </Button>
   );
 }

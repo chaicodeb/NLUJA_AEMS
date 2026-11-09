@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-serif-display), Georgia, serif;
+  --font-sans: var(--font-inter), var(--font-assamese), var(--font-hindi), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif-display), var(--font-assamese), var(--font-hindi), Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --color-background: #f8f6f3;

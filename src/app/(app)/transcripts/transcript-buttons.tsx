@@ -4,9 +4,11 @@ import { useState, useTransition } from "react";
 import { FileText, Stamp } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input } from "@/components/ui";
+import { useT } from "@/components/i18n";
 import { issueOfficialTranscriptAction, requestStudentCopyAction } from "./actions";
 
 export function StudentCopyButton() {
+  const t = useT();
   const [pending, start] = useTransition();
   return (
     <Button
@@ -20,7 +22,7 @@ export function StudentCopyButton() {
         })
       }
     >
-      <FileText className="h-4 w-4" /> {pending ? "Generating…" : "Download student copy"}
+      <FileText className="h-4 w-4" /> {pending ? t("Generating…") : t("Download student copy")}
     </Button>
   );
 }

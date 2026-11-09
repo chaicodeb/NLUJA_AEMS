@@ -17,6 +17,7 @@ import { getActiveRule } from "@/lib/rules/store";
 import { asParams, type AttendanceParams } from "@/lib/rules/engine";
 import { Badge, Callout, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat, Table, TD, TH, THead, TR, buttonVariants } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { getT } from "@/lib/i18n/server";
 import { DemoStageControl } from "./reset-demo-button";
 import { ShareQr } from "@/components/share-qr";
 import { AttendanceChart, EligibilityPie, EvaluationProgressChart, ResultsByBatchChart } from "./charts";
@@ -477,7 +478,8 @@ async function TeachingDashboard({ user }: { user: CurrentUser }) {
 
 async function StudentDashboard({ user }: { user: CurrentUser }) {
   const student = user.student ?? user.ward;
-  if (!student) return <PageHeader title="No student linked" />;
+  const t = await getT();
+  if (!student) return <PageHeader title={t("No student linked")} />;
   const full = await db.student.findUniqueOrThrow({
     where: { id: student.id },
     include: {
@@ -496,12 +498,12 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={isParent ? "Parent portal · read-only" : "Student portal"} title={full.name} description={`${full.batch.name} · Roll No. ${full.rollNo} · UID ${full.uid}`} />
+      <PageHeader eyebrow={isParent ? t("Parent portal · read-only") : t("Student portal")} title={full.name} description={`${full.batch.name} · ${t("Roll No.")} ${full.rollNo} · UID ${full.uid}`} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Current semester" value={`Semester ${full.batch.currentSemester}`} tone="brand" />
-        <Stat label="CGPA" value={latest?.cgpa.toFixed(2) ?? "—"} hint={latest ? `After semester ${latest.semester}${latest.division ? ` · ${latest.division}` : ""}` : undefined} tone="green" />
-        <Stat label="Courses this semester" value={full.enrolments.length} />
-        <Stat label="ABC ID" value={<span className="text-base">{full.abcId}</span>} hint="Academic Bank of Credits" />
+        <Stat label={t("Current semester")} value={t("Semester {n}", { n: full.batch.currentSemester })} tone="brand" />
+        <Stat label="CGPA" value={latest?.cgpa.toFixed(2) ?? "—"} hint={latest ? `${t("After semester {n}", { n: latest.semester })}${latest.division ? ` · ${t.loose(latest.division)}` : ""}` : undefined} tone="green" />
+        <Stat label={t("Courses this semester")} value={full.enrolments.length} />
+        <Stat label="ABC ID" value={<span className="text-base">{full.abcId}</span>} hint={t("Academic Bank of Credits")} />
       </div>
       {exam && (
         <div className="grid gap-4 md:grid-cols-2">
@@ -511,13 +513,13 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
               <div className="flex-1">
                 <div className="font-medium">{exam.name}</div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {reg ? (exam.admitCardsPublished ? "Registered · admit card available" : "Registered · admit card awaited") : exam.registrationOpen ? "Registration open" : "Registration closed"}
+                  {reg ? (exam.admitCardsPublished ? t("Registered · admit card available") : t("Registered · admit card awaited")) : exam.registrationOpen ? t("Registration open") : t("Registration closed")}
                 </div>
               </div>
               {reg && exam.admitCardsPublished ? (
-                <a href={`/api/admit-card/${reg.id}`} target="_blank" className={buttonVariants({ size: "sm", variant: "outline" })}><Download className="h-3.5 w-3.5" /> Admit card</a>
+                <a href={`/api/admit-card/${reg.id}`} target="_blank" className={buttonVariants({ size: "sm", variant: "outline" })}><Download className="h-3.5 w-3.5" /> {t("Admit card")}</a>
               ) : !isParent && exam.registrationOpen && !reg ? (
-                <Link href="/me/exams" className={buttonVariants({ size: "sm" })}>Register</Link>
+                <Link href="/me/exams" className={buttonVariants({ size: "sm" })}>{t("Register")}</Link>
               ) : null}
             </div>
           </Card>
@@ -525,43 +527,43 @@ async function StudentDashboard({ user }: { user: CurrentUser }) {
             <div className="flex items-start gap-3">
               <GraduationCap className="mt-0.5 h-5 w-5 text-leaf-600" />
               <div className="flex-1">
-                <div className="font-medium">Results</div>
-                <div className="mt-1 text-sm text-muted-foreground">{exam.status === "CLOSED" ? "Semester results published" : "Results not yet published"}</div>
+                <div className="font-medium">{t("Results")}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{exam.status === "CLOSED" ? t("Semester results published") : t("Results not yet published")}</div>
               </div>
-              <Link href="/me/results" className={buttonVariants({ size: "sm", variant: "outline" })}>View</Link>
+              <Link href="/me/results" className={buttonVariants({ size: "sm", variant: "outline" })}>{t("View")}</Link>
             </div>
           </Card>
         </div>
       )}
-      {isParent && <Callout tone="blue">Read-only access to your ward&apos;s records, shared with consent under the University&apos;s data-sharing policy (DPDP Act, 2023).</Callout>}
+      {isParent && <Callout tone="blue">{t("Read-only access to your ward's records, shared with consent under the University's data-sharing policy (DPDP Act, 2023).")}</Callout>}
       {feedbackDue > 0 && (
         <Link href="/me/feedback" className="flex items-center justify-between gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 hover:bg-sky-100">
-          <span className="flex items-center gap-2"><MessagesSquare className="h-4 w-4" /> {feedbackDue} anonymous feedback form{feedbackDue === 1 ? "" : "s"} awaiting you — about two minutes each</span>
+          <span className="flex items-center gap-2"><MessagesSquare className="h-4 w-4" /> {t("Anonymous feedback forms awaiting you: {n} — about two minutes each", { n: feedbackDue })}</span>
           <ArrowRight className="h-4 w-4" />
         </Link>
       )}
       {exitOpen && (
         <Link href="/me/exit" className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 hover:bg-amber-100">
-          <span className="flex items-center gap-2"><Stamp className="h-4 w-4" /> Exit formalities in progress — check your no-dues, refund and certificates</span>
+          <span className="flex items-center gap-2"><Stamp className="h-4 w-4" /> {t("Exit formalities in progress — check your no-dues, refund and certificates")}</span>
           <ArrowRight className="h-4 w-4" />
         </Link>
       )}
       {alerts.length > 0 && (
         <Link href="/me/attendance" className="block rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 hover:bg-red-100">
-          <div className="flex items-center gap-2 font-semibold"><BellRing className="h-4 w-4" /> Attendance alert</div>
+          <div className="flex items-center gap-2 font-semibold"><BellRing className="h-4 w-4" /> {t("Attendance alert")}</div>
           {alerts.map((a) => (
             <div key={a.id} className="mt-1">{a.message} <span className="text-xs text-red-700/80">· {formatDate(a.createdAt, true)}</span></div>
           ))}
         </Link>
       )}
       <Card>
-        <CardHeader title="Attendance this semester" description="Updated from faculty entry and biometric records" action={<Link href="/me/attendance" className="text-sm text-brand-700 hover:underline">Details & leave</Link>} />
+        <CardHeader title={t("Attendance this semester")} description={t("Updated from faculty entry and biometric records")} action={<Link href="/me/attendance" className="text-sm text-brand-700 hover:underline">{t("Details & leave")}</Link>} />
         <Table>
           <THead>
             <tr>
-              <TH>Course</TH>
-              <TH className="text-right">Held</TH>
-              <TH className="text-right">Attended</TH>
+              <TH>{t("Course")}</TH>
+              <TH className="text-right">{t("Held")}</TH>
+              <TH className="text-right">{t("Attended")}</TH>
               <TH className="text-right">%</TH>
             </tr>
           </THead>

@@ -1,9 +1,22 @@
-import { rgb, StandardFonts } from "pdf-lib";
+import { rgb, StandardFonts, type PDFFont } from "pdf-lib";
 import { appUrl, signHash } from "../docs";
 import type { DegreePayload } from "../convocation/degree";
-import { BRAND, INK, MUTED, istDate, newDoc, qrPng, safe } from "./common";
+import { BRAND, INK, MUTED, hindiFonts, istDate, newDoc, qrPng, safe } from "./common";
 
 const GOLD = rgb(0.71, 0.55, 0.2);
+
+/** Hindi forms used on the bilingual certificate. */
+const HI_DEGREE: Record<string, string> = {
+  "Bachelor of Arts and Bachelor of Laws (Honours)": "कला स्नातक एवं विधि स्नातक (प्रतिष्ठा)",
+  "Master of Laws": "विधि स्नातकोत्तर",
+  "Doctor of Philosophy in Law": "विधि में विद्या वाचस्पति",
+};
+const HI_DIVISION: Record<string, string> = {
+  "First Class with Distinction": "विशिष्टता सहित प्रथम श्रेणी",
+  "First Class": "प्रथम श्रेणी",
+  "Second Class": "द्वितीय श्रेणी",
+  Pass: "उत्तीर्ण श्रेणी",
+};
 
 function ordinalDay(d: Date) {
   const n = Number(d.toLocaleDateString("en-IN", { day: "numeric", timeZone: "Asia/Kolkata" }));
@@ -17,39 +30,49 @@ export async function renderDegree(doc: { verifyCode: string; payloadHash: strin
   const serif = await f.pdf.embedFont(StandardFonts.TimesRoman);
   const serifBold = await f.pdf.embedFont(StandardFonts.TimesRomanBold);
   const serifItalic = await f.pdf.embedFont(StandardFonts.TimesRomanItalic);
+  const hi = await hindiFonts(f.pdf);
   const page = f.pdf.addPage([842, 595]);
   const { width, height } = page.getSize();
   const center = (s: string, y: number, font = serif, size = 14, color = INK) => {
     const t = safe(s);
     page.drawText(t, { x: (width - font.widthOfTextAtSize(t, size)) / 2, y, size, font, color });
   };
+  const centerHi = (s: string, y: number, font: PDFFont, size: number, color = INK) => {
+    page.drawText(s, { x: (width - font.widthOfTextAtSize(s, size)) / 2, y, size, font, color });
+  };
+  const degreeHi = HI_DEGREE[p.degree] ?? p.degree;
+  const divisionHi = HI_DIVISION[p.division ?? "Pass"] ?? "";
 
   page.drawRectangle({ x: 18, y: 18, width: width - 36, height: height - 36, borderColor: BRAND, borderWidth: 3 });
   page.drawRectangle({ x: 26, y: 26, width: width - 52, height: height - 52, borderColor: GOLD, borderWidth: 1 });
   if (p.kind === "DEGREE") page.drawText("NLUJA", { x: width / 2 - 170, y: height / 2 - 60, size: 120, font: serifBold, color: rgb(0.96, 0.93, 0.88), opacity: 0.6 });
 
-  page.drawImage(f.emblem, { x: width / 2 - 34, y: height - 112, width: 68, height: 68 });
-  center("National Law University and Judicial Academy, Assam", height - 136, serifBold, 22, BRAND);
-  center("Established under the National Law University and Judicial Academy, Assam Act, 2009", height - 152, serifItalic, 9.5, MUTED);
+  page.drawImage(f.emblem, { x: width / 2 - 32, y: height - 104, width: 64, height: 64 });
+  centerHi("राष्ट्रीय विधि विश्वविद्यालय एवं न्यायिक अकादमी, असम", height - 124, hi.bold, 15, BRAND);
+  center("National Law University and Judicial Academy, Assam", height - 148, serifBold, 21, BRAND);
+  center("Established under the National Law University and Judicial Academy, Assam Act, 2009", height - 162, serifItalic, 9.5, MUTED);
 
   if (p.kind === "PROVISIONAL") {
-    center("PROVISIONAL CERTIFICATE", height - 186, serifBold, 18, INK);
-    center("This is to certify that", height - 220, serifItalic, 13);
-    center(p.student.name, height - 252, serifBold, 26, INK);
-    center(`(Roll No. ${p.student.rollNo} · University ID ${p.student.uid})`, height - 270, serif, 10, MUTED);
-    center("has passed all the examinations prescribed for, and has fulfilled all the requirements of, the degree of", height - 298, serif, 13);
-    center(p.degree, height - 326, serifBold, 18, BRAND);
-    center(`in the year ${p.yearOfPassing}, securing a CGPA of ${p.cgpa.toFixed(2)} on a 10-point scale${p.division ? ` (${p.division})` : ""}.`, height - 352, serif, 13);
+    centerHi("अनंतिम प्रमाणपत्र", height - 186, hi.bold, 13, INK);
+    center("PROVISIONAL CERTIFICATE", height - 204, serifBold, 17, INK);
+    center("This is to certify that", height - 232, serifItalic, 13);
+    center(p.student.name, height - 262, serifBold, 26, INK);
+    center(`(Roll No. ${p.student.rollNo} · University ID ${p.student.uid})`, height - 280, serif, 10, MUTED);
+    center("has passed all the examinations prescribed for, and has fulfilled all the requirements of, the degree of", height - 306, serif, 13);
+    center(p.degree, height - 332, serifBold, 18, BRAND);
+    center(`in the year ${p.yearOfPassing}, securing a CGPA of ${p.cgpa.toFixed(2)} on a 10-point scale${p.division ? ` (${p.division})` : ""}.`, height - 356, serif, 13);
     center("The degree will be conferred at the next convocation of the University. This certificate is valid until then.", height - 378, serifItalic, 11, MUTED);
+    centerHi(`प्रमाणित किया जाता है कि उपर्युक्त विद्यार्थी ने ${degreeHi} उपाधि की सभी अपेक्षाएँ पूर्ण कर ली हैं।`, height - 404, hi.regular, 12, INK);
   } else {
-    center("This is to certify that", height - 190, serifItalic, 14);
-    center(p.student.name, height - 228, serifBold, 30, INK);
+    center("This is to certify that", height - 194, serifItalic, 14);
+    center(p.student.name, height - 230, serifBold, 30, INK);
     center(`(Roll No. ${p.student.rollNo} · University ID ${p.student.uid}${p.student.abcId ? ` · ABC ID ${p.student.abcId}` : ""})`, height - 248, serif, 10, MUTED);
-    center("having been duly examined and found qualified, has this day been admitted to the degree of", height - 278, serif, 14);
-    center(p.degree, height - 310, serifBold, 22, BRAND);
-    center(`in the ${p.division ?? "Pass"} (CGPA ${p.cgpa.toFixed(2)} on a 10-point scale), having passed the examinations held in ${p.yearOfPassing}.`, height - 338, serif, 13);
-    if (p.medals.length) center(`Awarded the ${p.medals.join(" and the ")}.`, height - 360, serifBold, 12, GOLD);
-    if (p.convocation) center(`Given under the seal of the University at the ${p.convocation.title}, Guwahati, on this ${ordinalDay(new Date(p.convocation.date))}.`, height - 386, serifItalic, 12, INK);
+    center("having been duly examined and found qualified, has this day been admitted to the degree of", height - 274, serif, 14);
+    center(p.degree, height - 302, serifBold, 22, BRAND);
+    center(`in the ${p.division ?? "Pass"} (CGPA ${p.cgpa.toFixed(2)} on a 10-point scale), having passed the examinations held in ${p.yearOfPassing}.`, height - 326, serif, 13);
+    if (p.medals.length) center(`Awarded the ${p.medals.join(" and the ")}.`, height - 346, serifBold, 12, GOLD);
+    if (p.convocation) center(`Given under the seal of the University at the ${p.convocation.title}, Guwahati, on this ${ordinalDay(new Date(p.convocation.date))}.`, height - 368, serifItalic, 12, INK);
+    centerHi(`प्रमाणित किया जाता है कि उपर्युक्त विद्यार्थी को ${divisionHi} में ${degreeHi} की उपाधि प्रदान की गई है।`, height - 396, hi.regular, 12.5, INK);
   }
 
   const url = `${await appUrl()}/verify/${doc.verifyCode}`;

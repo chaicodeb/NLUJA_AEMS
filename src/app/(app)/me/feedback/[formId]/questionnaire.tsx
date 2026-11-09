@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, CardHeader, Textarea } from "@/components/ui";
+import { useT } from "@/components/i18n";
 import { cn } from "@/lib/utils";
 import { LIKERT, type Answers, type Question } from "@/lib/feedback/shared";
 import { submitFeedbackAction } from "../../../feedback/actions";
 
 export function FeedbackQuestionnaire({ formId, courseId, questions }: { formId: string; courseId: string; questions: Question[] }) {
+  const t = useT();
   const router = useRouter();
   const [answers, setAnswers] = useState<Answers>({});
   const [pending, start] = useTransition();
@@ -20,13 +22,13 @@ export function FeedbackQuestionnaire({ formId, courseId, questions }: { formId:
     <div className="space-y-4">
       {sections.map((section) => (
         <Card key={section}>
-          <CardHeader title={section} />
+          <CardHeader title={t.loose(section)} />
           <div className="divide-y divide-border">
             {questions.filter((q) => q.section === section).map((q) => (
               <div key={q.id} className="space-y-2 px-5 py-4">
-                <div className="text-sm font-medium">{q.text}{q.required && q.kind === "LIKERT" && <span className="text-red-600"> *</span>}</div>
+                <div className="text-sm font-medium">{t.loose(q.text)}{q.required && q.kind === "LIKERT" && <span className="text-red-600"> *</span>}</div>
                 {q.kind === "LIKERT" ? (
-                  <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label={q.text}>
+                  <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label={t.loose(q.text)}>
                     {LIKERT.map((l) => (
                       <button
                         key={l.value}
@@ -40,12 +42,12 @@ export function FeedbackQuestionnaire({ formId, courseId, questions }: { formId:
                         )}
                       >
                         <div className="text-base font-semibold">{l.value}</div>
-                        <div className="hidden sm:block">{l.label}</div>
+                        <div className="hidden sm:block">{t.loose(l.label)}</div>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <Textarea rows={2} maxLength={1000} placeholder="Optional" value={(answers[q.id] as string) ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))} />
+                  <Textarea rows={2} maxLength={1000} placeholder={t("Optional")} value={(answers[q.id] as string) ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))} />
                 )}
               </div>
             ))}
@@ -53,21 +55,21 @@ export function FeedbackQuestionnaire({ formId, courseId, questions }: { formId:
         </Card>
       ))}
       <div className="flex items-center justify-end gap-3">
-        <span className="text-sm text-muted-foreground">{missing ? `${missing} rating(s) remaining` : "All ratings answered"}</span>
+        <span className="text-sm text-muted-foreground">{missing ? t("{n} rating(s) remaining", { n: missing }) : t("All ratings answered")}</span>
         <Button
           disabled={pending || missing > 0}
           onClick={() =>
             start(async () => {
               const r = await submitFeedbackAction(formId, courseId, answers);
-              if ("error" in r && r.error) toast.error(r.error);
+              if ("error" in r && r.error) toast.error(t.loose(r.error));
               else {
-                toast.success("Thank you — your anonymous feedback has been recorded");
+                toast.success(t("Thank you — your anonymous feedback has been recorded"));
                 router.push("/me/feedback");
               }
             })
           }
         >
-          <Send className="h-4 w-4" /> Submit anonymously
+          <Send className="h-4 w-4" /> {t("Submit anonymously")}
         </Button>
       </div>
     </div>

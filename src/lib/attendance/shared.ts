@@ -1,3 +1,6 @@
+import type { MessageKey } from "../i18n/messages";
+import { makeT, type Vars } from "../i18n/translate";
+
 export const RECORD_STATUS: Record<string, { label: string; short: string; tone: "green" | "red" | "blue" | "violet" }> = {
   PRESENT: { label: "Present", short: "P", tone: "green" },
   ABSENT: { label: "Absent", short: "A", tone: "red" },
@@ -28,7 +31,12 @@ export function levelFor(pct: number, minPct: number, floorPct: number | null): 
   return "OK";
 }
 
-export type Standing = { pct: number; held: number; attended: number; remaining: number; level: AlertLevel; canMiss: number | null; advice: string };
+export type Standing = {
+  pct: number; held: number; attended: number; remaining: number; level: AlertLevel; canMiss: number | null;
+  advice: string;
+  /** The same advice as a translatable message and its values. */
+  adviceMsg: [MessageKey, Vars];
+};
 
 export function standing(attended: number, held: number, planned: number, minPct: number, floorPct: number | null): Standing {
   const pct = held ? (attended / held) * 100 : 100;
@@ -36,12 +44,14 @@ export function standing(attended: number, held: number, planned: number, minPct
   const needed = Math.ceil((minPct * Math.max(planned, held)) / 100);
   const canMiss = attended + remaining - needed;
   const level = levelFor(pct, minPct, floorPct);
-  let advice: string;
-  if (remaining === 0) advice = pct >= minPct ? `Final: ${pct.toFixed(1)}% — meets ${minPct}%` : `Final: ${pct.toFixed(1)}% — below ${minPct}%${floorPct != null && pct >= floorPct ? "; relaxation may be sought" : ""}`;
-  else if (canMiss < 0) advice = `Cannot reach ${minPct}% even by attending all ${remaining} remaining classes`;
-  else if (canMiss === 0) advice = `Must attend every one of the ${remaining} remaining classes`;
-  else advice = `Can miss at most ${Math.min(canMiss, remaining)} of the ${remaining} remaining classes`;
-  return { pct, held, attended, remaining, level, canMiss: remaining ? canMiss : null, advice };
+  const vars = { pct: pct.toFixed(1), min: minPct, n: remaining, k: Math.min(canMiss, remaining) };
+  const key: MessageKey =
+    remaining === 0
+      ? pct >= minPct ? "Final: {pct}% — meets {min}%" : floorPct != null && pct >= floorPct ? "Final: {pct}% — below {min}%; relaxation may be sought" : "Final: {pct}% — below {min}%"
+      : canMiss < 0 ? "Cannot reach {min}% even by attending all {n} remaining classes"
+        : canMiss === 0 ? "Must attend every one of the {n} remaining classes"
+          : "Can miss at most {k} of the {n} remaining classes";
+  return { pct, held, attended, remaining, level, canMiss: remaining ? canMiss : null, advice: makeT("en")(key, vars), adviceMsg: [key, vars] };
 }
 
 const IST = "Asia/Kolkata";

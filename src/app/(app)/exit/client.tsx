@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Banknote, Check, FileSignature, LogOut, Save, TriangleAlert, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Label, Select, Textarea } from "@/components/ui";
+import { useT } from "@/components/i18n";
 import { bankDetailsAction, decideClearanceAction, issueCertificatesAction, refundAction, saveAlumniAction, startExitAction } from "./actions";
 
 type Result = { error?: string; ok?: boolean };
@@ -84,6 +85,7 @@ export function IssueCertificatesButton({ studentId, name }: { studentId: string
 }
 
 export function StartExitForm({ graduating }: { graduating: boolean }) {
+  const t = useT();
   const [type, setType] = useState(graduating ? "GRADUATION" : "WITHDRAWAL");
   const [reason, setReason] = useState("");
   const [address, setAddress] = useState("");
@@ -92,27 +94,27 @@ export function StartExitForm({ graduating }: { graduating: boolean }) {
     <div className="grid gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor="exit-type">Reason for leaving</Label>
+          <Label htmlFor="exit-type">{t("Reason for leaving")}</Label>
           <Select id="exit-type" value={type} onChange={(e) => setType(e.target.value)}>
-            {graduating && <option value="GRADUATION">Completed the programme</option>}
-            <option value="WITHDRAWAL">Withdrawal from the programme</option>
-            <option value="TRANSFER">Transfer to another university</option>
+            {graduating && <option value="GRADUATION">{t("Completed the programme")}</option>}
+            <option value="WITHDRAWAL">{t("Withdrawal from the programme")}</option>
+            <option value="TRANSFER">{t("Transfer to another university")}</option>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="exit-address">Forwarding address</Label>
-          <Input id="exit-address" placeholder="Where certificates and refunds correspondence should go" value={address} onChange={(e) => setAddress(e.target.value)} />
+          <Label htmlFor="exit-address">{t("Forwarding address")}</Label>
+          <Input id="exit-address" placeholder={t("Where certificates and refunds correspondence should go")} value={address} onChange={(e) => setAddress(e.target.value)} />
         </div>
       </div>
       {type !== "GRADUATION" && (
         <div className="space-y-1">
-          <Label htmlFor="exit-reason">Explain briefly</Label>
+          <Label htmlFor="exit-reason">{t("Explain briefly")}</Label>
           <Textarea id="exit-reason" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
         </div>
       )}
       <div className="flex justify-end">
-        <Button disabled={pending} onClick={() => start(async () => report(await startExitAction(type, reason, address), "No-dues requests sent to the Library, Hostel, Accounts and Examination Branch"))}>
-          <LogOut className="h-4 w-4" /> Start exit formalities
+        <Button disabled={pending} onClick={() => start(async () => report(await startExitAction(type, reason, address), t("No-dues requests sent to the Library, Hostel, Accounts and Examination Branch")))}>
+          <LogOut className="h-4 w-4" /> {t("Start exit formalities")}
         </Button>
       </div>
     </div>
@@ -120,21 +122,22 @@ export function StartExitForm({ graduating }: { graduating: boolean }) {
 }
 
 export function BankDetailsForm() {
+  const t = useT();
   const [account, setAccount] = useState("");
   const [ifsc, setIfsc] = useState("");
   const [pending, start] = useTransition();
   return (
     <div className="flex flex-wrap items-end gap-2">
       <div className="space-y-1">
-        <Label htmlFor="bank-ac">Bank account number</Label>
+        <Label htmlFor="bank-ac">{t("Bank account number")}</Label>
         <Input id="bank-ac" inputMode="numeric" className="w-52" value={account} onChange={(e) => setAccount(e.target.value.replace(/\D/g, ""))} />
       </div>
       <div className="space-y-1">
         <Label htmlFor="bank-ifsc">IFSC</Label>
         <Input id="bank-ifsc" className="w-36 uppercase" value={ifsc} onChange={(e) => setIfsc(e.target.value.toUpperCase())} />
       </div>
-      <Button disabled={pending} onClick={() => start(async () => report(await bankDetailsAction(account, ifsc), "Refund account saved — Accounts will release the deposit after clearance"))}>
-        <Save className="h-4 w-4" /> Save
+      <Button disabled={pending} onClick={() => start(async () => report(await bankDetailsAction(account, ifsc), t("Refund account saved — Accounts will release the deposit after clearance")))}>
+        <Save className="h-4 w-4" /> {t("Save")}
       </Button>
     </div>
   );
@@ -143,6 +146,7 @@ export function BankDetailsForm() {
 type Profile = { sector: string; organisation: string; designation: string; city: string; phone: string; qualifiedExams: string[]; directoryConsent: boolean; mentor: boolean };
 
 export function AlumniProfileForm({ initial, sectors, exams }: { initial: Profile; sectors: [string, string][]; exams: string[] }) {
+  const t = useT();
   const [p, setP] = useState(initial);
   const [pending, start] = useTransition();
   const set = <K extends keyof Profile>(k: K, v: Profile[K]) => setP((x) => ({ ...x, [k]: v }));
@@ -150,31 +154,31 @@ export function AlumniProfileForm({ initial, sectors, exams }: { initial: Profil
     <div className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor="al-sector">What are you doing now?</Label>
+          <Label htmlFor="al-sector">{t("What are you doing now?")}</Label>
           <Select id="al-sector" value={p.sector} onChange={(e) => set("sector", e.target.value)}>
-            <option value="">Choose…</option>
+            <option value="">{t("Choose…")}</option>
             {sectors.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
           </Select>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="al-org">Organisation / institution</Label>
+          <Label htmlFor="al-org">{t("Organisation / institution")}</Label>
           <Input id="al-org" value={p.organisation} onChange={(e) => set("organisation", e.target.value)} />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="al-desig">Designation / course</Label>
+          <Label htmlFor="al-desig">{t("Designation / course")}</Label>
           <Input id="al-desig" value={p.designation} onChange={(e) => set("designation", e.target.value)} />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="al-city">City</Label>
+          <Label htmlFor="al-city">{t("City")}</Label>
           <Input id="al-city" value={p.city} onChange={(e) => set("city", e.target.value)} />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="al-phone">Phone (shown only to the alumni office)</Label>
+          <Label htmlFor="al-phone">{t("Phone (shown only to the alumni office)")}</Label>
           <Input id="al-phone" value={p.phone} onChange={(e) => set("phone", e.target.value)} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <div className="text-sm font-medium">Examinations qualified</div>
+        <div className="text-sm font-medium">{t("Examinations qualified")}</div>
         <div className="flex flex-wrap gap-3 text-sm">
           {exams.map((e) => (
             <label key={e} className="inline-flex items-center gap-1.5">
@@ -186,15 +190,15 @@ export function AlumniProfileForm({ initial, sectors, exams }: { initial: Profil
       </div>
       <div className="flex flex-wrap gap-5 text-sm">
         <label className="inline-flex items-center gap-1.5">
-          <input type="checkbox" checked={p.directoryConsent} onChange={(e) => set("directoryConsent", e.target.checked)} /> List me in the alumni directory
+          <input type="checkbox" checked={p.directoryConsent} onChange={(e) => set("directoryConsent", e.target.checked)} /> {t("List me in the alumni directory")}
         </label>
         <label className="inline-flex items-center gap-1.5">
-          <input type="checkbox" checked={p.mentor} onChange={(e) => set("mentor", e.target.checked)} /> I am willing to mentor current students
+          <input type="checkbox" checked={p.mentor} onChange={(e) => set("mentor", e.target.checked)} /> {t("I am willing to mentor current students")}
         </label>
       </div>
       <div className="flex justify-end">
-        <Button disabled={pending} onClick={() => start(async () => report(await saveAlumniAction(p), "Alumni profile saved — welcome to the NLUJA alumni network"))}>
-          <Save className="h-4 w-4" /> Save profile
+        <Button disabled={pending} onClick={() => start(async () => report(await saveAlumniAction(p), t("Alumni profile saved — welcome to the NLUJA alumni network")))}>
+          <Save className="h-4 w-4" /> {t("Save profile")}
         </Button>
       </div>
     </div>

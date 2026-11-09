@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavSection } from "@/lib/roles";
+import { useT } from "./i18n";
 
 const ICONS: Record<string, LucideIcon> = {
   BarChart3, BookOpen, Calculator, CalendarCheck, ClipboardList, FileCheck, GraduationCap, History, LayoutDashboard,
@@ -20,23 +21,25 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 function Brand({ onNavigate, className = "border-b border-white/10" }: { onNavigate?: () => void; className?: string }) {
+  const t = useT();
   return (
     <Link href="/dashboard" onClick={onNavigate} className={cn("flex items-center gap-3 px-5 py-4", className)}>
       <Image src="/brand/footer_logo.webp" alt="NLUJA emblem" width={40} height={40} className="rounded-full bg-white p-0.5" />
       <div className="leading-tight">
-        <div className="font-serif text-sm font-semibold text-white">NLUJA, Assam</div>
-        <div className="text-[11px] text-white/50">Academic &amp; Examination System</div>
+        <div className="font-serif text-sm font-semibold text-white">{t("NLUJA, Assam")}</div>
+        <div className="text-[11px] text-white/50">{t("Academic & Examination System")}</div>
       </div>
     </Link>
   );
 }
 
 export function Sidebar({ sections }: { sections: NavSection[] }) {
+  const t = useT();
   return (
     <aside className="no-print sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-ink-900 text-white/80 lg:flex">
       <Brand />
       <NavList sections={sections} />
-      <div className="border-t border-white/10 px-5 py-3 text-[11px] text-white/40">Demo build · data is synthetic</div>
+      <div className="border-t border-white/10 px-5 py-3 text-[11px] text-white/40">{t("Demo build · data is synthetic")}</div>
     </aside>
   );
 }
@@ -44,6 +47,7 @@ export function Sidebar({ sections }: { sections: NavSection[] }) {
 /** Below the lg breakpoint the sidebar is replaced by a menu button that opens the same navigation as a drawer. */
 export function MobileNav({ sections, footer }: { sections: NavSection[]; footer?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
   const pathname = usePathname();
   const [shownFor, setShownFor] = useState(pathname);
   if (shownFor !== pathname) {
@@ -62,16 +66,16 @@ export function MobileNav({ sections, footer }: { sections: NavSection[]; footer
   }, [open]);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open} className="no-print -ml-1 rounded-md p-2 text-foreground hover:bg-muted lg:hidden">
+      <button type="button" onClick={() => setOpen(true)} aria-label={t("Open menu")} aria-expanded={open} className="no-print -ml-1 rounded-md p-2 text-foreground hover:bg-muted lg:hidden">
         <Menu className="h-5 w-5" />
       </button>
       {open && createPortal(
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button type="button" aria-label="Close menu" className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
+          <button type="button" aria-label={t("Close menu")} className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-ink-900 text-white/80 shadow-xl">
             <div className="flex items-center justify-between border-b border-white/10 pr-2">
               <Brand onNavigate={() => setOpen(false)} className="" />
-              <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white">
+              <button type="button" aria-label={t("Close menu")} onClick={() => setOpen(false)} className="rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>

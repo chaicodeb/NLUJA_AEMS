@@ -6,6 +6,7 @@ import type { TranscriptPayload } from "@/lib/results/transcript";
 import { StudentCopyButton } from "../../transcripts/transcript-buttons";
 import { revaluationOptions } from "@/lib/results/revaluation";
 import { publishedSemesters } from "@/lib/results/engine";
+import { getT } from "@/lib/i18n/server";
 import { ApplyForm } from "../../revaluations/client";
 import { Badge, Callout, Card, CardHeader, EmptyState, PageHeader, Stat, Table, TD, TH, THead, TR, buttonVariants, type BadgeTone } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
@@ -14,8 +15,9 @@ const GRADE_TONE: Record<string, BadgeTone> = { O: "green", "A+": "green", A: "g
 
 export default async function MyResultsPage() {
   const user = await requirePage("/me/results");
+  const t = await getT();
   const studentId = user.studentId ?? user.wardId;
-  if (!studentId) return <EmptyState title="No student record linked" />;
+  if (!studentId) return <EmptyState title={t("No student record linked")} />;
   const student = await db.student.findUniqueOrThrow({ where: { id: studentId }, include: { batch: true } });
   const sheets = await db.document.findMany({ where: { studentId, type: "GRADE_SHEET", revoked: false }, orderBy: { issuedAt: "desc" } });
   const history = await publishedSemesters(studentId);
@@ -27,48 +29,48 @@ export default async function MyResultsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={user.role === "PARENT" ? "Parent portal · read-only" : "Student portal"}
-        title="Results & grade sheets"
+        eyebrow={user.role === "PARENT" ? t("Parent portal · read-only") : t("Student portal")}
+        title={t("Results & grade sheets")}
         description={`${student.name} · ${student.rollNo} · ${student.batch.name}`}
         actions={
           latest && (
             <a href={`/api/grade-sheet/${latest.id}`} target="_blank" className={buttonVariants({ variant: "success" })}>
-              <Download className="h-4 w-4" /> Download grade sheet
+              <Download className="h-4 w-4" /> {t("Download grade sheet")}
             </a>
           )
         }
       />
       {!p ? (
-        <Callout tone="amber" title="Results not yet published">
-          Results for the current semester will appear here as soon as the University publishes them. You will also receive an SMS and e-mail.
+        <Callout tone="amber" title={t("Results not yet published")}>
+          {t("Results for the current semester will appear here as soon as the University publishes them. You will also receive an SMS and e-mail.")}
         </Callout>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label={`SGPA · Semester ${p.semester}`} value={p.sgpa.toFixed(2)} tone="brand" />
-            <Stat label="CGPA" value={p.cgpa.toFixed(2)} tone="green" hint={p.division ?? undefined} />
-            <Stat label="Credits earned" value={`${p.earnedCredits}/${p.credits}`} />
-            <Stat label="Result" value={<Badge tone={p.result === "PASS" ? "green" : "red"}>{p.result === "PASS" ? "PASS" : "BACKLOG"}</Badge>} />
+            <Stat label={t("SGPA · Semester {n}", { n: p.semester })} value={p.sgpa.toFixed(2)} tone="brand" />
+            <Stat label="CGPA" value={p.cgpa.toFixed(2)} tone="green" hint={p.division ? t.loose(p.division) : undefined} />
+            <Stat label={t("Credits earned")} value={`${p.earnedCredits}/${p.credits}`} />
+            <Stat label={t("Result")} value={<Badge tone={p.result === "PASS" ? "green" : "red"}>{p.result === "PASS" ? t("Pass") : t("Backlog")}</Badge>} />
           </div>
           <Card>
             <CardHeader
-              title={`Semester ${p.semester} grade sheet`}
-              description={`${p.exam.name} · published ${formatDate(p.publishedOn, true)}`}
+              title={t("Semester {n} grade sheet", { n: p.semester })}
+              description={t("{exam} · published {date}", { exam: p.exam.name, date: formatDate(p.publishedOn, true) })}
               action={
                 <a href={`/verify/${latest.verifyCode}`} target="_blank" className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline">
-                  <ShieldCheck className="h-4 w-4" /> Verify ({latest.verifyCode})
+                  <ShieldCheck className="h-4 w-4" /> {t("Verify ({code})", { code: latest.verifyCode })}
                 </a>
               }
             />
             <Table>
               <THead>
                 <tr>
-                  <TH>Code</TH>
-                  <TH>Course</TH>
-                  <TH className="text-right">Credits</TH>
-                  <TH className="text-right">Marks</TH>
-                  <TH>Grade</TH>
-                  <TH className="text-right">Grade points</TH>
+                  <TH>{t("Code")}</TH>
+                  <TH>{t("Course")}</TH>
+                  <TH className="text-right">{t("Credits")}</TH>
+                  <TH className="text-right">{t("Marks")}</TH>
+                  <TH>{t("Grade")}</TH>
+                  <TH className="text-right">{t("Grade points")}</TH>
                 </tr>
               </THead>
               <tbody>
@@ -90,16 +92,20 @@ export default async function MyResultsPage() {
       {reval && reval.papers.length > 0 && (
         <Card>
           <CardHeader
-            title="Revaluation & scrutiny"
-            description={reval.open ? `Apply by ${formatDate(reval.deadline)} · revaluation ₹${reval.params.feeRevaluation}, scrutiny ₹${reval.params.feeScrutiny} per paper · up to ${reval.params.maxPapers} papers` : `The application window closed on ${formatDate(reval.deadline)}`}
+            title={t("Revaluation & scrutiny")}
+            description={
+              reval.open
+                ? t("Apply by {date} · revaluation ₹{rf}, scrutiny ₹{sf} per paper · up to {n} papers", { date: formatDate(reval.deadline), rf: reval.params.feeRevaluation, sf: reval.params.feeScrutiny, n: reval.params.maxPapers })
+                : t("The application window closed on {date}", { date: formatDate(reval.deadline) })
+            }
           />
           <Table>
             <THead>
               <tr>
-                <TH>Paper</TH>
-                <TH className="text-right">End-semester marks</TH>
-                <TH>Grade</TH>
-                <TH>Applications</TH>
+                <TH>{t("Paper")}</TH>
+                <TH className="text-right">{t("End-semester marks")}</TH>
+                <TH>{t("Grade")}</TH>
+                <TH>{t("Applications")}</TH>
                 <TH />
               </tr>
             </THead>
@@ -114,7 +120,7 @@ export default async function MyResultsPage() {
                       {pp.requests.map((r) => (
                         <span key={r.id}>
                           <Badge tone={r.status === "DECIDED" ? (r.outcome === "REVISED" ? "green" : "neutral") : "amber"}>
-                            {r.type === "REVALUATION" ? "Revaluation" : "Scrutiny"} · {r.status === "DECIDED" ? (r.outcome === "REVISED" ? `revised to ${r.revisedMarks}` : "unchanged") : "in process"}
+                            {r.type === "REVALUATION" ? t("Revaluation") : t("Scrutiny")} · {r.status === "DECIDED" ? (r.outcome === "REVISED" ? t("revised to {m}", { m: r.revisedMarks ?? "—" }) : t("unchanged")) : t("in process")}
                           </Badge>
                         </span>
                       ))}
@@ -134,35 +140,35 @@ export default async function MyResultsPage() {
       )}
       <Card>
         <CardHeader
-          title="Consolidated transcript"
-          description="All semesters, credits, SGPA and CGPA in one QR-verifiable document"
+          title={t("Consolidated transcript")}
+          description={t("All semesters, credits, SGPA and CGPA in one QR-verifiable document")}
           action={user.role === "STUDENT" && history.length > 0 ? <StudentCopyButton /> : undefined}
         />
         {transcripts.length === 0 ? (
           <div className="px-5 pb-5 text-sm text-muted-foreground">
-            No transcripts issued yet. Download a student copy for reference; official transcripts are issued by the Office of the Controller of Examinations on request.
+            {t("No transcripts issued yet. Download a student copy for reference; official transcripts are issued by the Office of the Controller of Examinations on request.")}
           </div>
         ) : (
           <Table>
             <THead>
               <tr>
-                <TH>Type</TH>
-                <TH>Purpose</TH>
-                <TH>Issued</TH>
-                <TH>Verification</TH>
+                <TH>{t("Type")}</TH>
+                <TH>{t("Purpose")}</TH>
+                <TH>{t("Issued")}</TH>
+                <TH>{t("Verification")}</TH>
                 <TH />
               </tr>
             </THead>
             <tbody>
-              {transcripts.map((t) => {
-                const tp = t.payload as unknown as TranscriptPayload;
+              {transcripts.map((tr) => {
+                const tp = tr.payload as unknown as TranscriptPayload;
                 return (
-                  <TR key={t.id}>
-                    <TD><Badge tone={tp.variant === "OFFICIAL" ? "green" : "neutral"}>{tp.variant === "OFFICIAL" ? "Official" : "Student copy"}</Badge></TD>
+                  <TR key={tr.id}>
+                    <TD><Badge tone={tp.variant === "OFFICIAL" ? "green" : "neutral"}>{tp.variant === "OFFICIAL" ? t("Official") : t("Student copy")}</Badge></TD>
                     <TD className="text-sm text-muted-foreground">{tp.purpose ?? "—"}</TD>
-                    <TD className="text-xs">{formatDate(t.issuedAt, true)}</TD>
-                    <TD><a href={`/verify/${t.verifyCode}`} target="_blank" className="font-mono text-xs text-brand-700 hover:underline">{t.verifyCode}</a></TD>
-                    <TD className="text-right"><a href={`/api/transcript/${t.id}`} target="_blank" className="text-sm font-medium text-brand-700 hover:underline">Download</a></TD>
+                    <TD className="text-xs">{formatDate(tr.issuedAt, true)}</TD>
+                    <TD><a href={`/verify/${tr.verifyCode}`} target="_blank" className="font-mono text-xs text-brand-700 hover:underline">{tr.verifyCode}</a></TD>
+                    <TD className="text-right"><a href={`/api/transcript/${tr.id}`} target="_blank" className="text-sm font-medium text-brand-700 hover:underline">{t("Download")}</a></TD>
                   </TR>
                 );
               })}
@@ -171,25 +177,25 @@ export default async function MyResultsPage() {
         )}
       </Card>
       <Card>
-        <CardHeader title="Academic history" description="SGPA / CGPA across all published semesters" />
+        <CardHeader title={t("Academic history")} description={t("SGPA / CGPA across all published semesters")} />
         <Table>
           <THead>
             <tr>
-              <TH>Semester</TH>
-              <TH className="text-right">Credits</TH>
+              <TH>{t("Semester")}</TH>
+              <TH className="text-right">{t("Credits")}</TH>
               <TH className="text-right">SGPA</TH>
               <TH className="text-right">CGPA</TH>
-              <TH>Result</TH>
+              <TH>{t("Result")}</TH>
             </tr>
           </THead>
           <tbody>
             {history.map((h) => (
               <TR key={h.id}>
-                <TD>Semester {h.semester}</TD>
+                <TD>{t("Semester {n}", { n: h.semester })}</TD>
                 <TD className="text-right">{h.credits}</TD>
                 <TD className="text-right">{h.sgpa.toFixed(2)}</TD>
                 <TD className="text-right font-medium">{h.cgpa.toFixed(2)}</TD>
-                <TD><Badge tone={h.result === "PASS" ? "green" : "red"}>{h.result}</Badge></TD>
+                <TD><Badge tone={h.result === "PASS" ? "green" : "red"}>{h.result === "PASS" ? t("Pass") : t("Backlog")}</Badge></TD>
               </TR>
             ))}
           </tbody>

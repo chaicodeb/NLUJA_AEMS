@@ -5,10 +5,13 @@ import { issueDocument } from "../docs";
 import { asParams, divisionFor, type GradingParams } from "../rules/engine";
 import { getActiveRule } from "../rules/store";
 import { firstPerSemester, PUBLISHED_ORDER } from "../results/engine";
+import type { MessageKey } from "../i18n/messages";
+import { makeT, type Vars } from "../i18n/translate";
 
 type Actor = { id: string; role: string };
 export type Medal = { code: string; name: string; description: string; criterion: { type: "HIGHEST_CGPA"; programme?: string } | { type: "HIGHEST_TOTAL"; courses: string[] } };
-export type Check = { label: string; ok: boolean; detail: string };
+export type Check = { label: string; ok: boolean; detail: string; labelMsg?: [MessageKey, Vars?]; detailMsg?: [MessageKey, Vars?] };
+const en = makeT("en");
 export const DEPARTMENTS: Record<string, string> = { LIBRARY: "Library", HOSTEL: "Hostel", ACCOUNTS: "Accounts", EXAMINATION: "Examination Branch" };
 
 export type DegreePayload = {
@@ -47,12 +50,18 @@ export async function degreeStatus(studentId: string) {
   const cgpa = last?.cgpa ?? 0;
   const dues = Object.keys(DEPARTMENTS).map((d) => ({ department: d, row: student.clearances.find((c) => c.department === d) }));
   const pendingDues = dues.filter((d) => d.row?.status !== "CLEARED");
+  const check = (ok: boolean, label: [MessageKey, Vars?], detail: [MessageKey, Vars?] | string): Check => ({
+    ok, label: en(...label), detail: typeof detail === "string" ? detail : en(...detail), labelMsg: label, detailMsg: typeof detail === "string" ? undefined : detail,
+  });
   const checks: Check[] = [
-    { label: `All ${duration} semesters completed`, ok: sems.length >= duration, detail: `${sems.length} of ${duration} semester results published` },
-    { label: "No backlog", ok: backlogs.length === 0, detail: backlogs.length ? `Backlog in semester ${backlogs.map((b) => b.semester).join(", ")}` : "Every semester passed" },
-    { label: `Credits (${required} required)`, ok: earned >= required, detail: `${earned} credits earned` },
-    { label: `Minimum CGPA ${minCgpa}`, ok: cgpa >= minCgpa, detail: `CGPA ${cgpa.toFixed(2)}` },
-    { label: "No-dues clearance", ok: pendingDues.length === 0, detail: pendingDues.length ? pendingDues.map((d) => `${DEPARTMENTS[d.department]}${d.row?.amount ? ` ₹${d.row.amount}` : ""}${d.row?.status === "DUES" ? " outstanding" : " pending"}`).join(", ") : "Library, hostel, accounts and examination cleared" },
+    check(sems.length >= duration, ["All {n} semesters completed", { n: duration }], ["{done} of {n} semester results published", { done: sems.length, n: duration }]),
+    check(backlogs.length === 0, ["No backlog"], backlogs.length ? ["Backlog in semester {list}", { list: backlogs.map((b) => b.semester).join(", ") }] : ["Every semester passed"]),
+    check(earned >= required, ["Credits ({n} required)", { n: required }], ["{n} credits earned", { n: earned }]),
+    check(cgpa >= minCgpa, ["Minimum CGPA {n}", { n: minCgpa }], ["CGPA {n}", { n: cgpa.toFixed(2) }]),
+    check(
+      pendingDues.length === 0, ["No-dues clearance"],
+      pendingDues.length ? pendingDues.map((d) => `${DEPARTMENTS[d.department]}${d.row?.amount ? ` ₹${d.row.amount}` : ""}${d.row?.status === "DUES" ? " outstanding" : " pending"}`).join(", ") : ["Library, hostel, accounts and examination cleared"],
+    ),
   ];
   const eligible = checks.every((c) => c.ok);
   const academicOk = checks.slice(0, 4).every((c) => c.ok);

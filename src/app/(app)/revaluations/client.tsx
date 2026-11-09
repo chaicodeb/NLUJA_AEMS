@@ -4,9 +4,11 @@ import { useState, useTransition } from "react";
 import { Gavel, Send, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Select, Textarea } from "@/components/ui";
+import { useT } from "@/components/i18n";
 import { applyRevaluationAction, assignRevaluatorAction, decideRevaluationAction } from "./actions";
 
 export function ApplyForm({ scriptId, code, feeRevaluation, feeScrutiny, existing }: { scriptId: string; code: string; feeRevaluation: number; feeScrutiny: number; existing: string[] }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"REVALUATION" | "SCRUTINY">(existing.includes("REVALUATION") ? "SCRUTINY" : "REVALUATION");
   const [reason, setReason] = useState("");
@@ -17,7 +19,7 @@ export function ApplyForm({ scriptId, code, feeRevaluation, feeScrutiny, existin
   if (!open)
     return (
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        Apply
+        {t("Apply")}
       </Button>
     );
   const fee = type === "REVALUATION" ? feeRevaluation : feeScrutiny;
@@ -25,18 +27,18 @@ export function ApplyForm({ scriptId, code, feeRevaluation, feeScrutiny, existin
     <div className="w-80 space-y-2 rounded-lg border border-border bg-white p-3 text-left shadow-lg">
       <div className="text-xs font-semibold">{code}</div>
       <Select value={type} onChange={(e) => setType(e.target.value as typeof type)}>
-        {available.map((t) => (
-          <option key={t} value={t}>{t === "REVALUATION" ? `Revaluation (fresh evaluation) — ₹${feeRevaluation}` : `Scrutiny / re-totalling — ₹${feeScrutiny}`}</option>
+        {available.map((k) => (
+          <option key={k} value={k}>{k === "REVALUATION" ? t("Revaluation (fresh evaluation) — ₹{fee}", { fee: feeRevaluation }) : t("Scrutiny / re-totalling — ₹{fee}", { fee: feeScrutiny })}</option>
         ))}
       </Select>
-      <Textarea rows={2} placeholder="Reason (optional)" value={reason} onChange={(e) => setReason(e.target.value)} />
+      <Textarea rows={2} placeholder={t("Reason (optional)")} value={reason} onChange={(e) => setReason(e.target.value)} />
       <Select value={method} onChange={(e) => setMethod(e.target.value)}>
-        <option value="UPI">Pay by UPI</option>
-        <option value="NETBANKING">Net banking</option>
-        <option value="CARD">Debit / credit card</option>
+        <option value="UPI">{t("Pay by UPI")}</option>
+        <option value="NETBANKING">{t("Net banking")}</option>
+        <option value="CARD">{t("Debit / credit card")}</option>
       </Select>
       <div className="flex justify-end gap-2">
-        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>{t("Cancel")}</Button>
         <Button
           size="sm"
           variant="success"
@@ -44,15 +46,15 @@ export function ApplyForm({ scriptId, code, feeRevaluation, feeScrutiny, existin
           onClick={() =>
             start(async () => {
               const r = await applyRevaluationAction(scriptId, type, reason, method);
-              if ("error" in r && r.error) toast.error(r.error);
+              if ("error" in r && r.error) toast.error(t.loose(r.error));
               else {
-                toast.success(type === "SCRUTINY" ? "Scrutiny completed — the Controller of Examinations will confirm the outcome" : "Application submitted — your script will be re-evaluated blind");
+                toast.success(type === "SCRUTINY" ? t("Scrutiny completed — the Controller of Examinations will confirm the outcome") : t("Application submitted — your script will be re-evaluated blind"));
                 setOpen(false);
               }
             })
           }
         >
-          <Send className="h-3.5 w-3.5" /> Pay ₹{fee} & apply
+          <Send className="h-3.5 w-3.5" /> {t("Pay ₹{fee} & apply", { fee })}
         </Button>
       </div>
     </div>

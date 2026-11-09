@@ -28,6 +28,19 @@ export async function newDoc() {
   return { pdf, regular, bold, emblem };
 }
 
+/** Devanagari fonts for bilingual (English + Hindi) documents; fontkit shapes conjuncts and vowel signs. */
+export async function hindiFonts(pdf: PDFDocument) {
+  await import("regenerator-runtime/runtime");
+  const fontkit = (await import("@pdf-lib/fontkit")).default;
+  pdf.registerFontkit(fontkit);
+  const dir = path.join(process.cwd(), "public", "fonts");
+  const [regular, bold] = await Promise.all([
+    readFile(path.join(dir, "NotoSansDevanagari-Regular.ttf")).then((b) => pdf.embedFont(b, { subset: true })),
+    readFile(path.join(dir, "NotoSansDevanagari-Bold.ttf")).then((b) => pdf.embedFont(b, { subset: true })),
+  ]);
+  return { regular, bold };
+}
+
 export async function qrPng(pdf: PDFDocument, text: string) {
   const buf = await QRCode.toBuffer(text, { margin: 1, width: 300, errorCorrectionLevel: "M" });
   return pdf.embedPng(buf);
