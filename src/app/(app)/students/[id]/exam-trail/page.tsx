@@ -67,8 +67,8 @@ export default async function ExamTrailPage({ params, searchParams }: PageProps<
         ))}
       </div>
       {t.fastForwarded && (
-        <Callout tone="blue" title="Demo note — the examination was fast-forwarded">
-          This examination is scheduled for {formatDate(t.exam.startDate)} onwards, but the demo presenter ran it ahead of time. System actions (results processed, published, etc.) are therefore stamped with the moment they were actually performed, while hall check-in, script custody and evaluation records carry the scheduled examination dates. Audit timestamps are never back-dated — that is what keeps the chain tamper-evident. In live use both clocks agree.
+        <Callout tone="blue" title="Dates in the demo">
+          This examination is scheduled from {formatDate(t.exam.startDate)}, but the demo runs it before its scheduled dates. Records such as hall attendance, script custody and evaluation therefore show the scheduled examination dates, while audit-trail entries show the actual time each action was performed in the demo (the audit trail is never back-dated). In real use, every action happens on the actual day, so both show the same date and time.
         </Callout>
       )}
       {phases.map((p) => (
